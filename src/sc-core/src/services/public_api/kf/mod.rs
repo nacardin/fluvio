@@ -1,1 +1,3 @@
-pub mod metadata_req;
+mod metadata_req;
+
+pub use metadata_req::*;

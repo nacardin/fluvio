@@ -36,6 +36,7 @@ use super::api::handle_fetch_spu_request;
 use super::api::handle_create_spu_groups_request;
 use super::api::handle_delete_spu_groups_request;
 use super::api::handle_fetch_spu_groups_request;
+use super::api::handle_metadata_update;
 
 use super::SharedPublicContext;
 
@@ -67,7 +68,7 @@ where
         api_loop!(
             api_stream,
 
-            // Common
+
             ScPublicRequest::ApiVersionsRequest(request) => call_service!(
                 request,
                 handle_api_versions_request(request),
@@ -75,7 +76,7 @@ where
                 "api version handler"
             ),
 
-            // Kafka
+   
             ScPublicRequest::KfMetadataRequest(request) => call_service!(
                 request,
                 handle_kf_metadata_request(request, ctx.metadata.clone()),
@@ -83,7 +84,6 @@ where
                 "metadata request handler"
             ),
 
-            // Fluvio - Topics
             ScPublicRequest::FlvCreateTopicsRequest(request) => call_service!(
                 request,
                 handle_create_topics_request(request, &ctx),
@@ -146,6 +146,12 @@ where
                 handle_fetch_spu_groups_request(request, &ctx),
                 sink,
                 "fetch spu groups handler"
+            ),
+            ScPublicRequest::UpdateMetadataRequest(request) => call_service!(
+                request,
+                handle_metadata_update(request),
+                sink,
+                "handle update"
             ),
             _ => {
                 log::warn!("not actual protocol");

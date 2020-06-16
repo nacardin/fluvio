@@ -29,27 +29,27 @@ mod request {
     use super::*;
 
     #[derive(Decode, Encode, Debug, Default)]
-    pub struct UpdateMedataRequest {}
+    pub struct UpdateMetadataRequest {}
 
-    impl Request for UpdateMedataRequest {
+    impl Request for UpdateMetadataRequest {
         const API_KEY: u16 = ScPublicApiKey::FlvUpdateMetadata as u16;
-        type Response = UpdateMedataResponse;
+        type Response = UpdateMetadataResponse;
     }
 
     #[derive(Debug)]
-    pub enum UpdateMedataResponse {
+    pub enum UpdateMetadataResponse {
         All(UpdateAllMetadataResponse),
         Replica(UpdateReplicaResponse),
         SPU(UpdateSpuResponse),
     }
 
-    impl Default for UpdateMedataResponse {
+    impl Default for UpdateMetadataResponse {
         fn default() -> Self {
             Self::All(UpdateAllMetadataResponse::default())
         }
     }
 
-    impl Encoder for UpdateMedataResponse {
+    impl Encoder for UpdateMetadataResponse {
         fn write_size(&self, version: Version) -> usize {
             let type_size = (0 as u8).write_size(version);
             type_size
@@ -99,7 +99,7 @@ mod request {
         }
     }
 
-    impl Decoder for UpdateMedataResponse {
+    impl Decoder for UpdateMetadataResponse {
         fn decode<T>(&mut self, src: &mut T, version: Version) -> Result<(), Error>
         where
             T: Buf,

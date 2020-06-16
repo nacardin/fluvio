@@ -51,7 +51,7 @@ pub enum ScPublicRequest {
     FlvDeleteSpuGroupsRequest(RequestMessage<FlvDeleteSpuGroupsRequest>),
     FlvFetchSpuGroupsRequest(RequestMessage<FlvFetchSpuGroupsRequest>),
 
-    UpdateMedataRequest(RequestMessage<UpdateMedataRequest>),
+    UpdateMetadataRequest(RequestMessage<UpdateMetadataRequest>),
 }
 
 impl Default for ScPublicRequest {
@@ -109,7 +109,7 @@ impl KfRequestMessage for ScPublicRequest {
             }
 
             ScPublicApiKey::FlvUpdateMetadata => {
-                api_decode!(Self, UpdateMedataRequest, src, header)
+                api_decode!(Self, UpdateMetadataRequest, src, header)
            }
         }
     }
