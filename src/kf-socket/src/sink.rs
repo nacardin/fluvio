@@ -42,10 +42,7 @@ pub struct InnerKfSink<S> {
     fd: RawFd,
 }
 
-impl<S> InnerKfSink<S>
-where
-    S: AsyncRead + AsyncWrite + Unpin,
-{
+impl<S> InnerKfSink<S> {
     pub fn new(inner: SplitFrame<S>, fd: RawFd) -> Self {
         InnerKfSink { fd, inner }
     }
@@ -57,6 +54,18 @@ where
     pub fn id(&self) -> RawFd {
         self.fd
     }
+
+    /// convert to shared sink
+    pub fn as_shared(self) -> InnerExclusiveKfSink<S> {
+        InnerExclusiveKfSink::new(self)
+    }
+}
+
+impl<S> InnerKfSink<S>
+where
+    S: AsyncRead + AsyncWrite + Unpin,
+{
+    
 
     /// as client, send request to server
     pub async fn send_request<R>(
@@ -151,14 +160,17 @@ use async_lock::Lock;
 /// Multi-thread aware Sink.  Only allow sending request one a time.
 pub struct InnerExclusiveKfSink<S>(Lock<InnerKfSink<S>>);
 
+impl<S> InnerExclusiveKfSink<S> {
+    pub fn new(sink: InnerKfSink<S>) -> Self {
+        InnerExclusiveKfSink(Lock::new(sink))
+    }
+}
+
 impl<S> InnerExclusiveKfSink<S>
 where
     S: AsyncRead + AsyncWrite + Unpin,
 {
-    pub fn new(sink: InnerKfSink<S>) -> Self {
-        InnerExclusiveKfSink(Lock::new(sink))
-    }
-
+    
     pub async fn send_request<R>(&self, req_msg: &RequestMessage<R>) -> Result<(), KfSocketError>
     where
         RequestMessage<R>: KfEncoder + Default + Debug,

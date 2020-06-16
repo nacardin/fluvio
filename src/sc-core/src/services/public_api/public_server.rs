@@ -1,5 +1,5 @@
 //!
-//! # Service Implementataion
+//! # Public Sc Api Implementation
 //!
 //! Public service API allows 3rd party systems to invoke operations on Fluvio
 //! Streaming Controller. Requests are received and dispatched to handlers
@@ -62,8 +62,9 @@ where
         ctx: Self::Context,
         socket: InnerKfSocket<S>,
     ) -> Result<(), KfSocketError> {
-        let (mut sink, mut stream) = socket.split();
+        let (sink, mut stream) = socket.split();
         let mut api_stream = stream.api_stream::<ScPublicRequest, ScPublicApiKey>();
+        let mut shared_sink = sink.as_shared();
 
         api_loop!(
             api_stream,
@@ -72,7 +73,7 @@ where
             ScPublicRequest::ApiVersionsRequest(request) => call_service!(
                 request,
                 handle_api_versions_request(request),
-                sink,
+                shared_sink,
                 "api version handler"
             ),
 
@@ -80,32 +81,32 @@ where
             ScPublicRequest::KfMetadataRequest(request) => call_service!(
                 request,
                 handle_kf_metadata_request(request, ctx.metadata.clone()),
-                sink,
+                shared_sink,
                 "metadata request handler"
             ),
 
             ScPublicRequest::FlvCreateTopicsRequest(request) => call_service!(
                 request,
                 handle_create_topics_request(request, &ctx),
-                sink,
+                shared_sink,
                 "create topic handler"
             ),
             ScPublicRequest::FlvDeleteTopicsRequest(request) => call_service!(
                 request,
                 handle_delete_topics_request(request, &ctx),
-                sink,
+                shared_sink,
                 "delete topic handler"
             ),
             ScPublicRequest::FlvFetchTopicsRequest(request) => call_service!(
                 request,
                 handle_fetch_topics_request(request, ctx.metadata.clone()),
-                sink,
+                shared_sink,
                 "fetch topic handler"
             ),
             ScPublicRequest::FlvTopicCompositionRequest(request) => call_service!(
                 request,
                 handle_topic_composition_request(request, ctx.metadata.clone()),
-                sink,
+                shared_sink,
                 "topic metadata handler"
             ),
 
@@ -113,44 +114,44 @@ where
             ScPublicRequest::FlvRegisterCustomSpusRequest(request) => call_service!(
                 request,
                 handle_register_custom_spus_request(request, &ctx),
-                sink,
+                shared_sink,
                 "create custom spus handler"
             ),
             ScPublicRequest::FlvUnregisterCustomSpusRequest(request) => call_service!(
                 request,
                 handle_unregister_custom_spus_request(request, &ctx),
-                sink,
+                shared_sink,
                 "delete custom spus handler"
             ),
             ScPublicRequest::FlvFetchSpusRequest(request) => call_service!(
                 request,
                 handle_fetch_spu_request(request, ctx.metadata.clone()),
-                sink,
+                shared_sink,
                 "fetch spus handler"
             ),
 
             ScPublicRequest::FlvCreateSpuGroupsRequest(request) => call_service!(
                 request,
                 handle_create_spu_groups_request(request, &ctx),
-                sink,
+                shared_sink,
                 "create spu groups handler"
             ),
             ScPublicRequest::FlvDeleteSpuGroupsRequest(request) => call_service!(
                 request,
                 handle_delete_spu_groups_request(request, &ctx),
-                sink,
+                shared_sink,
                 "delete spu groups handler"
             ),
             ScPublicRequest::FlvFetchSpuGroupsRequest(request) => call_service!(
                 request,
                 handle_fetch_spu_groups_request(request, &ctx),
-                sink,
+                shared_sink,
                 "fetch spu groups handler"
             ),
             ScPublicRequest::UpdateMetadataRequest(request) => call_service!(
                 request,
                 handle_metadata_update(request),
-                sink,
+                shared_sink,
                 "handle update"
             ),
             _ => {
