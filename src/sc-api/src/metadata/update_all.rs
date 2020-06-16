@@ -1,28 +1,25 @@
 use std::collections::BTreeMap;
 
-use kf_protocol::api::Request;
+
 use kf_protocol::derive::Decode;
 use kf_protocol::derive::Encode;
 use flv_metadata::partition::ReplicaKey;
 use flv_metadata::spu::SpuSpec;
 use flv_types::SpuId;
 
-use crate::ScPublicApiKey;
 use super::replica::ReplicaLeader;
+
 
 /// All specs.  Listener can use this to sync their own metadata store.
 #[derive(Decode, Encode, Debug, Default)]
-pub struct UpdateAllRequest {
+pub struct UpdateAllMetadataResponse {
     pub spus: Vec<SpuSpec>,
     pub replicas: Vec<ReplicaLeader>,
 }
 
-impl Request for UpdateAllRequest {
-    const API_KEY: u16 = ScPublicApiKey::UpdateAll as u16;
-    type Response = UpdateAllResponse;
-}
 
-impl UpdateAllRequest {
+
+impl UpdateAllMetadataResponse {
     pub fn new(spus: Vec<SpuSpec>, replicas: Vec<ReplicaLeader>) -> Self {
         Self { spus, replicas }
     }
@@ -91,5 +88,3 @@ impl UpdateAllRequest {
     }
 }
 
-#[derive(Decode, Encode, Default, Debug)]
-pub struct UpdateAllResponse {}

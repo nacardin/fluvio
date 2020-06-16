@@ -25,6 +25,7 @@ use super::spu::*;
 use super::topics::*;
 use super::metadata::*;
 
+
 use super::ScPublicApiKey;
 
 #[derive(Debug, Encode)]
@@ -50,7 +51,7 @@ pub enum ScPublicRequest {
     FlvDeleteSpuGroupsRequest(RequestMessage<FlvDeleteSpuGroupsRequest>),
     FlvFetchSpuGroupsRequest(RequestMessage<FlvFetchSpuGroupsRequest>),
 
-   // UpdateAllMetadataRequest(RequestMessage<UpdateAllMetadataRequest>),
+    UpdateMedataRequest(RequestMessage<UpdateMedataRequest>),
 }
 
 impl Default for ScPublicRequest {
@@ -107,9 +108,9 @@ impl KfRequestMessage for ScPublicRequest {
                 api_decode!(Self, FlvFetchSpuGroupsRequest, src, header)
             }
 
-           // ScPublicApiKey::FlvUpdateAllMetadata => {
-           //     api_decode!(Self, UpdateAllMetadataRequest, src, header)
-           // }
+            ScPublicApiKey::FlvUpdateMetadata => {
+                api_decode!(Self, UpdateMedataRequest, src, header)
+           }
         }
     }
 }

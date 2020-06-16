@@ -1,26 +1,19 @@
 use std::collections::BTreeMap;
-
-use kf_protocol::api::Request;
 use kf_protocol::derive::Decode;
 use kf_protocol::derive::Encode;
 use flv_types::SpuId;
 use flv_metadata::spu::SpuSpec;
 use flv_metadata::api::SpuMsg;
 
-use super::ScClientApiKey;
 
 /// Changes to Spu specs
 #[derive(Decode, Encode, Debug, Default)]
-pub struct SpuChangeRequest {
+pub struct UpdateSpuResponse {
     pub spus: Vec<SpuMsg>,
 }
 
-impl Request for SpuChangeRequest {
-    const API_KEY: u16 = ScClientApiKey::SpuChange as u16;
-    type Response = UpdateSpuResponse;
-}
 
-impl SpuChangeRequest {
+impl UpdateSpuResponse {
     pub fn new(spus: Vec<SpuMsg>) -> Self {
         Self { spus }
     }
@@ -49,6 +42,3 @@ impl SpuChangeRequest {
         self
     }
 }
-
-#[derive(Decode, Encode, Default, Debug)]
-pub struct UpdateSpuResponse {}
