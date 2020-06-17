@@ -30,8 +30,6 @@ use kf_socket::KfSink;
 use flv_types::SpuId;
 use flv_types::log_on_err;
 use flv_util::actions::Actions;
-use utils::counters::CounterTable;
-use flv_util::SimpleConcurrentBTreeMap;
 use internal_api::messages::SpuMsg;
 use internal_api::messages::Replica;
 use internal_api::messages::ReplicaMsg;
@@ -69,15 +67,6 @@ enum ConnCntr {
     InternalErr = 6,
 }
 
-const CONN_COUNTERS: [(ConnCntr, &'static str, bool); 7] = [
-    (ConnCntr::ReqOk, "CONN-REQ-OK", false),
-    (ConnCntr::ReqFailed, "CONN-REQ-FAIL", false),
-    (ConnCntr::TryConnectOk, "TRY-CONN-OK", false),
-    (ConnCntr::TryConnectFailed, "TRY-CONN-FAIL", false),
-    (ConnCntr::SendMsgOk, "SEND-MSG-OK", false),
-    (ConnCntr::SendMsgFailed, "SEND-MSG-FAIL", false),
-    (ConnCntr::InternalErr, "INTERNAL-ERR", true),
-];
 
 /// Discovered Connection Parameter such as source IP address and port
 #[derive(Debug, Clone)]
@@ -99,9 +88,7 @@ pub type SharedConnManager = Arc<ConnManager>;
 pub struct ConnManager {
     spu_store: SharedSpuLocalStore,
     partition_store: SharedPartitionStore,
-    conn_params: SimpleConcurrentBTreeMap<SpuId, ConnParams>,
     sinks: SinkPool<SpuId>,
-    counter_tbl: CounterTable<SpuId, ConnCntr>,
 }
 
 impl Default for ConnManager {
@@ -126,36 +113,12 @@ impl ConnManager {
         ConnManager {
             spu_store,
             partition_store,
-            conn_params: SimpleConcurrentBTreeMap::new(),
-            counter_tbl: CounterTable::default().with_columns(CONN_COUNTERS.to_vec()),
             sinks: SinkPool::new(),
         }
     }
 
-    /// add connection parameters & counters for this SPU
-    fn add_conn_param(&self, spu_id: SpuId, conn: ConnParams) {
-        // add parameters
-        self.conn_params.insert(spu_id, conn);
+    
 
-        self.counter_tbl.add_row(spu_id);
-    }
-
-    /// remove connection parameters & counters for this SPU
-    fn remove_conn_param(&self, spu_id: &SpuId) {
-        self.conn_params.write().remove(spu_id);
-
-        self.counter_tbl.remove_row(spu_id);
-    }
-
-    /// get connection parameters
-    #[allow(dead_code)]
-    fn conn_param(&self, spu_id: SpuId) -> Option<ConnParams> {
-        if let Some(params) = self.conn_params.read().get(&spu_id) {
-            Some(params.clone())
-        } else {
-            None
-        }
-    }
 
     /// SPU is valid if we have registered SPU in the store and if spu is offline
     pub fn validate_spu(&self, spu_id: &SpuId) -> bool {
@@ -166,7 +129,6 @@ impl ConnManager {
     /// true if successfully register
     pub async fn register_sink(&self, spu_id: SpuId, sink: KfSink, param: ConnParams) {
         self.sinks.insert_sink(spu_id.clone(), sink);
-        self.add_conn_param(spu_id.clone(), param);
     }
 
     /// De-register sink.  This happens when connection when down
@@ -230,7 +192,6 @@ impl ConnManager {
                 "unexpected socket entry found for Spu({}). clearing ",
                 spu.id
             );
-            self.counter_tbl.inc_counter(&spu.id, ConnCntr::InternalErr);
         }
     }
 
@@ -258,7 +219,7 @@ impl ConnManager {
     async fn remove_spu(&self, old_spu: SpuSpec) {
         debug!("remove Spu({}) from ConnMgr", old_spu.id);
         self.sinks.clear_sink(&old_spu.id);
-        self.remove_conn_param(&old_spu.id);
+       
 
         let spu_msg = SpuMsg::delete(old_spu.into());
         self.send_msg_to_all_live_spus(vec![spu_msg]).await;
@@ -268,7 +229,7 @@ impl ConnManager {
     fn inner_remove_spu(&self, old_spu: &SpuSpec) {
         debug!("remove Spu({}) from ConnMgr", old_spu.id);
         self.sinks.clear_sink(&old_spu.id);
-        self.remove_conn_param(&old_spu.id);
+      
     }
 
     // -----------------------------------
@@ -280,17 +241,7 @@ impl ConnManager {
         self.sinks.get_sink(spu_id)
     }
 
-    /// message sent successfully
-    pub fn inc_ok_counter(&self, spu_id: &SpuId) {
-        self.counter_tbl.inc_counter(spu_id, ConnCntr::SendMsgOk);
-    }
-
-    /// could not send message clear connection so it gets established again.
-    pub fn inc_failed_counter(&self, spu_id: &SpuId) {
-        self.counter_tbl
-            .inc_counter(spu_id, ConnCntr::SendMsgFailed);
-    }
-
+  
     /// Update Partition information to all SPUs in the spec
     async fn refresh_partition(&self, key: ReplicaKey, spec: PartitionSpec) {
         // generate replica
@@ -342,13 +293,13 @@ impl ConnManager {
         Ok(())
     }
 
-    /// send all spec to SPU
-    async fn send_update_all_to_spu<'a>(&'a self, spu: &'a SpuKV) -> Result<(), ScServerError> {
+    /// send all changes to specific SPU
+    async fn send_update_all_to_spu(&self, spu: &SpuKV) -> Result<(), ScServerError> {
         let spu_specs = self
             .spu_store
             .all_values()
             .into_iter()
-            .map(|spu_kv| spu_kv.spec)
+            .map(|spu_kv| spu_kv.spec.clone())
             .collect();
         let replicas = self.partition_store.replica_for_spu(spu.id());
         let request = UpdateAllRequest::new(spu_specs, replicas);
@@ -421,16 +372,10 @@ impl ConnManager {
             match spu_conn.send_request(&req_msg).await {
                 Ok(_) => {
                     trace!("spu client send successfully");
-                    // increment ok counter
-                    self.inc_ok_counter(spu_id);
                     Ok(true)
                 }
                 Err(err) => {
                     error!("spu client send failed");
-                    // mark socket as stale and update counter
-                    //spu_conn.set_stale();
-                    self.inc_failed_counter(spu_id);
-
                     Err(ScServerError::SpuCommuncationError(*spu_id, err))
                 }
             }

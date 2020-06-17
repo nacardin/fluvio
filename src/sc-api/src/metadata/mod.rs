@@ -28,8 +28,19 @@ mod request {
     use crate::ScPublicApiKey;
     use super::*;
 
-    #[derive(Decode, Encode, Debug, Default)]
-    pub struct UpdateMetadataRequest {}
+    #[derive(Decode, Encode, Debug)]
+    pub struct UpdateMetadataRequest {
+        /// number of milliseconds between refresh
+        re_sync_period_ms: u16
+    }
+
+    impl Default for UpdateMetadataRequest {
+        fn default() -> Self {
+            Self {
+                re_sync_period_ms: 6000     // 60 seconds
+            }
+        }
+    }
 
     impl Request for UpdateMetadataRequest {
         const API_KEY: u16 = ScPublicApiKey::FlvUpdateMetadata as u16;

@@ -4,6 +4,8 @@ use std::fmt::Display;
 use std::borrow::Borrow;
 use std::io::Error as IoError;
 use std::io::ErrorKind;
+use std::collections::btree_map::Values;
+use std::collections::btree_map::Keys;
 
 use flv_util::SimpleConcurrentBTreeMap;
 
@@ -156,8 +158,8 @@ where
         self.inner_store().read().keys().cloned().collect()
     }
 
-    pub fn all_values(&self) -> Vec<KVObject<S>> {
-        self.inner_store().read().values().cloned().collect()
+    pub fn all_values(&self) -> Values<S::Key,KVObject<S>> {
+        self.inner_store().read().values()
     }
 
     pub fn all_specs(&self) -> Vec<S> {

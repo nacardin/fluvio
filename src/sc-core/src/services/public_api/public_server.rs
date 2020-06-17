@@ -150,7 +150,7 @@ where
             ),
             ScPublicRequest::UpdateMetadataRequest(request) => call_service!(
                 request,
-                handle_metadata_update(request),
+                handle_metadata_update(request,&ctx),
                 shared_sink,
                 "handle update"
             ),
