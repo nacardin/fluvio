@@ -14,8 +14,8 @@ use std::fmt;
 use flv_util::actions::Actions;
 use internal_api::UpdateLrsRequest;
 
-use crate::core::spus::SpuLSChange;
-use crate::conn_manager::ConnectionRequest;
+use crate::controllers::spus::SpuLSChange;
+use crate::controllers::conn_manager::ConnectionRequest;
 
 use super::PartitionWSAction;
 use super::PartitionLSChange;

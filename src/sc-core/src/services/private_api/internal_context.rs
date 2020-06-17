@@ -8,9 +8,8 @@ use kf_socket::KfSink;
 use internal_api::UpdateLrsRequest;
 
 use crate::core::SharedContext;
-use crate::conn_manager::SharedConnManager;
-use crate::conn_manager::ConnParams;
-use crate::conn_manager::SpuConnectionStatusChange;
+use crate::controllers::conn_manager::*;
+
 
 /// Context used by Private API Server
 pub struct InternalContext {

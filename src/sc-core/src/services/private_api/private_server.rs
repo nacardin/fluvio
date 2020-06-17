@@ -16,7 +16,7 @@ use internal_api::InternalScRequest;
 use internal_api::InternalScKey;
 use internal_api::RegisterSpuResponse;
 
-use crate::conn_manager::ConnParams;
+use crate::controllers::conn_manager::ConnParams;
 use super::SharedInternalContext;
 
 pub struct ScInternalService {}

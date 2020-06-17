@@ -2,9 +2,7 @@ use std::fmt::Debug;
 use std::fmt::Display;
 use std::fmt;
 
-use crate::core::Spec;
-
-use super::KVObject;
+use crate::stores::*;
 
 /// Represents changes in Local State
 #[derive(Debug, PartialEq, Clone)]

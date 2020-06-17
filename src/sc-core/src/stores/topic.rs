@@ -29,15 +29,8 @@ use flv_metadata::partition::ReplicaKey;
 use k8_metadata::topic::TopicSpec as K8TopicSpec;
 use k8_metadata::topic::TopicStatus as K8TopicStatus;
 
-use crate::core::partitions::PartitionKV;
-use crate::core::partitions::PartitionLocalStore;
 
-use crate::core::common::LocalStore;
-use crate::core::common::KVObject;
-use crate::core::common::KvContext;
-use crate::core::spus::SpuLocalStore;
-use crate::core::Spec;
-use crate::core::Status;
+use super::*;
 
 impl Spec for TopicSpec {
     const LABEL: &'static str = "Topic";

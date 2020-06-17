@@ -16,8 +16,8 @@ use flv_metadata::spu::{SpuSpec, Endpoint, SpuType, IngressPort};
 use sc_api::FlvResponseMessage;
 use sc_api::spu::*;
 use crate::core::Context;
-use crate::core::spus::SpuKV;
-use crate::core::common::KvContext;
+use crate::stores::*;
+
 
 use super::PublicContext;
 

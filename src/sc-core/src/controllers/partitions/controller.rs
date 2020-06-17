@@ -19,12 +19,12 @@ use internal_api::UpdateLrsRequest;
 
 use crate::core::WSUpdateService;
 use crate::core::SharedContext;
-use crate::conn_manager::SharedConnManager;
+use crate::controllers::conn_manager::SharedConnManager;
 
 use crate::core::WSChangeChannel;
 
-use super::PartitionReducer;
-use super::PartitionChangeRequest;
+use super::*;
+
 
 #[derive(Debug)]
 pub struct PartitionController<W> {

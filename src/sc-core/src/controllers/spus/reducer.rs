@@ -9,15 +9,11 @@ use flv_types::log_on_err;
 
 use crate::core::common::LSChange;
 use crate::core::common::WSAction;
-use crate::conn_manager::ConnectionRequest;
-use crate::conn_manager::SpuConnectionStatusChange;
-use crate::conn_manager::SpuSpecChange;
+use crate::controllers::conn_manager::*;
 use crate::ScServerError;
+use crate::stores::*;
 
-use super::SpuActions;
-use super::SharedSpuLocalStore;
-use super::SpuKV;
-use super::SpuChangeRequest;
+use super::*;
 
 /// SpuReducer is responsible for updating state for SPU
 #[derive(Debug)]

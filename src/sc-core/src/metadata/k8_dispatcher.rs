@@ -31,9 +31,8 @@ use k8_metadata_client::MetadataClient;
 use k8_metadata_client::SharedClient;
 
 use crate::core::common::new_channel;
-use crate::core::common::LocalStore;
+use crate::stores::*;
 use crate::core::common::LSChange;
-use crate::core::Spec;
 use crate::core::WSChangeChannel;
 
 use super::k8_events_to_actions::k8_events_to_metadata_actions;

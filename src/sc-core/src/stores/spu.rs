@@ -8,6 +8,7 @@ use std::collections::HashSet;
 use std::iter::FromIterator;
 use std::io::Error as IoError;
 use std::io::ErrorKind;
+use std::sync::Arc;
 
 use flv_util::socket_helpers::ServerAddress;
 use flv_types::SpuId;
@@ -16,11 +17,10 @@ use k8_metadata::metadata::K8Obj;
 use k8_metadata::spu::SpuSpec as K8SpuSpec;
 use internal_api::messages::SpuMsg;
 
-use crate::core::common::LocalStore;
-use crate::core::common::KVObject;
-use crate::core::Spec;
-use crate::core::Status;
+use super::*;
 use crate::metadata::default_convert_from_k8;
+
+pub type SharedSpuLocalStore = Arc<SpuLocalStore>;
 
 impl Spec for SpuSpec {
     const LABEL: &'static str = "SPU";

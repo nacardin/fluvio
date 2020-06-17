@@ -18,17 +18,12 @@ use log::{debug, trace};
 use flv_types::log_on_err;
 use flv_metadata::spu::SpuSpec;
 
-use crate::core::spus::SpuLocalStore;
-use crate::core::partitions::PartitionWSAction;
-use crate::core::partitions::PartitionLocalStore;
+use crate::stores::*;
+use crate::controllers::partitions::PartitionWSAction;
 use crate::core::common::LSChange;
 use crate::ScServerError;
 
-use super::TopicActions;
-use super::TopicChangeRequest;
-use super::TopicKV;
-use super::TopicLocalStore;
-use super::TopicWSAction;
+use super::*;
 
 /// Generates Partition Spec from Toic Spec based on replication and partition factor.
 /// For example, if we have Topic with partitions = #1 and replication = #2,

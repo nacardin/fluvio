@@ -9,12 +9,12 @@ use std::io::Error;
 
 use kf_protocol::api::{RequestMessage, ResponseMessage};
 use kf_protocol::api::FlvErrorCode;
-use sc_api::{FlvResponseMessage};
+use sc_api::FlvResponseMessage;
 use sc_api::spu::*;
 use k8_metadata::spu::SpuSpec as K8SpuSpec;
 use k8_metadata_client::MetadataClient;
 
-use crate::core::spus::SpuKV;
+use crate::stores::*;
 use super::PublicContext;
 
 /// Handler for delete custom spu request

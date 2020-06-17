@@ -9,15 +9,15 @@ use std::sync::Arc;
 use k8_metadata_client::SharedClient;
 use k8_metadata_client::MetadataClient;
 
-use crate::conn_manager::ConnManager;
+use crate::controllers::conn_manager::ConnManager;
 
 use crate::core::Context;
 use crate::core::SharedContext;
 use crate::core::WSUpdateService;
 use crate::core::WSChangeDispatcher;
-use crate::core::spus::SpuController;
-use crate::core::topics::TopicController;
-use crate::core::partitions::PartitionController;
+use crate::controllers::spus::SpuController;
+use crate::controllers::topics::TopicController;
+use crate::controllers::partitions::PartitionController;
 use crate::config::ScConfig;
 use crate::services::create_public_server;
 use crate::services::create_internal_server;

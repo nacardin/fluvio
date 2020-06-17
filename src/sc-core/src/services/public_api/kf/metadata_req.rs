@@ -12,9 +12,8 @@ use kf_protocol::api::ErrorCode as KfErrorCode;
 use kf_protocol::api::{RequestMessage, ResponseMessage};
 
 use crate::core::SharedContext;
-use crate::core::spus::SpuKV;
-use crate::core::topics::TopicLocalStore;
-use crate::core::partitions::PartitionLocalStore;
+use crate::stores::*;
+
 
 pub async fn handle_kf_metadata_request(
     request: RequestMessage<KfMetadataRequest>,

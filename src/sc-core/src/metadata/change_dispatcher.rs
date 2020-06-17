@@ -7,9 +7,9 @@ use k8_metadata_client::SharedClient;
 use crate::core::WSChangeDispatcher;
 use crate::core::WSChangeChannel;
 use crate::core::SharedContext;
-use crate::core::spus::K8SpuChangeDispatcher;
-use crate::core::partitions::K8PartitionChangeDispatcher;
-use crate::core::topics::K8TopicChangeDispatcher;
+use crate::controllers::spus::K8SpuChangeDispatcher;
+use crate::controllers::partitions::K8PartitionChangeDispatcher;
+use crate::controllers::topics::K8TopicChangeDispatcher;
 
 pub struct K8AllChangeDispatcher<C> {
     spu: K8SpuChangeDispatcher<C>,

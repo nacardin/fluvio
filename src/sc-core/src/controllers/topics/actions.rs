@@ -7,11 +7,11 @@ use std::fmt;
 
 use flv_util::actions::Actions;
 
-use crate::core::partitions::PartitionWSAction;
-use crate::core::spus::SpuLSChange;
+use crate::controllers::partitions::PartitionWSAction;
+use crate::controllers::spus::SpuLSChange;
 
-use super::TopicWSAction;
-use super::TopicLSChange;
+use super::*;
+
 
 /// Change Request send to Topic
 #[derive(Debug, PartialEq, Clone)]

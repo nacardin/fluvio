@@ -15,8 +15,7 @@ use internal_api::UpdateLrsRequest;
 use kf_service::KfApiServer;
 
 use crate::core::SharedContext;
-use crate::conn_manager::SharedConnManager;
-use crate::conn_manager::SpuConnectionStatusChange;
+use crate::controllers::conn_manager::*;
 
 pub type SharedInternalContext = Arc<InternalContext>;
 

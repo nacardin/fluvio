@@ -17,8 +17,8 @@ use flv_metadata::spu::SpuSpec;
 use flv_types::log_on_err;
 
 use crate::core::WSUpdateService;
-use crate::conn_manager::SharedConnManager;
-use crate::conn_manager::SpuConnectionStatusChange;
+use crate::controllers::conn_manager::SharedConnManager;
+use crate::controllers::conn_manager::SpuConnectionStatusChange;
 use crate::core::SharedContext;
 use crate::core::common::LSChange;
 use crate::core::WSChangeChannel;

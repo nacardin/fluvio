@@ -41,9 +41,7 @@ use internal_api::UpdateAllRequest;
 use kf_protocol::api::Request;
 use kf_protocol::api::RequestMessage;
 
-use crate::core::spus::SharedSpuLocalStore;
-use crate::core::spus::SpuKV;
-use crate::core::partitions::SharedPartitionStore;
+use crate::stores::*;
 use crate::core::SharedContext;
 use crate::ScServerError;
 

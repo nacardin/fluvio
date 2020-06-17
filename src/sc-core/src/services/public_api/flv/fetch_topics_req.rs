@@ -7,8 +7,8 @@ use sc_api::topics::*;
 use flv_metadata::partition::ReplicaKey;
 
 use crate::core::SharedContext;
-use crate::core::topics::TopicLocalStore;
-use crate::core::partitions::PartitionLocalStore;
+use crate::stores::*;
+
 
 pub async fn handle_fetch_topics_request(
     request: RequestMessage<FlvFetchTopicsRequest>,

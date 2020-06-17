@@ -10,8 +10,8 @@ use flv_metadata::spu::SpuSpec;
 use flv_util::actions::Actions;
 
 use crate::core::common::WSAction;
-use crate::conn_manager::SpuConnectionStatusChange;
-use crate::conn_manager::ConnectionRequest;
+use crate::controllers::conn_manager::SpuConnectionStatusChange;
+use crate::controllers::conn_manager::ConnectionRequest;
 
 use super::SpuLSChange;
 

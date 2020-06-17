@@ -17,20 +17,15 @@ use flv_metadata::partition::ElectionPolicy;
 use flv_metadata::partition::ElectionScoring;
 use internal_api::UpdateLrsRequest;
 
-use crate::conn_manager::ConnectionRequest;
-use crate::conn_manager::PartitionSpecChange;
+use crate::controllers::conn_manager::ConnectionRequest;
+use crate::controllers::conn_manager::PartitionSpecChange;
 use crate::core::common::LSChange;
 use crate::core::common::WSAction;
-use crate::core::spus::SharedSpuLocalStore;
-use crate::core::spus::SpuLocalStore;
-use crate::core::spus::SpuKV;
+use crate::stores::*;
 use crate::ScServerError;
 
-use super::PartitionChangeRequest;
-use super::PartitionActions;
-use super::PartitionLocalStore;
-use super::PartitionKV;
-use super::SharedPartitionStore;
+
+use super::*;
 
 type PartitionWSAction = WSAction<PartitionSpec>;
 

@@ -13,14 +13,11 @@ use flv_util::actions::Actions;
 use k8_metadata::metadata::K8List;
 use k8_metadata::metadata::K8Obj;
 use k8_metadata::metadata::K8Watch;
-use k8_metadata_client::TokenStreamResult;
-use k8_metadata_client::MetadataClientError;
+use k8_metadata_client::*;
 
-use crate::core::common::KVObject;
+
+use crate::stores::*;
 use crate::core::common::LSChange;
-use crate::core::common::LocalStore;
-use crate::core::Spec;
-use crate::core::Status;
 use crate::ScServerError;
 
 ///
@@ -261,7 +258,7 @@ pub mod test {
     //use k8_metadata::core::metadata::K8Watch;
     //use k8_metadata::core::Spec as K8Spec;
     use crate::core::common::LSChange;
-    use crate::core::topics::TopicLocalStore;
+    use crate::stores::*;
 
     use super::k8_events_to_metadata_actions;
     use super::k8_event_stream_to_metadata_actions;

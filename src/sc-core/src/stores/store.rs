@@ -5,13 +5,10 @@ use std::borrow::Borrow;
 use std::io::Error as IoError;
 use std::io::ErrorKind;
 use std::collections::btree_map::Values;
-use std::collections::btree_map::Keys;
 
 use flv_util::SimpleConcurrentBTreeMap;
 
-use crate::core::Spec;
-
-use super::KVObject;
+use super::*;
 
 /// Local state in memory
 #[derive(Debug)]

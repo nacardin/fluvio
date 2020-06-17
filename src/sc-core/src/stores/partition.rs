@@ -4,6 +4,7 @@
 //! Partition metadata information on cached in the local Controller.
 //!
 use std::io::Error as IoError;
+use std::sync::Arc;
 
 use log::debug;
 
@@ -15,11 +16,10 @@ use k8_metadata::partition::PartitionSpec as K8PartitionSpec;
 use k8_metadata::metadata::K8Obj;
 use flv_types::SpuId;
 
-use crate::core::common::LocalStore;
-use crate::core::common::KVObject;
-use crate::core::Spec;
-use crate::core::Status;
+use super::*;
 use crate::metadata::default_convert_from_k8;
+
+pub type SharedPartitionStore = Arc<PartitionLocalStore>;
 
 impl Spec for PartitionSpec {
     const LABEL: &'static str = "Partition";
