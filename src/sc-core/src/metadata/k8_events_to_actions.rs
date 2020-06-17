@@ -258,7 +258,7 @@ pub mod test {
     //use k8_metadata::core::metadata::K8Watch;
     //use k8_metadata::core::Spec as K8Spec;
     use crate::core::common::LSChange;
-    use crate::stores::*;
+    use crate::stores::topic::*;
 
     use super::k8_events_to_metadata_actions;
     use super::k8_event_stream_to_metadata_actions;

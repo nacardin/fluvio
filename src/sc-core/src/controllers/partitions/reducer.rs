@@ -21,7 +21,8 @@ use crate::controllers::conn_manager::ConnectionRequest;
 use crate::controllers::conn_manager::PartitionSpecChange;
 use crate::core::common::LSChange;
 use crate::core::common::WSAction;
-use crate::stores::*;
+use crate::stores::partition::*;
+use crate::stores::spu::*;
 use crate::ScServerError;
 
 

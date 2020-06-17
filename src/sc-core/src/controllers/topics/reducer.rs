@@ -18,7 +18,9 @@ use log::{debug, trace};
 use flv_types::log_on_err;
 use flv_metadata::spu::SpuSpec;
 
-use crate::stores::*;
+use crate::stores::topic::*;
+use crate::stores::partition::*;
+use crate::stores::spu::*;
 use crate::controllers::partitions::PartitionWSAction;
 use crate::core::common::LSChange;
 use crate::ScServerError;

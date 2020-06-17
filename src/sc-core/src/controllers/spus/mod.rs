@@ -3,7 +3,6 @@ mod reducer;
 mod controller;
 
 pub use self::actions::*;
-pub use self::reducer::*;
 pub use self::controller::*;
 pub use common::*;
 

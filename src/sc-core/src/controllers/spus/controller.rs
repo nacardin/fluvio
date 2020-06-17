@@ -23,7 +23,7 @@ use crate::core::SharedContext;
 use crate::core::common::LSChange;
 use crate::core::WSChangeChannel;
 
-use super::SpuReducer;
+use super::reducer::SpuReducer;
 use super::SpuChangeRequest;
 
 #[derive(Debug)]

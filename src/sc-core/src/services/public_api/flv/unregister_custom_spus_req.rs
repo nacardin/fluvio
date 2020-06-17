@@ -14,7 +14,7 @@ use sc_api::spu::*;
 use k8_metadata::spu::SpuSpec as K8SpuSpec;
 use k8_metadata_client::MetadataClient;
 
-use crate::stores::*;
+use crate::stores::spu::*;
 use super::PublicContext;
 
 /// Handler for delete custom spu request

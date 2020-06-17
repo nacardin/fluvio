@@ -25,8 +25,8 @@ use sc_api::topics::*;
 use flv_metadata::topic::TopicSpec;
 
 use crate::core::Context;
+use crate::stores::topic::*;
 use crate::stores::*;
-
 
 use super::PublicContext;
 

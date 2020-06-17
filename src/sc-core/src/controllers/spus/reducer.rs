@@ -11,7 +11,7 @@ use crate::core::common::LSChange;
 use crate::core::common::WSAction;
 use crate::controllers::conn_manager::*;
 use crate::ScServerError;
-use crate::stores::*;
+use crate::stores::spu::*;
 
 use super::*;
 

@@ -19,7 +19,7 @@ use crate::core::WSUpdateService;
 use crate::core::WSChangeChannel;
 use crate::core::SharedContext;
 
-use super::TopicReducer;
+use super::reducer::TopicReducer;
 use super::TopicChangeRequest;
 
 #[derive(Debug)]

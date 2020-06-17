@@ -6,6 +6,9 @@
 use std::sync::Arc;
 
 use crate::config::ScConfig;
+use crate::stores::spu::*;
+use crate::stores::partition::*;
+use crate::stores::topic::*;
 use crate::stores::*;
 
 pub type SharedContext = Arc<Context>;

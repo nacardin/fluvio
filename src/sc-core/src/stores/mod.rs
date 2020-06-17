@@ -1,13 +1,10 @@
-mod partition;
-mod spu;
-mod topic;
+pub mod partition;
+pub mod spu;
+pub mod topic;
 mod store;
 mod kv_obj;
 mod kv_context;
 
-pub use partition::*;
-pub use spu::*;
-pub use topic::*;
 pub use store::*;
 pub use kv_obj::*;
 pub use kv_context::*;

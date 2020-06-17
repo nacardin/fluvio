@@ -4,7 +4,6 @@ mod reducer;
 
 pub use self::actions::*;
 pub use self::controller::*;
-pub use reducer::*;
 pub use common::*;
 
 mod common {

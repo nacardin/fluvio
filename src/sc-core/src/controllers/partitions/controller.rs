@@ -24,7 +24,7 @@ use crate::controllers::conn_manager::SharedConnManager;
 use crate::core::WSChangeChannel;
 
 use super::*;
-
+use super::reducer::*;
 
 #[derive(Debug)]
 pub struct PartitionController<W> {

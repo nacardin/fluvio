@@ -29,7 +29,8 @@ use flv_metadata::partition::ReplicaKey;
 use k8_metadata::topic::TopicSpec as K8TopicSpec;
 use k8_metadata::topic::TopicStatus as K8TopicStatus;
 
-
+use super::partition::*;
+use super::spu::*;
 use super::*;
 
 impl Spec for TopicSpec {

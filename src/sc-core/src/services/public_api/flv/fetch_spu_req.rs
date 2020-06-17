@@ -10,7 +10,7 @@ use flv_metadata::spu::SpuType;
 use flv_metadata::spu::SpuResolution;
 
 use crate::core::SharedContext;
-use crate::stores::*;
+use crate::stores::spu::*;
 
 pub async fn handle_fetch_spu_request(
     request: RequestMessage<FlvFetchSpusRequest>,
