@@ -7,14 +7,14 @@ use flv_types::SpuId;
 use kf_socket::KfSink;
 use internal_api::UpdateLrsRequest;
 
-use crate::core::ShareLocalStores;
+use crate::core::SharedContext;
 use crate::conn_manager::SharedConnManager;
 use crate::conn_manager::ConnParams;
 use crate::conn_manager::SpuConnectionStatusChange;
 
 /// Context used by Private API Server
 pub struct InternalContext {
-    pub local_stores: ShareLocalStores,
+    pub local_stores: SharedContext,
     conn_mgr: SharedConnManager,
     conn_status_sender: Sender<SpuConnectionStatusChange>,
     lrs_sender: Sender<UpdateLrsRequest>,
@@ -22,7 +22,7 @@ pub struct InternalContext {
 
 impl InternalContext {
     pub fn new(
-        local_stores: ShareLocalStores,
+        local_stores: SharedContext,
         conn_mgr: SharedConnManager,
         conn_status_sender: Sender<SpuConnectionStatusChange>,
         lrs_sender: Sender<UpdateLrsRequest>,

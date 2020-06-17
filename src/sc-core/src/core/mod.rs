@@ -1,4 +1,4 @@
-mod metadata;
+mod context;
 mod world_store;
 
 pub mod common;
@@ -6,29 +6,31 @@ pub mod partitions;
 pub mod spus;
 pub mod topics;
 
-pub use self::metadata::{LocalStores, ShareLocalStores};
-pub use self::world_store::WSUpdateService;
-pub use self::world_store::WSChangeChannel;
-pub use self::world_store::WSChangeDispatcher;
+pub use self::context::*;
+pub use self::world_store::*;
+pub use metadata::*;
 
-use std::io::Error as IoError;
+mod metadata {
 
-use k8_metadata::metadata::Spec as K8Spec;
-use k8_metadata::metadata::K8Obj;
+    use std::io::Error as IoError;
 
-use crate::core::common::KVObject;
+    use k8_metadata::metadata::Spec as K8Spec;
+    use k8_metadata::metadata::K8Obj;
 
-pub trait Spec: Default + Clone {
-    const LABEL: &'static str;
+    use crate::core::common::KVObject;
 
-    type Status: Status;
-    type K8Spec: K8Spec;
-    type Owner: Spec;
+    pub trait Spec: Default + Clone {
+        const LABEL: &'static str;
 
-    type Key: Ord + Clone + ToString;
+        type Status: Status;
+        type K8Spec: K8Spec;
+        type Owner: Spec;
 
-    // convert kubernetes objects into KV value
-    fn convert_from_k8(k8_obj: K8Obj<Self::K8Spec>) -> Result<KVObject<Self>, IoError>;
+        type Key: Ord + Clone + ToString;
+
+        // convert kubernetes objects into KV value
+        fn convert_from_k8(k8_obj: K8Obj<Self::K8Spec>) -> Result<KVObject<Self>, IoError>;
+    }
+
+    pub trait Status: Default + Clone {}
 }
-
-pub trait Status: Default + Clone {}

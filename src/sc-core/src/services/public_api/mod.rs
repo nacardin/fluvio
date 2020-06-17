@@ -33,9 +33,9 @@ mod context {
     use k8_metadata::metadata::K8List;
     use k8_metadata::metadata::Spec as K8Spec;
 
-    use crate::core::ShareLocalStores;
+    use crate::core::SharedContext;
     use crate::metadata::K8WSUpdateService;
-    use crate::core::LocalStores;
+    use crate::core::Context;
     use super::public_server::PublicService;
 
     pub type SharedPublicContext<C> = Arc<PublicContext<C>>;
@@ -45,7 +45,7 @@ mod context {
 
     /// create public server
     pub fn create_public_server<C>(
-        metadata: ShareLocalStores,
+        metadata: SharedContext,
         k8_ws: K8WSUpdateService<C>,
         namespace: String,
     ) -> PublicApiServer<C>
@@ -68,7 +68,7 @@ mod context {
 
     #[derive(Clone)]
     pub struct PublicContext<C> {
-        pub metadata: ShareLocalStores,
+        pub metadata: SharedContext,
         pub k8_ws: K8WSUpdateService<C>,
         pub namespace: String,
     }
@@ -85,7 +85,7 @@ mod context {
             &self.k8_ws
         }
 
-        pub fn metadata(&self) -> &LocalStores {
+        pub fn metadata(&self) -> &Context {
             &self.metadata
         }
 

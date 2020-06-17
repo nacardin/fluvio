@@ -19,7 +19,7 @@ use flv_types::log_on_err;
 use crate::core::WSUpdateService;
 use crate::conn_manager::SharedConnManager;
 use crate::conn_manager::SpuConnectionStatusChange;
-use crate::core::ShareLocalStores;
+use crate::core::SharedContext;
 use crate::core::common::LSChange;
 use crate::core::WSChangeChannel;
 
@@ -28,7 +28,7 @@ use super::SpuChangeRequest;
 
 #[derive(Debug)]
 pub struct SpuController<W> {
-    local_stores: ShareLocalStores,
+    local_stores: SharedContext,
     conn_manager: SharedConnManager,
     ws_service: W,
     spu_reducer: SpuReducer,
@@ -42,7 +42,7 @@ where
     W: WSUpdateService + Send + Sync + 'static,
 {
     pub fn new(
-        local_stores: ShareLocalStores,
+        local_stores: SharedContext,
         conn_manager: SharedConnManager,
         lc_receiver: WSChangeChannel<SpuSpec>,
         ws_service: W,

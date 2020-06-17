@@ -7,11 +7,11 @@ use kf_protocol::api::{RequestMessage, ResponseMessage};
 use sc_api::metadata::*;
 use kf_protocol::api::FlvErrorCode;
 
-use crate::core::ShareLocalStores;
+use crate::core::SharedContext;
 
 pub async fn handle_topic_composition_request(
     request: RequestMessage<FlvTopicCompositionRequest>,
-    metadata: ShareLocalStores,
+    metadata: SharedContext,
 ) -> Result<ResponseMessage<FlvTopicCompositionResponse>, Error> {
     let mut topic_comp_resp = FlvTopicCompositionResponse::default();
     let mut spu_ids = vec![];

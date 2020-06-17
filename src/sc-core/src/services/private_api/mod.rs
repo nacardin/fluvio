@@ -14,7 +14,7 @@ use internal_api::InternalScRequest;
 use internal_api::UpdateLrsRequest;
 use kf_service::KfApiServer;
 
-use crate::core::ShareLocalStores;
+use crate::core::SharedContext;
 use crate::conn_manager::SharedConnManager;
 use crate::conn_manager::SpuConnectionStatusChange;
 
@@ -25,7 +25,7 @@ pub type InternalApiServer =
 
 // start server
 pub fn create_internal_server(
-    local_stores: ShareLocalStores,
+    local_stores: SharedContext,
     conn_mgr: SharedConnManager,
     conn_status_sender: Sender<SpuConnectionStatusChange>,
     lrs_sender: Sender<UpdateLrsRequest>,

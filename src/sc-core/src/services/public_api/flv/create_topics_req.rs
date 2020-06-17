@@ -24,7 +24,7 @@ use sc_api::topics::*;
 
 use flv_metadata::topic::TopicSpec;
 
-use crate::core::LocalStores;
+use crate::core::Context;
 use crate::core::topics::TopicKV;
 use crate::core::common::KvContext;
 
@@ -76,7 +76,7 @@ where
 fn validate_topic_request(
     name: &str,
     topic_spec: &TopicSpec,
-    metadata: &LocalStores,
+    metadata: &Context,
 ) -> Result<(), FlvResponseMessage> {
     debug!("validating topic: {}", name);
 

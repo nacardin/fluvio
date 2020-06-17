@@ -18,7 +18,7 @@ use flv_future_aio::task::spawn;
 use internal_api::UpdateLrsRequest;
 
 use crate::core::WSUpdateService;
-use crate::core::ShareLocalStores;
+use crate::core::SharedContext;
 use crate::conn_manager::SharedConnManager;
 
 use crate::core::WSChangeChannel;
@@ -28,7 +28,7 @@ use super::PartitionChangeRequest;
 
 #[derive(Debug)]
 pub struct PartitionController<W> {
-    local_stores: ShareLocalStores,
+    local_stores: SharedContext,
     conn_manager: SharedConnManager,
     ws_service: W,
     partition_receiver: WSChangeChannel<PartitionSpec>,
@@ -43,7 +43,7 @@ where
     W: WSUpdateService + Send + Sync + 'static,
 {
     pub fn new(
-        local_stores: ShareLocalStores,
+        local_stores: SharedContext,
         conn_manager: SharedConnManager,
         partition_receiver: WSChangeChannel<PartitionSpec>,
         spu_receiver: WSChangeChannel<SpuSpec>,

@@ -17,14 +17,14 @@ use flv_future_aio::task::spawn;
 
 use crate::core::WSUpdateService;
 use crate::core::WSChangeChannel;
-use crate::core::ShareLocalStores;
+use crate::core::SharedContext;
 
 use super::TopicReducer;
 use super::TopicChangeRequest;
 
 #[derive(Debug)]
 pub struct TopicController<W> {
-    local_stores: ShareLocalStores,
+    local_stores: SharedContext,
     ws_service: W,
     topic_receiver: WSChangeChannel<TopicSpec>,
     spu_receiver: WSChangeChannel<SpuSpec>,
@@ -37,7 +37,7 @@ where
 {
     /// streaming coordinator controller constructor
     pub fn new(
-        local_stores: ShareLocalStores,
+        local_stores: SharedContext,
         spu_receiver: WSChangeChannel<SpuSpec>,
         topic_receiver: WSChangeChannel<TopicSpec>,
         ws_service: W,

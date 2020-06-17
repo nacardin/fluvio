@@ -9,12 +9,12 @@ use sc_api::spu::*;
 use flv_metadata::spu::SpuType;
 use flv_metadata::spu::SpuResolution;
 
-use crate::core::ShareLocalStores;
+use crate::core::SharedContext;
 use crate::core::spus::SpuKV;
 
 pub async fn handle_fetch_spu_request(
     request: RequestMessage<FlvFetchSpusRequest>,
-    metadata: ShareLocalStores,
+    metadata: SharedContext,
 ) -> Result<ResponseMessage<FlvFetchSpusResponse>, Error> {
     // identify query type
     let (query_custom, query_type) = match request.request.req_spu_type {

@@ -22,6 +22,7 @@ use log::error;
 use log::warn;
 use chashmap::WriteGuard;
 
+use flv_future_aio::sync::broadcast::Sender;
 use flv_metadata::spu::SpuSpec;
 use flv_metadata::partition::PartitionSpec;
 use flv_metadata::partition::ReplicaKey;
@@ -41,16 +42,15 @@ use kf_protocol::api::Request;
 use kf_protocol::api::RequestMessage;
 
 use crate::core::spus::SharedSpuLocalStore;
-use crate::core::spus::SpuLocalStore;
 use crate::core::spus::SpuKV;
 use crate::core::partitions::SharedPartitionStore;
-use crate::core::partitions::PartitionLocalStore;
-use crate::core::ShareLocalStores;
+use crate::core::SharedContext;
 use crate::ScServerError;
 
 use super::ConnectionRequest;
 use super::SpuSpecChange;
 use super::PartitionSpecChange;
+use super::ClientNotification;
 
 // ---------------------------------------
 // Counters
@@ -89,31 +89,34 @@ pub struct ConnManager {
     spu_store: SharedSpuLocalStore,
     partition_store: SharedPartitionStore,
     sinks: SinkPool<SpuId>,
+    client_sender: Sender<ClientNotification>
 }
 
-impl Default for ConnManager {
-    fn default() -> Self {
-        Self::new(
-            SpuLocalStore::new_shared(),
-            PartitionLocalStore::new_shared(),
-        )
-    }
-}
+
 
 impl ConnManager {
-    pub fn new_with_local_stores(local_stores: ShareLocalStores) -> Self {
+    pub fn new_with_local_stores(
+        local_stores: SharedContext,
+        client_sender: Sender<ClientNotification>
+    ) -> Self {
         Self::new(
             local_stores.spus().clone(),
             local_stores.partitions().clone(),
+            client_sender
         )
     }
 
     /// internal connection manager constructor
-    pub fn new(spu_store: SharedSpuLocalStore, partition_store: SharedPartitionStore) -> Self {
+    pub fn new(
+        spu_store: SharedSpuLocalStore, 
+        partition_store: SharedPartitionStore,
+        client_sender: Sender<ClientNotification>
+    ) -> Self {
         ConnManager {
             spu_store,
             partition_store,
             sinks: SinkPool::new(),
+            client_sender
         }
     }
 
@@ -149,22 +152,25 @@ impl ConnManager {
 
         for request in requests.into_iter() {
             match request {
-                ConnectionRequest::Spu(spec_changes) => match spec_changes {
-                    SpuSpecChange::Add(new_spu) => {
-                        self.add_spu(new_spu).await;
+                ConnectionRequest::Spu(spec_changes) => {
+                    match spec_changes.clone() {
+                        SpuSpecChange::Add(new_spu) => {
+                            self.add_spu(new_spu).await;
+                        }
+                        SpuSpecChange::Mod(new_spu, old_spu) => {
+                            self.update_spu(new_spu, old_spu).await;
+                        }
+                        SpuSpecChange::Remove(spu) => {
+                            self.remove_spu(spu).await;
+                        }
                     }
-                    SpuSpecChange::Mod(new_spu, old_spu) => {
-                        self.update_spu(new_spu, old_spu).await;
-                    }
-                    SpuSpecChange::Remove(spu) => {
-                        self.remove_spu(spu).await;
-                    }
+                    self.send_client_notification(ClientNotification::SPU(spec_changes));
                 },
                 ConnectionRequest::RefreshSpu(spu_id) => {
                     log_on_err!(self.refresh_spu(spu_id).await);
                 }
                 ConnectionRequest::Partition(partition_req) => {
-                    match partition_req {
+                    match partition_req.clone() {
                         PartitionSpecChange::Add(key, spec) => {
                             self.refresh_partition(key, spec).await;
                         }
@@ -174,6 +180,7 @@ impl ConnManager {
                         }
                         _ => {}
                     }
+                    self.send_client_notification(ClientNotification::Partition(partition_req))
                 }
             }
         }
@@ -381,6 +388,12 @@ impl ConnManager {
             }
         } else {
             Ok(false)
+        }
+    }
+
+    fn send_client_notification(&self, msg: ClientNotification) {
+        if let Err(err) = self.client_sender.send(msg) {
+            debug!("no client receivers {:#?}",err);
         }
     }
 }

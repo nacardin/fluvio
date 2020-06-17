@@ -34,14 +34,14 @@ impl std::fmt::Display for SpuConnectionStatusChange {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq,Clone)]
 pub enum SpuSpecChange {
     Add(SpuSpec),          // New Spec
     Mod(SpuSpec, SpuSpec), // Update SPU spec (new,old)
     Remove(SpuSpec),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq,Clone)]
 pub enum PartitionSpecChange {
     Add(ReplicaKey, PartitionSpec),
     Mod(ReplicaKey, PartitionSpec, PartitionSpec),
@@ -54,4 +54,11 @@ pub enum ConnectionRequest {
     Spu(SpuSpecChange),
     Partition(PartitionSpecChange),
     RefreshSpu(SpuId), // Refresh SPU with it' metadata including SPU and Replica
+}
+
+/// notify client of changes
+#[derive(Debug)]
+pub enum ClientNotification {
+    SPU(SpuSpecChange),
+    Partition(PartitionSpecChange)
 }

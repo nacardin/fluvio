@@ -6,13 +6,13 @@ use kf_protocol::api::{RequestMessage, ResponseMessage};
 use sc_api::topics::*;
 use flv_metadata::partition::ReplicaKey;
 
-use crate::core::ShareLocalStores;
+use crate::core::SharedContext;
 use crate::core::topics::TopicLocalStore;
 use crate::core::partitions::PartitionLocalStore;
 
 pub async fn handle_fetch_topics_request(
     request: RequestMessage<FlvFetchTopicsRequest>,
-    metadata: ShareLocalStores,
+    metadata: SharedContext,
 ) -> Result<ResponseMessage<FlvFetchTopicsResponse>, Error> {
     // is names is provided, return list, otherwise generate all names
     let topic_names = match &request.request.names {

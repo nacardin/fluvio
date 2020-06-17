@@ -15,7 +15,7 @@ use flv_metadata::spu::{SpuSpec, Endpoint, SpuType, IngressPort};
 
 use sc_api::FlvResponseMessage;
 use sc_api::spu::*;
-use crate::core::LocalStores;
+use crate::core::Context;
 use crate::core::spus::SpuKV;
 use crate::core::common::KvContext;
 
@@ -62,7 +62,7 @@ where
 /// Validate custom_spu requests (one at a time)
 fn validate_custom_spu_request(
     custom_spu_req: &FlvRegisterCustomSpuRequest,
-    metadata: &LocalStores,
+    metadata: &Context,
 ) -> Result<(), FlvResponseMessage> {
     let spu_id = &custom_spu_req.id;
     let spu_name = &custom_spu_req.name;

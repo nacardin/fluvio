@@ -11,8 +11,8 @@ use k8_metadata_client::MetadataClient;
 
 use crate::conn_manager::ConnManager;
 
-use crate::core::LocalStores;
-use crate::core::ShareLocalStores;
+use crate::core::Context;
+use crate::core::SharedContext;
 use crate::core::WSUpdateService;
 use crate::core::WSChangeDispatcher;
 use crate::core::spus::SpuController;
@@ -29,13 +29,13 @@ use crate::metadata::K8WSUpdateService;
 pub async fn start_main_loop<C>(
     sc_config: ScConfig,
     metadata_client: SharedClient<C>,
-) -> (K8WSUpdateService<C>, ShareLocalStores)
+) -> (K8WSUpdateService<C>, SharedContext)
 where
     C: MetadataClient + 'static,
     K8WSUpdateService<C>: Clone,
 {
     let namespace = sc_config.namespace.clone();
-    let local_stores = LocalStores::shared_metadata(sc_config);
+    let local_stores = Context::shared_metadata(sc_config);
     let k8_ws_service = K8WSUpdateService::new(metadata_client.clone());
     let mut k8_dispatcher = K8AllChangeDispatcher::new(
         metadata_client.clone(),
@@ -56,10 +56,10 @@ where
 
 /// essential core controllers
 pub fn create_core_services<W, D>(
-    local_stores: ShareLocalStores,
+    local_stores: SharedContext,
     ws_service: W,
     ws_dispatcher: &mut D,
-) -> (ShareLocalStores, InternalApiServer)
+) -> (SharedContext, InternalApiServer)
 where
     W: WSUpdateService + Clone + Sync + Send + 'static,
     D: WSChangeDispatcher,

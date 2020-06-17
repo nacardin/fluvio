@@ -11,14 +11,14 @@ use kf_protocol::message::metadata::MetadataResponsePartition;
 use kf_protocol::api::ErrorCode as KfErrorCode;
 use kf_protocol::api::{RequestMessage, ResponseMessage};
 
-use crate::core::ShareLocalStores;
+use crate::core::SharedContext;
 use crate::core::spus::SpuKV;
 use crate::core::topics::TopicLocalStore;
 use crate::core::partitions::PartitionLocalStore;
 
 pub async fn handle_kf_metadata_request(
     request: RequestMessage<KfMetadataRequest>,
-    metadata: ShareLocalStores,
+    metadata: SharedContext,
 ) -> Result<ResponseMessage<KfMetadataResponse>, Error> {
     // generate broker metadata (from online spus)
     let spus = metadata.spus().online_spus();

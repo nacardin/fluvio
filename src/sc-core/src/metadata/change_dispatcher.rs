@@ -6,7 +6,7 @@ use k8_metadata_client::SharedClient;
 
 use crate::core::WSChangeDispatcher;
 use crate::core::WSChangeChannel;
-use crate::core::ShareLocalStores;
+use crate::core::SharedContext;
 use crate::core::spus::K8SpuChangeDispatcher;
 use crate::core::partitions::K8PartitionChangeDispatcher;
 use crate::core::topics::K8TopicChangeDispatcher;
@@ -21,7 +21,7 @@ impl<C> K8AllChangeDispatcher<C>
 where
     C: MetadataClient + 'static,
 {
-    pub fn new(client: SharedClient<C>, namespace: String, local_stores: ShareLocalStores) -> Self {
+    pub fn new(client: SharedClient<C>, namespace: String, local_stores: SharedContext) -> Self {
         Self {
             spu: K8SpuChangeDispatcher::new(
                 namespace.clone(),
