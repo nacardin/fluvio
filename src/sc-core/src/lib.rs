@@ -1,15 +1,16 @@
 #![feature(trace_macros, generators, specialization)]
 #![recursion_limit = "256"]
 
-mod config;
-mod core;
+pub mod config;
+pub mod core;
 mod controllers;
-mod metadata;
+pub mod metadata;
 mod error;
 mod init;
 mod services;
-mod stores;
+pub mod stores;
+
 
 use init::create_core_services;
 use self::error::ScServerError;
-use init::start_main_loop;
+pub use init::start_main_loop;

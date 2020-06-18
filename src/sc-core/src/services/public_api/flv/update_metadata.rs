@@ -1,10 +1,11 @@
 use futures::io::*;
+use async_trait::async_trait;
 
 use kf_protocol::api::RequestMessage;
 use sc_api::metadata::*;
 use kf_socket::InnerExclusiveKfSink;
 use flv_future_aio::zero_copy::ZeroCopyWrite;
-use flv_future_aio::task::spawn;
+use flv_future_aio::actor::AsyncDispatcher;
 
 use crate::core::Context;
 
@@ -32,14 +33,18 @@ impl<S>  ClientMetadataController<S>
         let controller = Self {
             response_sink
         };
+
+        controller.run();
             
     }
+}
 
-    pub fn run(self) {
+#[async_trait]
+impl<S> AsyncDispatcher for ClientMetadataController<S>
+    where S: AsyncWrite + AsyncRead + Unpin + Send + ZeroCopyWrite + 'static, 
+{
 
-    }
-
-
+   
     async fn dispatch_loop(mut self) {
         
     }

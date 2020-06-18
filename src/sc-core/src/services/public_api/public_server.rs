@@ -80,7 +80,7 @@ where
    
             ScPublicRequest::KfMetadataRequest(request) => call_service!(
                 request,
-                handle_kf_metadata_request(request, ctx.metadata.clone()),
+                handle_kf_metadata_request(request, ctx.shared_context.clone()),
                 shared_sink,
                 "metadata request handler"
             ),
@@ -99,13 +99,13 @@ where
             ),
             ScPublicRequest::FlvFetchTopicsRequest(request) => call_service!(
                 request,
-                handle_fetch_topics_request(request, ctx.metadata.clone()),
+                handle_fetch_topics_request(request, ctx.shared_context.clone()),
                 shared_sink,
                 "fetch topic handler"
             ),
             ScPublicRequest::FlvTopicCompositionRequest(request) => call_service!(
                 request,
-                handle_topic_composition_request(request, ctx.metadata.clone()),
+                handle_topic_composition_request(request, ctx.shared_context.clone()),
                 shared_sink,
                 "topic metadata handler"
             ),
@@ -125,7 +125,7 @@ where
             ),
             ScPublicRequest::FlvFetchSpusRequest(request) => call_service!(
                 request,
-                handle_fetch_spu_request(request, ctx.metadata.clone()),
+                handle_fetch_spu_request(request, ctx.shared_context.clone()),
                 shared_sink,
                 "fetch spus handler"
             ),
@@ -151,7 +151,7 @@ where
             ScPublicRequest::UpdateMetadataRequest(request) => ClientMetadataController::handle_metadata_update(
                 request,
                 shared_sink.clone(), 
-                &ctx),
+                &ctx.shared_context),
             _ => {
                 log::warn!("not actual protocol");
             }

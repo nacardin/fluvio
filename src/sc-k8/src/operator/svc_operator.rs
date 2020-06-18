@@ -15,7 +15,7 @@ use k8_client::metadata::MetadataClient;
 use flv_metadata::spu::IngressAddr;
 
 use flv_sc_core::metadata::K8WSUpdateService;
-use flv_sc_core::core::spus::SharedSpuLocalStore;
+use flv_sc_core::stores::spu::SharedSpuLocalStore;
 use crate::ScK8Error;
 
 /// An operator to deal with Svc

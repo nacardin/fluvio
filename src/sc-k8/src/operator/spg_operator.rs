@@ -31,7 +31,7 @@ use k8_client::SharedK8Client;
 use flv_types::defaults::SPU_PUBLIC_PORT;
 use flv_types::defaults::SPU_DEFAULT_NAME;
 use flv_types::SpuId;
-use flv_sc_core::core::spus::SharedSpuLocalStore;
+use flv_sc_core::stores::spu::SharedSpuLocalStore;
 
 use crate::cli::TlsConfig;
 use super::convert_cluster_to_statefulset;

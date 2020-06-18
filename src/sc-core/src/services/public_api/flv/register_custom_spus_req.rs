@@ -43,7 +43,7 @@ where
         );
 
         // validate custom-spu request
-        if let Err(err_msg) = validate_custom_spu_request(&custom_spu_req, ctx.metadata()) {
+        if let Err(err_msg) = validate_custom_spu_request(&custom_spu_req, ctx.context()) {
             results.push(err_msg);
             continue;
         }

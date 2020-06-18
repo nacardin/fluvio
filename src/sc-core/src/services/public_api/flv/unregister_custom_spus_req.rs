@@ -35,7 +35,7 @@ where
                 debug!("api request: delete custom-spu with name '{}'", spu_name);
 
                 // spu-name must exist
-                if let Some(spu) = &ctx.metadata().spus().spu(spu_name) {
+                if let Some(spu) = &ctx.context().spus().spu(spu_name) {
                     unregister_custom_spu(ctx, spu).await?
                 } else {
                     // spu does not exist
@@ -50,7 +50,7 @@ where
                 debug!("api request: delete custom-spu with id '{}'", spu_id);
 
                 // spu-id must exist
-                if let Some(spu) = &ctx.metadata().spus().get_by_id(spu_id) {
+                if let Some(spu) = &ctx.context().spus().get_by_id(spu_id) {
                     unregister_custom_spu(ctx, spu).await?
                 } else {
                     // spu does not exist

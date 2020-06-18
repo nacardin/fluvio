@@ -51,21 +51,6 @@ use super::SpuSpecChange;
 use super::PartitionSpecChange;
 use super::ClientNotification;
 
-// ---------------------------------------
-// Counters
-// ---------------------------------------
-
-#[derive(Debug, PartialEq, PartialOrd, Eq, Ord, Clone)]
-enum ConnCntr {
-    ReqOk = 0,
-    ReqFailed = 1,
-    TryConnectOk = 2,
-    TryConnectFailed = 3,
-    SendMsgOk = 4,
-    SendMsgFailed = 5,
-    InternalErr = 6,
-}
-
 
 /// Discovered Connection Parameter such as source IP address and port
 #[derive(Debug, Clone)]

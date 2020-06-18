@@ -51,7 +51,7 @@ where
         debug!("api request: create topic '{}'", name);
 
         // validate topic request
-        if let Err(validation_message) = validate_topic_request(&name, &topic_spec, ctx.metadata())
+        if let Err(validation_message) = validate_topic_request(&name, &topic_spec, ctx.context())
         {
             topic_results.push(validation_message);
             continue;

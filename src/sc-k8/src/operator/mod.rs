@@ -4,7 +4,7 @@ mod spg_group;
 mod svc_operator;
 
 use flv_sc_core::metadata::K8WSUpdateService;
-use flv_sc_core::core::spus::SharedSpuLocalStore;
+use flv_sc_core::stores::spu::SharedSpuLocalStore;
 use k8_client::K8Client;
 
 use spg_operator::SpgOperator;

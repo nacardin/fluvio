@@ -45,20 +45,20 @@ mod context {
 
     /// create public server
     pub fn create_public_server<C>(
-        metadata: SharedContext,
+        shared_context: SharedContext,
         k8_ws: K8WSUpdateService<C>,
         namespace: String,
     ) -> PublicApiServer<C>
     where
         C: MetadataClient,
     {
-        let addr = metadata.config().public_endpoint.clone();
+        let addr = shared_context.config().public_endpoint.clone();
         info!("start public api service at: {}", addr);
 
         KfApiServer::new(
             addr,
             Arc::new(PublicContext {
-                metadata,
+                shared_context,
                 k8_ws,
                 namespace,
             }),
@@ -68,7 +68,7 @@ mod context {
 
     #[derive(Clone)]
     pub struct PublicContext<C> {
-        pub metadata: SharedContext,
+        pub shared_context: SharedContext,
         pub k8_ws: K8WSUpdateService<C>,
         pub namespace: String,
     }
@@ -85,8 +85,8 @@ mod context {
             &self.k8_ws
         }
 
-        pub fn metadata(&self) -> &Context {
-            &self.metadata
+        pub fn context(&self) -> &Context {
+            &self.shared_context
         }
 
         /// Create input metadata for our context
