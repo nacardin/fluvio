@@ -49,7 +49,7 @@ pub enum PartitionSpecChange {
 }
 
 /// Request to made to Connection Manager
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ConnectionRequest {
     Spu(SpuSpecChange),
     Partition(PartitionSpecChange),
@@ -57,7 +57,7 @@ pub enum ConnectionRequest {
 }
 
 /// notify client of changes
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub enum ClientNotification {
     SPU(SpuSpecChange),
     Partition(PartitionSpecChange)

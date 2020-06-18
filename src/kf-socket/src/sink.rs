@@ -158,11 +158,18 @@ impl<S> AsRawFd for InnerKfSink<S> {
 use async_lock::Lock;
 
 /// Multi-thread aware Sink.  Only allow sending request one a time.
-pub struct InnerExclusiveKfSink<S>(Lock<InnerKfSink<S>>);
+pub struct InnerExclusiveKfSink<S> {
+    inner: Lock<InnerKfSink<S>>,
+    fd: RawFd
+}
 
 impl<S> InnerExclusiveKfSink<S> {
     pub fn new(sink: InnerKfSink<S>) -> Self {
-        InnerExclusiveKfSink(Lock::new(sink))
+        let fd = sink.id();
+        InnerExclusiveKfSink {
+            inner: Lock::new(sink),
+            fd
+        }
     }
 }
 
@@ -175,7 +182,7 @@ where
     where
         RequestMessage<R>: KfEncoder + Default + Debug,
     {
-        let mut inner_sink = self.0.lock().await;
+        let mut inner_sink = self.inner.lock().await;
         inner_sink.send_request(req_msg).await
     }
 
@@ -187,14 +194,24 @@ where
     where
         ResponseMessage<P>: KfEncoder + Default + Debug,
     {
-        let mut inner_sink = self.0.lock().await;
+        let mut inner_sink = self.inner.lock().await;
         inner_sink.send_response(resp_msg, version).await
     }
+
+
+    pub fn id(&self) -> RawFd {
+        self.fd
+    }
+
+    
 }
 
 impl<S> Clone for InnerExclusiveKfSink<S> {
     fn clone(&self) -> Self {
-        Self(self.0.clone())
+        Self {
+            inner: self.inner.clone(),
+            fd: self.fd.clone()
+        }
     }
 }
 

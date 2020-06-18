@@ -844,6 +844,7 @@ dependencies = [
  "rand 0.7.3",
  "regex",
  "serde",
+ "tokio",
  "toml",
  "utils",
 ]
