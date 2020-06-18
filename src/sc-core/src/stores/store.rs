@@ -160,6 +160,7 @@ where
         self.inner_store().read().values().cloned().collect()
     }
 
+    /// copy of all specs
     pub fn all_specs(&self) -> Vec<S> {
         self.inner_store()
             .read()

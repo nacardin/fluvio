@@ -1,25 +1,20 @@
 //!
 //! # Partition Spec
 //!
-//! Partition Spec metadata information cached locally.
 //!
 use flv_types::SpuId;
 use kf_protocol::derive::{Decode, Encode};
 use k8_metadata::partition::PartitionSpec as K8PartitionSpec;
 
-// -----------------------------------
-// Data Structures
-// -----------------------------------
-
+/// Spec for Partition
+/// Each partition has replicas spread among SPU
+/// one of replica is leader which is duplicated in the leader field
 #[derive(Decode, Encode, Debug, Clone, PartialEq)]
 pub struct PartitionSpec {
     pub leader: SpuId,
     pub replicas: Vec<SpuId>,
 }
 
-// -----------------------------------
-// Encode - from K8 PartitionSpec
-// -----------------------------------
 
 impl From<K8PartitionSpec> for PartitionSpec {
     fn from(kv_spec: K8PartitionSpec) -> Self {
@@ -39,9 +34,6 @@ impl From<PartitionSpec> for K8PartitionSpec {
     }
 }
 
-// -----------------------------------
-// Default
-// -----------------------------------
 
 impl std::default::Default for PartitionSpec {
     fn default() -> Self {
@@ -52,9 +44,7 @@ impl std::default::Default for PartitionSpec {
     }
 }
 
-// -----------------------------------
-// Implementation
-// -----------------------------------
+
 
 impl PartitionSpec {
     pub fn new(leader: SpuId, replicas: Vec<SpuId>) -> Self {

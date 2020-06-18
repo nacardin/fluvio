@@ -19,242 +19,6 @@ use kf_protocol::{Decoder, Encoder};
 use k8_metadata::topic::TopicSpec as K8TopicSpec;
 use k8_metadata::topic::Partition as K8Partition;
 
-// -----------------------------------
-// Data Structures
-// -----------------------------------
-
-#[derive(Debug, Clone, Default, PartialEq, Encode, Decode)]
-pub struct TopicReplicaParam {
-    pub partitions: PartitionCount,
-    pub replication_factor: ReplicationFactor,
-    pub ignore_rack_assignment: IgnoreRackAssignment,
-}
-
-impl TopicReplicaParam {
-    pub fn new(
-        partitions: PartitionCount,
-        replication_factor: ReplicationFactor,
-        ignore_rack_assignment: IgnoreRackAssignment,
-    ) -> Self {
-        Self {
-            partitions,
-            replication_factor,
-            ignore_rack_assignment,
-        }
-    }
-}
-
-impl From<(PartitionCount, ReplicationFactor, IgnoreRackAssignment)> for TopicReplicaParam {
-    fn from(value: (PartitionCount, ReplicationFactor, IgnoreRackAssignment)) -> Self {
-        let (partitions, replication_factor, ignore_rack) = value;
-        Self::new(partitions, replication_factor, ignore_rack)
-    }
-}
-
-impl std::fmt::Display for TopicReplicaParam {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(
-            f,
-            "replica param::(p:{}, r:{})",
-            self.partitions, self.replication_factor
-        )
-    }
-}
-
-/// Hack: field instead of new type to get around encode and decode limitations
-#[derive(Debug, Default, Clone, PartialEq, Encode, Decode)]
-pub struct PartitionMaps {
-    maps: Vec<PartitionMap>,
-}
-
-impl From<Vec<PartitionMap>> for PartitionMaps {
-    fn from(maps: Vec<PartitionMap>) -> Self {
-        Self { maps }
-    }
-}
-
-impl From<Vec<(i32, Vec<i32>)>> for PartitionMaps {
-    fn from(partition_vec: Vec<(i32, Vec<i32>)>) -> Self {
-        let maps: Vec<PartitionMap> = partition_vec
-            .into_iter()
-            .map(|(id, replicas)| PartitionMap { id, replicas })
-            .collect();
-        maps.into()
-    }
-}
-
-impl std::fmt::Display for PartitionMaps {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "partiton map:{})", self.maps.len())
-    }
-}
-
-impl PartitionMaps {
-    pub fn maps(&self) -> &Vec<PartitionMap> {
-        &self.maps
-    }
-
-    pub fn maps_owned(self) -> Vec<PartitionMap> {
-        self.maps
-    }
-
-    fn partition_count(&self) -> Option<PartitionCount> {
-        // compute partitions form replica map
-        let partitions = self.maps.len() as PartitionCount;
-        if partitions > 0 {
-            Some(partitions)
-        } else {
-            None
-        }
-    }
-
-    fn replication_factor(&self) -> Option<ReplicationFactor> {
-        // compute replication form replica map
-        if self.maps.len() > 0 {
-            Some(self.maps[0].replicas.len() as i32)
-        } else {
-            None
-        }
-    }
-
-    fn partition_map_string(&self) -> Option<String> {
-        let mut res = String::new();
-        for partition in &self.maps {
-            res.push_str(&format!("{}:{:?}, ", partition.id, partition.replicas));
-        }
-        if res.len() > 0 {
-            res.truncate(res.len() - 2);
-        }
-        Some(res)
-    }
-
-    // -----------------------------------
-    // Partition Map - Operations
-    // -----------------------------------
-
-    /// Generate a vector with all spu ids represented by all partitions (no duplicates)
-    pub fn unique_spus_in_partition_map(&self) -> Vec<SpuId> {
-        let mut spu_ids: Vec<SpuId> = vec![];
-
-        for partition in &self.maps {
-            for spu in &partition.replicas {
-                if !spu_ids.contains(spu) {
-                    spu_ids.push(spu.clone());
-                }
-            }
-        }
-
-        spu_ids
-    }
-
-    /// Convert partition map into replica map
-    pub fn partition_map_to_replica_map(&self) -> ReplicaMap {
-        let mut replica_map: ReplicaMap = BTreeMap::new();
-
-        for partition in &self.maps {
-            replica_map.insert(partition.id, partition.replicas.clone());
-        }
-
-        replica_map
-    }
-
-    /// Validate partition map for assigned topics
-    pub fn valid_partition_map(&self) -> Result<(), Error> {
-        // there must be at least one partition in the partition map
-        if self.maps.len() == 0 {
-            return Err(Error::new(
-                ErrorKind::InvalidInput,
-                "no assigned partitions found",
-            ));
-        }
-
-        // assigned partitions must meet the following criteria
-        //  ids:
-        //      - must start with 0
-        //      - must be in sequence, without gaps
-        //  replicas:
-        //      - must have at least one element
-        //      - all replicas must have the same number of elements.
-        //      - all elements must be unique
-        //      - all elements must be positive integers
-        let mut id = 0;
-        let mut replica_len = 0;
-        for partition in &self.maps {
-            if id == 0 {
-                // id must be 0
-                if partition.id != id {
-                    return Err(Error::new(
-                        ErrorKind::InvalidInput,
-                        "assigned partitions must start with id 0",
-                    ));
-                }
-
-                // replica must have elements
-                replica_len = partition.replicas.len();
-                if replica_len == 0 {
-                    return Err(Error::new(
-                        ErrorKind::InvalidInput,
-                        "assigned replicas must have at least one spu id",
-                    ));
-                }
-            } else {
-                // id must be in sequence
-                if partition.id != id {
-                    return Err(Error::new(
-                        ErrorKind::InvalidInput,
-                        "assigned partition ids must be in sequence and without gaps",
-                    ));
-                }
-
-                // replica must have same number of elements as previous one
-                if partition.replicas.len() != replica_len {
-                    return Err(Error::new(
-                        ErrorKind::InvalidInput,
-                        format!(
-                            "all assigned replicas must have the same number of spu ids: {}",
-                            replica_len
-                        ),
-                    ));
-                }
-            }
-
-            // all replica ids must be unique
-            let mut sorted_replicas = partition.replicas.clone();
-            sorted_replicas.sort();
-            let unique_count = 1 + sorted_replicas
-                .windows(2)
-                .filter(|pair| pair[0] != pair[1])
-                .count();
-            if partition.replicas.len() != unique_count {
-                return Err(Error::new(
-                    ErrorKind::InvalidInput,
-                    format!(
-                        "duplicate spu ids found in assigned partition with id: {}",
-                        id
-                    ),
-                ));
-            }
-
-            // all ids must be positive numbers
-            for spu_id in &partition.replicas {
-                if *spu_id < 0 {
-                    return Err(Error::new(
-                        ErrorKind::InvalidInput,
-                        format!(
-                            "invalid spu id: {} in assigned partition with id: {}",
-                            spu_id, id
-                        ),
-                    ));
-                }
-            }
-
-            // increment id for next iteration
-            id += 1;
-        }
-
-        Ok(())
-    }
-}
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum TopicSpec {
@@ -498,6 +262,244 @@ impl From<TopicSpec> for K8TopicSpec {
         }
     }
 }
+
+
+
+/// Topic param
+#[derive(Debug, Clone, Default, PartialEq, Encode, Decode)]
+pub struct TopicReplicaParam {
+    pub partitions: PartitionCount,
+    pub replication_factor: ReplicationFactor,
+    pub ignore_rack_assignment: IgnoreRackAssignment,
+}
+
+impl TopicReplicaParam {
+    pub fn new(
+        partitions: PartitionCount,
+        replication_factor: ReplicationFactor,
+        ignore_rack_assignment: IgnoreRackAssignment,
+    ) -> Self {
+        Self {
+            partitions,
+            replication_factor,
+            ignore_rack_assignment,
+        }
+    }
+}
+
+impl From<(PartitionCount, ReplicationFactor, IgnoreRackAssignment)> for TopicReplicaParam {
+    fn from(value: (PartitionCount, ReplicationFactor, IgnoreRackAssignment)) -> Self {
+        let (partitions, replication_factor, ignore_rack) = value;
+        Self::new(partitions, replication_factor, ignore_rack)
+    }
+}
+
+impl std::fmt::Display for TopicReplicaParam {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(
+            f,
+            "replica param::(p:{}, r:{})",
+            self.partitions, self.replication_factor
+        )
+    }
+}
+
+/// Hack: field instead of new type to get around encode and decode limitations
+#[derive(Debug, Default, Clone, PartialEq, Encode, Decode)]
+pub struct PartitionMaps {
+    maps: Vec<PartitionMap>,
+}
+
+impl From<Vec<PartitionMap>> for PartitionMaps {
+    fn from(maps: Vec<PartitionMap>) -> Self {
+        Self { maps }
+    }
+}
+
+impl From<Vec<(i32, Vec<i32>)>> for PartitionMaps {
+    fn from(partition_vec: Vec<(i32, Vec<i32>)>) -> Self {
+        let maps: Vec<PartitionMap> = partition_vec
+            .into_iter()
+            .map(|(id, replicas)| PartitionMap { id, replicas })
+            .collect();
+        maps.into()
+    }
+}
+
+impl std::fmt::Display for PartitionMaps {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "partiton map:{})", self.maps.len())
+    }
+}
+
+impl PartitionMaps {
+    pub fn maps(&self) -> &Vec<PartitionMap> {
+        &self.maps
+    }
+
+    pub fn maps_owned(self) -> Vec<PartitionMap> {
+        self.maps
+    }
+
+    fn partition_count(&self) -> Option<PartitionCount> {
+        // compute partitions form replica map
+        let partitions = self.maps.len() as PartitionCount;
+        if partitions > 0 {
+            Some(partitions)
+        } else {
+            None
+        }
+    }
+
+    fn replication_factor(&self) -> Option<ReplicationFactor> {
+        // compute replication form replica map
+        if self.maps.len() > 0 {
+            Some(self.maps[0].replicas.len() as i32)
+        } else {
+            None
+        }
+    }
+
+    fn partition_map_string(&self) -> Option<String> {
+        let mut res = String::new();
+        for partition in &self.maps {
+            res.push_str(&format!("{}:{:?}, ", partition.id, partition.replicas));
+        }
+        if res.len() > 0 {
+            res.truncate(res.len() - 2);
+        }
+        Some(res)
+    }
+
+    // -----------------------------------
+    // Partition Map - Operations
+    // -----------------------------------
+
+    /// Generate a vector with all spu ids represented by all partitions (no duplicates)
+    pub fn unique_spus_in_partition_map(&self) -> Vec<SpuId> {
+        let mut spu_ids: Vec<SpuId> = vec![];
+
+        for partition in &self.maps {
+            for spu in &partition.replicas {
+                if !spu_ids.contains(spu) {
+                    spu_ids.push(spu.clone());
+                }
+            }
+        }
+
+        spu_ids
+    }
+
+    /// Convert partition map into replica map
+    pub fn partition_map_to_replica_map(&self) -> ReplicaMap {
+        let mut replica_map: ReplicaMap = BTreeMap::new();
+
+        for partition in &self.maps {
+            replica_map.insert(partition.id, partition.replicas.clone());
+        }
+
+        replica_map
+    }
+
+    /// Validate partition map for assigned topics
+    pub fn valid_partition_map(&self) -> Result<(), Error> {
+        // there must be at least one partition in the partition map
+        if self.maps.len() == 0 {
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "no assigned partitions found",
+            ));
+        }
+
+        // assigned partitions must meet the following criteria
+        //  ids:
+        //      - must start with 0
+        //      - must be in sequence, without gaps
+        //  replicas:
+        //      - must have at least one element
+        //      - all replicas must have the same number of elements.
+        //      - all elements must be unique
+        //      - all elements must be positive integers
+        let mut id = 0;
+        let mut replica_len = 0;
+        for partition in &self.maps {
+            if id == 0 {
+                // id must be 0
+                if partition.id != id {
+                    return Err(Error::new(
+                        ErrorKind::InvalidInput,
+                        "assigned partitions must start with id 0",
+                    ));
+                }
+
+                // replica must have elements
+                replica_len = partition.replicas.len();
+                if replica_len == 0 {
+                    return Err(Error::new(
+                        ErrorKind::InvalidInput,
+                        "assigned replicas must have at least one spu id",
+                    ));
+                }
+            } else {
+                // id must be in sequence
+                if partition.id != id {
+                    return Err(Error::new(
+                        ErrorKind::InvalidInput,
+                        "assigned partition ids must be in sequence and without gaps",
+                    ));
+                }
+
+                // replica must have same number of elements as previous one
+                if partition.replicas.len() != replica_len {
+                    return Err(Error::new(
+                        ErrorKind::InvalidInput,
+                        format!(
+                            "all assigned replicas must have the same number of spu ids: {}",
+                            replica_len
+                        ),
+                    ));
+                }
+            }
+
+            // all replica ids must be unique
+            let mut sorted_replicas = partition.replicas.clone();
+            sorted_replicas.sort();
+            let unique_count = 1 + sorted_replicas
+                .windows(2)
+                .filter(|pair| pair[0] != pair[1])
+                .count();
+            if partition.replicas.len() != unique_count {
+                return Err(Error::new(
+                    ErrorKind::InvalidInput,
+                    format!(
+                        "duplicate spu ids found in assigned partition with id: {}",
+                        id
+                    ),
+                ));
+            }
+
+            // all ids must be positive numbers
+            for spu_id in &partition.replicas {
+                if *spu_id < 0 {
+                    return Err(Error::new(
+                        ErrorKind::InvalidInput,
+                        format!(
+                            "invalid spu id: {} in assigned partition with id: {}",
+                            spu_id, id
+                        ),
+                    ));
+                }
+            }
+
+            // increment id for next iteration
+            id += 1;
+        }
+
+        Ok(())
+    }
+}
+
+
 
 /// Translate Fluvio Replica Map to K8 Partitions to KV store notification
 fn replica_map_to_k8_partition(partition_maps: PartitionMaps) -> Vec<K8Partition> {

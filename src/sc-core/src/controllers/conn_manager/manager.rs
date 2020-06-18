@@ -285,12 +285,7 @@ impl ConnManager {
 
     /// send all changes to specific SPU
     async fn send_update_all_to_spu(&self, spu: &SpuKV) -> Result<(), ScServerError> {
-        let spu_specs = self
-            .spu_store
-            .all_values()
-            .into_iter()
-            .map(|spu_kv| spu_kv.spec.clone())
-            .collect();
+        let spu_specs = self.spu_store.all_specs();
         let replicas = self.partition_store.replica_for_spu(spu.id());
         let request = UpdateAllRequest::new(spu_specs, replicas);
 

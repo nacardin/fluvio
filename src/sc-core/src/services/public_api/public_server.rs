@@ -12,6 +12,7 @@ use std::marker::PhantomData;
 use async_trait::async_trait;
 use futures::io::AsyncRead;
 use futures::io::AsyncWrite;
+use event_listener::Event;
 
 use kf_service::api_loop;
 use kf_service::call_service;
@@ -65,6 +66,8 @@ where
         let (sink, mut stream) = socket.split();
         let mut api_stream = stream.api_stream::<ScPublicRequest, ScPublicApiKey>();
         let mut shared_sink = sink.as_shared();
+
+        let end_event = Arc::new(Event::new());
 
         api_loop!(
             api_stream,
@@ -151,7 +154,8 @@ where
             ScPublicRequest::UpdateMetadataRequest(request) => ClientMetadataController::handle_metadata_update(
                 request,
                 shared_sink.clone(), 
-                &ctx.shared_context),
+                end_event.clone(),
+                ctx.shared_context.clone()),
             _ => {
                 log::warn!("not actual protocol");
             }
