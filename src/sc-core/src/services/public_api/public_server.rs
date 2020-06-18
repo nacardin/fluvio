@@ -36,7 +36,7 @@ use super::api::handle_fetch_spu_request;
 use super::api::handle_create_spu_groups_request;
 use super::api::handle_delete_spu_groups_request;
 use super::api::handle_fetch_spu_groups_request;
-use super::api::handle_metadata_update;
+use super::api::ClientMetadataController;
 
 use super::SharedPublicContext;
 
@@ -148,12 +148,10 @@ where
                 shared_sink,
                 "fetch spu groups handler"
             ),
-            ScPublicRequest::UpdateMetadataRequest(request) => call_service!(
+            ScPublicRequest::UpdateMetadataRequest(request) => ClientMetadataController::handle_metadata_update(
                 request,
-                handle_metadata_update(request,&ctx),
-                shared_sink,
-                "handle update"
-            ),
+                shared_sink.clone(), 
+                &ctx),
             _ => {
                 log::warn!("not actual protocol");
             }

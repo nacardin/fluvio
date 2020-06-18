@@ -56,7 +56,7 @@ where
 
 /// essential core controllers
 pub fn create_core_services<W, D>(
-    local_stores: SharedContext,
+    context: SharedContext,
     ws_service: W,
     ws_dispatcher: &mut D,
 ) -> (SharedContext, InternalApiServer)
@@ -65,7 +65,7 @@ where
     D: WSChangeDispatcher,
 {
     // connect conn manager and controllers
-    let conn_manager = ConnManager::new_with_local_stores(local_stores.clone());
+    let conn_manager = ConnManager::new_with_local_stores(context.clone());
     let spu_lc_channel = ws_dispatcher.create_spu_channel();
     let topic_spu_channel = ws_dispatcher.create_spu_channel();
     let topic_topic_channel = ws_dispatcher.create_topic_channel();
@@ -76,14 +76,14 @@ where
 
     // start controller
     let spu_controller = SpuController::new(
-        local_stores.clone(),
+        context.clone(),
         shared_conn_manager.clone(),
         spu_lc_channel,
         ws_service.clone(),
     );
 
     let partition_controller = PartitionController::new(
-        local_stores.clone(),
+        context.clone(),
         shared_conn_manager.clone(),
         partition_channel,
         partition_spu_channel,
@@ -91,7 +91,7 @@ where
     );
 
     let private_server = create_internal_server(
-        local_stores.clone(),
+        context.clone(),
         shared_conn_manager,
         spu_controller.conn_sender(),
         partition_controller.lrs_sender(),
@@ -100,7 +100,7 @@ where
     spu_controller.run();
 
     let topic_controller = TopicController::new(
-        local_stores.clone(),
+        context.clone(),
         topic_spu_channel,
         topic_topic_channel,
         ws_service.clone(),
@@ -108,5 +108,5 @@ where
 
     topic_controller.run();
     partition_controller.run();
-    (local_stores, private_server)
+    (context, private_server)
 }

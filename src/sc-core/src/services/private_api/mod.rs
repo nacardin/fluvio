@@ -24,13 +24,13 @@ pub type InternalApiServer =
 
 // start server
 pub fn create_internal_server(
-    local_stores: SharedContext,
+    context: SharedContext,
     conn_mgr: SharedConnManager,
     conn_status_sender: Sender<SpuConnectionStatusChange>,
     lrs_sender: Sender<UpdateLrsRequest>,
 ) -> InternalApiServer {
-    let addr = local_stores.config().private_endpoint.clone();
-    let ctx = InternalContext::new(local_stores, conn_mgr, conn_status_sender, lrs_sender);
+    let addr = context.config().private_endpoint.clone();
+    let ctx = InternalContext::new(context, conn_mgr, conn_status_sender, lrs_sender);
     info!("SC: starting internal services at: {}", addr);
 
     KfApiServer::new(addr, Arc::new(ctx), ScInternalService::new())

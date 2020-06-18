@@ -28,7 +28,7 @@ use super::SpuChangeRequest;
 
 #[derive(Debug)]
 pub struct SpuController<W> {
-    local_stores: SharedContext,
+    context: SharedContext,
     conn_manager: SharedConnManager,
     ws_service: W,
     spu_reducer: SpuReducer,
@@ -42,7 +42,7 @@ where
     W: WSUpdateService + Send + Sync + 'static,
 {
     pub fn new(
-        local_stores: SharedContext,
+        context: SharedContext,
         conn_manager: SharedConnManager,
         lc_receiver: WSChangeChannel<SpuSpec>,
         ws_service: W,
@@ -50,8 +50,8 @@ where
         let (conn_sender, conn_receiver) = channel(100);
 
         Self {
-            spu_reducer: SpuReducer::new(local_stores.spus().clone()),
-            local_stores: local_stores,
+            spu_reducer: SpuReducer::new(context.spus().clone()),
+            context,
             ws_service: ws_service,
             conn_manager,
             lc_receiver,

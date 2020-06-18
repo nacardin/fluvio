@@ -1,15 +1,47 @@
-use std::io::Error as IoError;
+use futures::io::*;
 
-use kf_protocol::api::{RequestMessage, ResponseMessage};
-use kf_protocol::api::FlvErrorCode;
-use sc_api::{FlvResponseMessage};
+use kf_protocol::api::RequestMessage;
 use sc_api::metadata::*;
+use kf_socket::InnerExclusiveKfSink;
+use flv_future_aio::zero_copy::ZeroCopyWrite;
+use flv_future_aio::task::spawn;
 
-use crate::stores::*;
-use super::PublicContext;
-pub async fn handle_metadata_update(
-    request: RequestMessage<UpdateMetadataRequest>,
-) -> Result<ResponseMessage<UpdateMetadataResponse>, IoError> {
+use crate::core::Context;
 
-    //    
+
+/// metadata request are handle thru MetadataController which waits metadata event from ConnManager
+/// and forward to Client
+
+
+/// 
+pub struct ClientMetadataController<S> {
+    response_sink: InnerExclusiveKfSink<S>
 }
+
+impl<S>  ClientMetadataController<S> 
+    where S: AsyncWrite + AsyncRead + Unpin + Send + ZeroCopyWrite + 'static, 
+{
+
+    pub fn handle_metadata_update(
+        request: RequestMessage<UpdateMetadataRequest>,
+        response_sink: InnerExclusiveKfSink<S>,
+        context: &Context
+    ) 
+        
+    {
+        let controller = Self {
+            response_sink
+        };
+            
+    }
+
+    pub fn run(self) {
+
+    }
+
+
+    async fn dispatch_loop(mut self) {
+        
+    }
+}
+

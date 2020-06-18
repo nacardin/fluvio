@@ -5,16 +5,20 @@
 //!
 use std::sync::Arc;
 
+
+use flv_future_aio::sync::broadcast::*;
+
 use crate::config::ScConfig;
 use crate::stores::spu::*;
 use crate::stores::partition::*;
 use crate::stores::topic::*;
-use crate::stores::*;
+use crate::controllers::ClientNotification;
 
 pub type SharedContext = Arc<Context>;
 
 #[derive(Debug)]
 pub struct Context {
+    client_channel: Channel<ClientNotification>,
     spus: SharedSpuLocalStore,
     partitions: Arc<PartitionLocalStore>,
     topics: Arc<TopicLocalStore>,
@@ -32,7 +36,9 @@ impl Context {
 
     /// private function to provision metadata
     fn new(config: ScConfig) -> Self {
+
         Self {
+            client_channel: Channel::new(100),
             spus: SpuLocalStore::new_shared(),
             partitions: PartitionLocalStore::new_shared(),
             topics: TopicLocalStore::new_shared(),
@@ -62,6 +68,15 @@ impl Context {
     /// reference to config
     pub fn config(&self) -> &ScConfig {
         &self.config
+    }
+
+    /// create new client subscriber
+    pub fn new_client_subscriber(&self) -> Receiver<ClientNotification> {
+        self.client_channel.receiver()
+    }
+
+    pub fn new_client_sender(&self) -> Sender<ClientNotification> {
+        self.client_channel.sender()
     }
 
     /// format metadata cache into a table string

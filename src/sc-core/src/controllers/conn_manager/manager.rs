@@ -95,13 +95,12 @@ pub struct ConnManager {
 
 impl ConnManager {
     pub fn new_with_local_stores(
-        local_stores: SharedContext,
-        client_sender: Sender<ClientNotification>
+        context: SharedContext,
     ) -> Self {
         Self::new(
-            local_stores.spus().clone(),
-            local_stores.partitions().clone(),
-            client_sender
+            context.spus().clone(),
+            context.partitions().clone(),
+            context.new_client_sender()
         )
     }
 
