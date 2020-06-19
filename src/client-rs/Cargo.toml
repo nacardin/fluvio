@@ -7,6 +7,9 @@ authors = ["Fluvio Contributors <team@fluvio.io>"]
 repository = "https://github.com/infinyon/fluvio"
 description = "Fluvio rust client"
 
+[features]
+kafka = []
+
 [dependencies]
 log = "0.4.8"
 dirs = "1.0.2"

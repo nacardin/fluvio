@@ -11,7 +11,7 @@ path = "src/bin/main.rs"
 doc = false
 
 [features]
-kf = []
+kafka = []
 
 
 [dependencies]

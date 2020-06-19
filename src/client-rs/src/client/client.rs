@@ -1,6 +1,7 @@
 use std::default::Default;
 
 use log::trace;
+use async_trait::async_trait;
 
 use kf_protocol::api::RequestMessage;
 use kf_protocol::api::Request;
@@ -12,7 +13,8 @@ use crate::ClientError;
 
 
 /// Generic client trait
-pub(crate) trait Client  {
+#[async_trait]
+pub trait Client: Sync + Send  {
 
     /// client config
     fn config(&self) -> &ClientConfig;
@@ -20,7 +22,7 @@ pub(crate) trait Client  {
     /// create new request based on version
     fn new_request<R>(&self, request: R, version: Option<i16>) -> RequestMessage<R>
     where
-        R: Request,
+        R: Request + Send,
     {
         let mut req_msg = RequestMessage::new_request(request);
         req_msg
@@ -33,21 +35,40 @@ pub(crate) trait Client  {
         req_msg
     }
 
+    /// send and receive
+    async fn send_receive<R>(&mut self, request: R) -> Result<R::Response, KfSocketError>
+        where R: Request + Send + Sync;
 
 }
 
 /// Client to fluvio component
 ///
-pub(crate) struct RawClient {
+pub struct RawClient {
     socket: AllKfSocket,
     config: ClientConfig,
     versions: Versions,
 }
 
+#[async_trait]
 impl Client for RawClient {
 
     fn config(&self) -> &ClientConfig {
         &self.config
+    }
+
+    /// send and wait for reply
+    async fn send_receive<R>(&mut self, request: R) -> Result<R::Response, KfSocketError>
+    where
+        R: Request + Send + Sync,
+    {
+        let req_message = self.send_request(request).await?;
+
+        // send request & save response
+        self.socket
+            .get_mut_stream()
+            .next_response(&req_message)
+            .await
+            .map(|res_msg| res_msg.response)
     }
 }
 
@@ -87,7 +108,7 @@ impl RawClient {
     /// send request only
     pub async fn send_request<R>(&mut self, request: R) -> Result<RequestMessage<R>, KfSocketError>
     where
-        R: Request,
+        R: Request + Send + Sync,
     {
         trace!(
             "send API '{}' req to srv '{}'",
@@ -101,20 +122,7 @@ impl RawClient {
         Ok(req_msg)
     }
 
-    /// send and wait for reply
-    pub async fn send_receive<R>(&mut self, request: R) -> Result<R::Response, KfSocketError>
-    where
-        R: Request,
-    {
-        let req_message = self.send_request(request).await?;
-
-        // send request & save response
-        self.socket
-            .get_mut_stream()
-            .next_response(&req_message)
-            .await
-            .map(|res_msg| res_msg.response)
-    }
+    
 
 
 }
@@ -212,24 +220,27 @@ impl SerialClient {
 
 
 
-    /// send and wait for reply serially
-    pub async fn send_receive<R>(&mut self, request: R) -> Result<R::Response, KfSocketError>
-    where
-        R: Request,
-    {
-        let req_msg = self.new_request(request, self.versions.lookup_version(R::API_KEY));
-        
-        // send request & save response
-        self.socket.send_and_receive(req_msg).await
-    }    
+     
 
 }
 
+#[async_trait]
 impl Client for SerialClient {
 
     fn config(&self) -> &ClientConfig {
         &self.config
     }
+
+    /// send and wait for reply serially
+    async fn send_receive<R>(&mut self, request: R) -> Result<R::Response, KfSocketError>
+    where
+        R: Request + Send + Sync
+    {
+        let req_msg = self.new_request(request, self.versions.lookup_version(R::API_KEY));
+        
+        // send request & save response
+        self.socket.send_and_receive(req_msg).await
+    }   
 
 }
 

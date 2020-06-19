@@ -47,19 +47,13 @@ pub enum FetchOffset {
 
 /// Replica Leader (topic,partition)
 #[async_trait]
-pub(crate) trait ReplicaLeader: Send + Sync {
+pub trait ReplicaLeader: Send + Sync {
     type OffsetPartitionResponse: PartitionOffset;
+    type Client: Client;
 
     fn config(&self) -> &ReplicaLeaderConfig;
 
-    fn mut_client(&mut self) -> &mut RawClient;
-
-    fn client(&self) -> &RawClient;
-
-    fn addr(&self) -> &str {
-        self.client().config().addr()
-    }
-
+    
     fn topic(&self) -> &str {
         &self.config().topic()
     }
@@ -67,6 +61,10 @@ pub(crate) trait ReplicaLeader: Send + Sync {
     fn partition(&self) -> i32 {
         self.config().partition()
     }
+
+    fn addr(&self) -> &str;
+
+    fn mut_client(&mut self) -> &mut Self::Client;
 
     // fetch offsets for
     async fn fetch_offsets(&mut self) -> Result<Self::OffsetPartitionResponse, ClientError>;

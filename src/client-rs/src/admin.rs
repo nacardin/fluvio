@@ -4,9 +4,9 @@ use crate::ClientError;
 use crate::ReplicaLeader;
 use crate::query_params::ReplicaConfig;
 
-/// Client for Controller
+/// Perform adminstration workflow common across Fluvio and Kafka
 #[async_trait]
-pub(crate) trait ControllerClient {
+pub trait AdminClient {
     type Leader: ReplicaLeader;
     type TopicMetadata;
 
@@ -31,3 +31,13 @@ pub(crate) trait ControllerClient {
         topics: Option<Vec<String>>,
     ) -> Result<Vec<Self::TopicMetadata>, ClientError>;
 }
+
+
+pub trait FluvioAdminClient {
+
+    
+
+
+}
+
+

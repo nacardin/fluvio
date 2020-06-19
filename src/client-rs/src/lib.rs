@@ -3,6 +3,8 @@ mod spu_old;
 mod replica;
 //mod sc;
 pub mod client;
+pub mod kf;
+pub mod admin;
 
 pub mod metadata;
 pub mod profile;

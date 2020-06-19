@@ -12,10 +12,9 @@ use sc_api::errors::FlvErrorCode;
 use sc_api::metadata::*;
 use sc_api::spu::*;
 use sc_api::topics::*;
-use spu_api::server::versions::ApiVersions;
 use kf_socket::KfSocketError;
 use kf_socket::AllMultiplexerSocket;
-use kf_socket::AllSerialSocket;
+
 
 use crate::ClientError;
 use crate::ReplicaLeaderConfig;
@@ -24,6 +23,7 @@ use crate::query_params::ReplicaConfig;
 use crate::metadata::topic::TopicMetadata;
 use crate::metadata::spu::SpuMetadata;
 use crate::client::ClientConfig;
+use crate::admin::*;
 use super::*;
 
 pub struct ScClient {
@@ -176,7 +176,7 @@ macro_rules! topic_error {
 }
 
 #[async_trait]
-impl ControllerClient for ScAdminClient {
+impl AdminClient for ScAdminClient {
     type Leader = SpuReplicaLeader;
 
     type TopicMetadata = TopicMetadata;

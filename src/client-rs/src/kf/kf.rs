@@ -26,12 +26,13 @@ use flv_util::socket_helpers::ServerAddress;
 use kf_protocol::api::ErrorCode as KfErrorCode;
 
 use crate::ClientError;
-use super::*;
 use crate::ReplicaLeaderConfig;
 use crate::ReplicaLeader;
 use crate::FetchLogOption;
 use crate::FetchOffset;
 use crate::query_params::*;
+use crate::client::*;
+use crate::admin::*;
 
 pub struct KfClient(RawClient);
 
@@ -276,7 +277,7 @@ impl KfClient {
 }
 
 #[async_trait]
-impl ControllerClient for KfClient {
+impl AdminClient for KfClient {
     type Leader = KfLeader;
 
     type TopicMetadata = MetadataResponseTopic;
@@ -445,6 +446,11 @@ impl KfLeader {
         Self { client, config }
     }
 
+    fn addr(&self) -> &str {
+        self.client().config().addr()
+    }
+
+
     /// fetch logs
     #[allow(unused)]
     async fn fetch_logs_inner(
@@ -516,22 +522,29 @@ impl KfLeader {
             }
         }
     }
-}
-
-#[async_trait]
-impl ReplicaLeader for KfLeader {
-    type OffsetPartitionResponse = ListOffsetPartitionResponse;
-
-    fn config(&self) -> &ReplicaLeaderConfig {
-        &self.config
-    }
 
     fn client(&self) -> &RawClient {
         &self.client
     }
 
-    fn mut_client(&mut self) -> &mut RawClient {
+    
+}
+
+#[async_trait]
+impl ReplicaLeader for KfLeader {
+    type OffsetPartitionResponse = ListOffsetPartitionResponse;
+    type Client = RawClient;
+
+    fn config(&self) -> &ReplicaLeaderConfig {
+        &self.config
+    }
+
+    fn mut_client(&mut self) -> &mut Self::Client {
         &mut self.client
+    }
+
+    fn addr(&self) -> &str {
+        self.client().config().addr()
     }
 
     async fn fetch_offsets(&mut self) -> Result<Self::OffsetPartitionResponse, ClientError> {
