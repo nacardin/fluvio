@@ -31,7 +31,7 @@ mod request {
     #[derive(Decode, Encode, Debug)]
     pub struct UpdateMetadataRequest {
         /// number of milliseconds between refresh
-        re_sync_period_ms: u16
+        pub re_sync_period_ms: u16
     }
 
     impl Default for UpdateMetadataRequest {
