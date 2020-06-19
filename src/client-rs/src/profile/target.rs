@@ -65,7 +65,7 @@ impl ScConfig {
         };
         let config = ClientConfig::new(self.addr, connector);
         let client = config.connect().await?;
-        debug!("connected to sc: {}", client.addr());
+        debug!("connected to sc: {}", client.config().addr());
         Ok(ScClient::new(client))
     }
 }
@@ -141,6 +141,7 @@ impl ControllerTargetConfig {
     }
 }
 
+/*
 /// can target sc/kf/spu
 #[derive(Debug)]
 pub enum ServerTargetConfig {
@@ -230,3 +231,4 @@ impl ServerTargetConfig {
         }
     }
 }
+*/

@@ -47,7 +47,7 @@ pub enum FetchOffset {
 
 /// Replica Leader (topic,partition)
 #[async_trait]
-pub trait ReplicaLeader: Send + Sync {
+pub(crate) trait ReplicaLeader: Send + Sync {
     type OffsetPartitionResponse: PartitionOffset;
 
     fn config(&self) -> &ReplicaLeaderConfig;

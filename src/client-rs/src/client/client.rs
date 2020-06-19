@@ -163,7 +163,7 @@ impl ClientConfig {
         self.addr = domain
     }
 
-    pub async fn connect(self) -> Result<RawClient, ClientError> {
+    pub(crate) async fn connect(self) -> Result<RawClient, ClientError> {
         let socket = AllKfSocket::connect_with_connector(&self.addr, &self.connector).await?;
         RawClient::connect(socket, self).await
     }

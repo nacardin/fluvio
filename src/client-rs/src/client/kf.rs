@@ -36,11 +36,11 @@ use crate::query_params::*;
 pub struct KfClient(RawClient);
 
 impl KfClient {
-    pub fn new(client: RawClient) -> Self {
+    pub(crate) fn new(client: RawClient) -> Self {
         Self(client)
     }
 
-    pub fn mut_client(&mut self) -> &mut RawClient {
+    pub(crate) fn mut_client(&mut self) -> &mut RawClient {
         &mut self.0
     }
 }
@@ -441,7 +441,7 @@ pub struct KfLeader {
 }
 
 impl KfLeader {
-    pub fn new(client: RawClient, config: ReplicaLeaderConfig) -> Self {
+    pub(crate) fn new(client: RawClient, config: ReplicaLeaderConfig) -> Self {
         Self { client, config }
     }
 

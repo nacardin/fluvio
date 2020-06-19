@@ -33,7 +33,7 @@ pub struct ScClient {
 }
 
 impl ScClient {
-    pub fn new(client: RawClient) -> Self {
+    pub(crate) fn new(client: RawClient) -> Self {
 
         let (socket, config, versions) = client.split();
         Self {
@@ -44,12 +44,12 @@ impl ScClient {
     }
 
     /// create new admin client
-    pub fn admin(&self) -> ScAdminClient {
-        Self {
-            socket: self.socket.create_serial_socket(),
-            config: self.config.clone(),
-            versions: self.config.clone()
-        }
+    pub async fn admin(&mut self) -> ScAdminClient {
+        ScAdminClient(SerialClient::new(
+    self.socket.create_serial_socket().await,
+    self.config.clone(),
+    self.versions.clone()
+        ))
     }
 
 }
@@ -58,12 +58,7 @@ impl ScClient {
 
 
 /// adminstration interface
-pub struct ScAdminClient {
-    socket: AllSerialSocket,
-    config: ClientConfig,
-    versions: ApiVersions
-}
-
+pub struct ScAdminClient(SerialClient);
 
 
 impl ScAdminClient {
@@ -77,7 +72,7 @@ impl ScAdminClient {
         let mut request = FlvTopicCompositionRequest::default();
         request.topic_names = vec![topic.to_owned()];
 
-        self.socket.send_and_receive(request).await
+        self.0.send_receive(request).await
     }
 
     pub async fn register_custom_spu(
@@ -106,7 +101,7 @@ impl ScAdminClient {
             custom_spus: vec![spu],
         };
 
-        let responses = self.socket.send_and_receive(request).await?;
+        let responses = self.0.send_receive(request).await?;
 
         responses.validate(&name).map_err(|err| err.into())
     }
@@ -116,7 +111,7 @@ impl ScAdminClient {
             custom_spus: vec![spu],
         };
 
-        let responses = self.socket.send_receive(request).await?;
+        let responses = self.0.send_receive(request).await?;
 
         responses.validate().map_err(|err| err.into())
     }
@@ -133,7 +128,7 @@ impl ScAdminClient {
             ..Default::default()
         };
 
-        let responses = self.0.send_and_receive(request).await?;
+        let responses = self.0.send_receive(request).await?;
 
         Ok(responses.spus.into_iter().map(|spu| spu.into()).collect())
     }
@@ -144,7 +139,7 @@ impl ScAdminClient {
     ) -> Result<(), ClientError> {
         let request: FlvCreateSpuGroupsRequest = group.into();
 
-        let responses = self.0.send_and_receive(request).await?;
+        let responses = self.0.send_receive(request).await?;
 
         responses.validate().map_err(|err| err.into())
     }
@@ -154,13 +149,13 @@ impl ScAdminClient {
             spu_groups: vec![group.to_owned()],
         };
 
-        let responses = self.0.send_and_receive(request).await?;
+        let responses = self.0.send_receive(request).await?;
         responses.validate().map_err(|err| err.into())
     }
 
     pub async fn list_group(&mut self) -> Result<FlvFetchSpuGroupsResponse, ClientError> {
         let request = FlvFetchSpuGroupsRequest::default();
-        self.0.send_and_receive(request).await.map_err(|err| err.into())
+        self.0.send_receive(request).await.map_err(|err| err.into())
     }
 }
 
@@ -260,7 +255,7 @@ impl ControllerClient for ScAdminClient {
 
                         debug!("spu {}/{}: is leader", spu_resp.host, spu_resp.port);
 
-                        let mut leader_client_config = self.0.clone_config();
+                        let mut leader_client_config = self.0.config().clone();
                         let addr: ServerAddress = spu_resp.into();
                         leader_client_config.set_addr(addr.to_string());
 

@@ -6,7 +6,7 @@ use crate::query_params::ReplicaConfig;
 
 /// Client for Controller
 #[async_trait]
-pub trait ControllerClient {
+pub(crate) trait ControllerClient {
     type Leader: ReplicaLeader;
     type TopicMetadata;
 

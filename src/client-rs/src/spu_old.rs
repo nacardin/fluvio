@@ -33,7 +33,7 @@ pub struct SpuReplicaLeader {
 }
 
 impl SpuReplicaLeader {
-    pub fn new(config: ReplicaLeaderConfig, client: RawClient) -> Self {
+    pub(crate) fn new(config: ReplicaLeaderConfig, client: RawClient) -> Self {
         Self { client, config }
     }
 
