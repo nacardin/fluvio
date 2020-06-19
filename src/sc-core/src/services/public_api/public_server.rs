@@ -162,6 +162,9 @@ where
 
         );
 
+        // we are done with this tcp stream, notify any controllers use this strep
+        end_event.notify(0);
+
         Ok(())
     }
 }

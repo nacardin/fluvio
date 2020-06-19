@@ -76,9 +76,9 @@ dependencies = [
 
 [[package]]
 name = "async-std"
-version = "1.6.1"
+version = "1.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b93c583a035d21e6d6f09adf48abfc55277bf48886406df370e5db6babe3ab98"
+checksum = "00d68a33ebc8b57800847d00787307f84a562224a14db069b0acefe4c2abbf5d"
 dependencies = [
  "async-task",
  "crossbeam-utils",
@@ -130,9 +130,9 @@ dependencies = [
 
 [[package]]
 name = "async-trait"
-version = "0.1.35"
+version = "0.1.36"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "89cb5d814ab2a47fd66d3266e9efccb53ca4c740b7451043b8ffcf9a6208f3f8"
+checksum = "a265e3abeffdce30b2e26b7a11b222fe37c6067404001b434101457d0385eb92"
 dependencies = [
  "proc-macro2 1.0.18",
  "quote 1.0.7",
@@ -284,9 +284,12 @@ dependencies = [
 
 [[package]]
 name = "bytes"
-version = "0.5.4"
+version = "0.5.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "130aac562c0dd69c56b3b1cc8ffd2e17be31d0b6c25b61c96b76231aa23e39e1"
+checksum = "118cf036fbb97d0816e3c34b2d7a1e8cfc60f68fcf63d550ddbe9bd5f59c213b"
+dependencies = [
+ "loom",
+]
 
 [[package]]
 name = "cache-padded"
@@ -648,7 +651,7 @@ name = "fluvio"
 version = "4.0.0"
 dependencies = [
  "async-trait",
- "bytes 0.5.4",
+ "bytes 0.5.5",
  "ctrlc",
  "flv-api-sc",
  "flv-api-spu",
@@ -693,7 +696,7 @@ dependencies = [
 name = "flv-api-spu"
 version = "2.0.0"
 dependencies = [
- "bytes 0.5.4",
+ "bytes 0.5.5",
  "kf-protocol 2.0.3",
  "log",
  "serde",
@@ -716,7 +719,6 @@ dependencies = [
  "kf-protocol 2.0.3",
  "kf-socket",
  "log",
- "rand 0.7.3",
  "serde",
  "serde_json",
  "toml",
@@ -732,7 +734,7 @@ dependencies = [
  "async-test-derive",
  "async-tls",
  "async-trait",
- "bytes 0.5.4",
+ "bytes 0.5.5",
  "flv-util 0.2.1",
  "futures",
  "futures-timer 2.0.2",
@@ -858,7 +860,7 @@ name = "flv-spu"
 version = "1.0.0"
 dependencies = [
  "async-trait",
- "bytes 0.5.4",
+ "bytes 0.5.5",
  "chashmap",
  "chrono",
  "flv-api-spu",
@@ -889,7 +891,7 @@ name = "flv-storage"
 version = "1.0.0"
 dependencies = [
  "async-trait",
- "bytes 0.5.4",
+ "bytes 0.5.5",
  "flv-future-aio",
  "flv-types",
  "flv-util 0.2.1",
@@ -909,7 +911,7 @@ name = "flv-test"
 version = "1.0.1"
 dependencies = [
  "async-trait",
- "bytes 0.5.4",
+ "bytes 0.5.5",
  "flv-client",
  "flv-future-aio",
  "flv-metadata",
@@ -1088,6 +1090,19 @@ dependencies = [
  "proc-macro-hack",
  "proc-macro-nested",
  "slab",
+]
+
+[[package]]
+name = "generator"
+version = "0.6.21"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "add72f17bb81521258fcc8a7a3245b1e184e916bfbe34f0ea89558f440df5c68"
+dependencies = [
+ "cc",
+ "libc",
+ "log",
+ "rustc_version",
+ "winapi",
 ]
 
 [[package]]
@@ -1282,7 +1297,7 @@ dependencies = [
  "async-std",
  "async-trait",
  "base64 0.11.0",
- "bytes 0.5.4",
+ "bytes 0.5.5",
  "curl",
  "flv-future-aio",
  "futures",
@@ -1467,7 +1482,7 @@ version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "181d915d438db9198e5c45852ad2368a4999ed23146fcf62a516d5a58ffa2375"
 dependencies = [
- "bytes 0.5.4",
+ "bytes 0.5.5",
  "log",
  "num-derive",
  "num-traits",
@@ -1492,7 +1507,7 @@ version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "728b9376fcd4ac2e9538f2323d4b1a59a992b7553be53b7e71497d3f10d7f02f"
 dependencies = [
- "bytes 0.5.4",
+ "bytes 0.5.5",
  "flv-future-aio",
  "futures",
  "kf-protocol-api 0.1.0",
@@ -1507,7 +1522,7 @@ version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e8ef03620f77406bff96b68012375da9536f8f627ec461f6d86f761d8bcf4cfb"
 dependencies = [
- "bytes 0.5.4",
+ "bytes 0.5.5",
  "flv-future-aio",
  "futures",
  "kf-protocol-api 1.0.2",
@@ -1556,7 +1571,7 @@ version = "2.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "013331a05c5e2989d2387ff3976485b3416042766dba999f1678ebb830a13f87"
 dependencies = [
- "bytes 0.5.4",
+ "bytes 0.5.5",
  "flv-future-aio",
  "kf-protocol-core",
  "log",
@@ -1585,7 +1600,7 @@ dependencies = [
  "async-channel",
  "async-lock",
  "async-trait",
- "bytes 0.5.4",
+ "bytes 0.5.5",
  "chashmap",
  "event-listener 2.0.0",
  "flv-future-aio",
@@ -1663,6 +1678,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "14b6052be84e6b71ab17edffc2eeabf5c2c3ae1fdb464aae35ac50c67a44e1f7"
 dependencies = [
  "cfg-if",
+]
+
+[[package]]
+name = "loom"
+version = "0.3.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4ecc775857611e1df29abba5c41355cdf540e7e9d4acfdf0f355eefee82330b7"
+dependencies = [
+ "cfg-if",
+ "generator",
+ "scoped-tls 0.1.2",
 ]
 
 [[package]]
@@ -2343,6 +2369,12 @@ dependencies = [
 
 [[package]]
 name = "scoped-tls"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "332ffa32bf586782a3efaeb58f127980944bbc8c4d6913a86107ac2a5ab24b28"
+
+[[package]]
+name = "scoped-tls"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ea6a9290e3c9cf0f18145ef7ffa62d68ee0bf5fcd651017e586dc7fd5da448c2"
@@ -2514,7 +2546,7 @@ dependencies = [
  "libc",
  "once_cell",
  "piper",
- "scoped-tls",
+ "scoped-tls 1.0.0",
  "slab",
  "socket2",
  "wepoll-binding",
@@ -2703,7 +2735,7 @@ version = "0.2.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d099fa27b9702bed751524694adbe393e18b36b204da91eb1cbbbbb4a5ee2d58"
 dependencies = [
- "bytes 0.5.4",
+ "bytes 0.5.5",
  "fnv",
  "futures-core",
  "pin-project-lite",
@@ -2727,7 +2759,7 @@ version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "be8242891f2b6cbef26a2d7e8605133c2c554cd35b3e4948ea892d6d68436499"
 dependencies = [
- "bytes 0.5.4",
+ "bytes 0.5.5",
  "futures-core",
  "futures-io",
  "futures-sink",

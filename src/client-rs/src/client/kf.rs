@@ -33,14 +33,14 @@ use crate::FetchLogOption;
 use crate::FetchOffset;
 use crate::query_params::*;
 
-pub struct KfClient(Client);
+pub struct KfClient(RawClient);
 
 impl KfClient {
-    pub fn new(client: Client) -> Self {
+    pub fn new(client: RawClient) -> Self {
         Self(client)
     }
 
-    pub fn mut_client(&mut self) -> &mut Client {
+    pub fn mut_client(&mut self) -> &mut RawClient {
         &mut self.0
     }
 }
@@ -301,7 +301,7 @@ impl ControllerClient for KfClient {
                         for broker in brokers {
                             if broker.node_id == leader_id {
                                 debug!("broker {}/{} is leader", broker.host, broker.port);
-                                let mut kafka_config = self.0.clone_config();
+                                let mut kafka_config = self.0.config().clone();
                                 let broker: ServerAddress = broker.into();
                                 kafka_config.set_addr(broker.to_string());
                                 let kf_client = kafka_config.connect().await?;
@@ -436,12 +436,12 @@ impl ControllerClient for KfClient {
 }
 
 pub struct KfLeader {
-    client: Client,
+    client: RawClient,
     config: ReplicaLeaderConfig,
 }
 
 impl KfLeader {
-    pub fn new(client: Client, config: ReplicaLeaderConfig) -> Self {
+    pub fn new(client: RawClient, config: ReplicaLeaderConfig) -> Self {
         Self { client, config }
     }
 
@@ -526,11 +526,11 @@ impl ReplicaLeader for KfLeader {
         &self.config
     }
 
-    fn client(&self) -> &Client {
+    fn client(&self) -> &RawClient {
         &self.client
     }
 
-    fn mut_client(&mut self) -> &mut Client {
+    fn mut_client(&mut self) -> &mut RawClient {
         &mut self.client
     }
 

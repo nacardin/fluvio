@@ -52,9 +52,9 @@ pub trait ReplicaLeader: Send + Sync {
 
     fn config(&self) -> &ReplicaLeaderConfig;
 
-    fn mut_client(&mut self) -> &mut Client;
+    fn mut_client(&mut self) -> &mut RawClient;
 
-    fn client(&self) -> &Client;
+    fn client(&self) -> &RawClient;
 
     fn addr(&self) -> &str {
         self.client().config().addr()

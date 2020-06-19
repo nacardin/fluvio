@@ -30,7 +30,6 @@ use crate::InnerExclusiveKfSink;
 
 #[allow(unused)]
 pub type DefaultMultiplexerSocket = MultiplexerSocket<TcpStream>;
-#[allow(unused)]
 pub type AllMultiplexerSocket = MultiplexerSocket<AllTcpStream>;
 
 type SharedMsg = (Lock<Option<BytesMut>>, Arc<Event>);
@@ -55,11 +54,13 @@ impl<S> MultiplexerSocket<S>
 where
     S: AsyncRead + AsyncWrite + Unpin + Send + Sync + 'static,
 {
+    /// create new multiplexer socket, this always starts with correlation id of 1
+    /// correlation id of 0 means shared
     pub fn new(socket: InnerKfSocket<S>) -> Self {
         let (sink, stream) = socket.split();
 
         let multiplexer = Self {
-            correlation_id_counter: Lock::new(0),
+            correlation_id_counter: Lock::new(1),
             senders: Lock::new(HashMap::new()),
             sink: InnerExclusiveKfSink::new(sink),
         };
@@ -157,6 +158,8 @@ where
         }
     }
 }
+
+pub type AllSerialSocket = SerialSocket<AllTcpStream>;
 
 /// socket that can send request and response one at time,
 /// this can be only created from multiplex socket

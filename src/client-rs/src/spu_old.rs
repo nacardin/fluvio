@@ -28,12 +28,12 @@ use crate::FetchOffset;
 // Access specific replica leader of the SPU
 // for now, we use string to store address, later, we might store address natively
 pub struct SpuReplicaLeader {
-    client: Client,
+    client: RawClient,
     config: ReplicaLeaderConfig,
 }
 
 impl SpuReplicaLeader {
-    pub fn new(config: ReplicaLeaderConfig, client: Client) -> Self {
+    pub fn new(config: ReplicaLeaderConfig, client: RawClient) -> Self {
         Self { client, config }
     }
 
@@ -69,11 +69,11 @@ impl ReplicaLeader for SpuReplicaLeader {
         &self.config
     }
 
-    fn mut_client(&mut self) -> &mut Client {
+    fn mut_client(&mut self) -> &mut RawClient {
         &mut self.client
     }
 
-    fn client(&self) -> &Client {
+    fn client(&self) -> &RawClient {
         &self.client
     }
 

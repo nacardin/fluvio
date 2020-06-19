@@ -12,7 +12,10 @@ use sc_api::errors::FlvErrorCode;
 use sc_api::metadata::*;
 use sc_api::spu::*;
 use sc_api::topics::*;
+use spu_api::server::versions::ApiVersions;
 use kf_socket::KfSocketError;
+use kf_socket::AllMultiplexerSocket;
+use kf_socket::AllSerialSocket;
 
 use crate::ClientError;
 use crate::ReplicaLeaderConfig;
@@ -20,27 +23,50 @@ use crate::SpuReplicaLeader;
 use crate::query_params::ReplicaConfig;
 use crate::metadata::topic::TopicMetadata;
 use crate::metadata::spu::SpuMetadata;
+use crate::client::ClientConfig;
 use super::*;
 
-pub struct ScClient(Client);
+pub struct ScClient {
+    socket: AllMultiplexerSocket,
+    config: ClientConfig,
+    versions: Versions
+}
 
 impl ScClient {
-    pub fn new(client: Client) -> Self {
-        Self(client)
+    pub fn new(client: RawClient) -> Self {
+
+        let (socket, config, versions) = client.split();
+        Self {
+            socket: AllMultiplexerSocket::new(socket),
+            config,
+            versions
+        }
     }
 
-    pub fn inner(&self) -> &Client {
-        &self.0
+    /// create new admin client
+    pub fn admin(&self) -> ScAdminClient {
+        Self {
+            socket: self.socket.create_serial_socket(),
+            config: self.config.clone(),
+            versions: self.config.clone()
+        }
     }
 
-    // move out client
-    pub fn unwrap(self) -> Client {
-        self.0
-    }
+}
 
-    pub fn inner_mut(&mut self) -> &mut Client {
-        &mut self.0
-    }
+
+
+
+/// adminstration interface
+pub struct ScAdminClient {
+    socket: AllSerialSocket,
+    config: ClientConfig,
+    versions: ApiVersions
+}
+
+
+
+impl ScAdminClient {
 
     /// Connect to server, get version, and for topic composition: Replicas and SPUs
     pub async fn get_topic_composition(
@@ -51,7 +77,7 @@ impl ScClient {
         let mut request = FlvTopicCompositionRequest::default();
         request.topic_names = vec![topic.to_owned()];
 
-        self.0.send_receive(request).await
+        self.socket.send_and_receive(request).await
     }
 
     pub async fn register_custom_spu(
@@ -80,7 +106,7 @@ impl ScClient {
             custom_spus: vec![spu],
         };
 
-        let responses = self.0.send_receive(request).await?;
+        let responses = self.socket.send_and_receive(request).await?;
 
         responses.validate(&name).map_err(|err| err.into())
     }
@@ -90,7 +116,7 @@ impl ScClient {
             custom_spus: vec![spu],
         };
 
-        let responses = self.0.send_receive(request).await?;
+        let responses = self.socket.send_receive(request).await?;
 
         responses.validate().map_err(|err| err.into())
     }
@@ -107,7 +133,7 @@ impl ScClient {
             ..Default::default()
         };
 
-        let responses = self.0.send_receive(request).await?;
+        let responses = self.0.send_and_receive(request).await?;
 
         Ok(responses.spus.into_iter().map(|spu| spu.into()).collect())
     }
@@ -118,7 +144,7 @@ impl ScClient {
     ) -> Result<(), ClientError> {
         let request: FlvCreateSpuGroupsRequest = group.into();
 
-        let responses = self.0.send_receive(request).await?;
+        let responses = self.0.send_and_receive(request).await?;
 
         responses.validate().map_err(|err| err.into())
     }
@@ -128,13 +154,13 @@ impl ScClient {
             spu_groups: vec![group.to_owned()],
         };
 
-        let responses = self.0.send_receive(request).await?;
+        let responses = self.0.send_and_receive(request).await?;
         responses.validate().map_err(|err| err.into())
     }
 
     pub async fn list_group(&mut self) -> Result<FlvFetchSpuGroupsResponse, ClientError> {
         let request = FlvFetchSpuGroupsRequest::default();
-        self.0.send_receive(request).await.map_err(|err| err.into())
+        self.0.send_and_receive(request).await.map_err(|err| err.into())
     }
 }
 
@@ -155,7 +181,7 @@ macro_rules! topic_error {
 }
 
 #[async_trait]
-impl ControllerClient for ScClient {
+impl ControllerClient for ScAdminClient {
     type Leader = SpuReplicaLeader;
 
     type TopicMetadata = TopicMetadata;
