@@ -40,6 +40,7 @@ use internal_api::UpdateReplicaRequest;
 use internal_api::UpdateAllRequest;
 use kf_protocol::api::Request;
 use kf_protocol::api::RequestMessage;
+use sc_api::metadata::*;
 
 use crate::stores::partition::*;
 use crate::stores::spu::*;
@@ -136,7 +137,7 @@ impl ConnManager {
         for request in requests.into_iter() {
             match request {
                 ConnectionRequest::Spu(spec_changes) => {
-                    match spec_changes.clone() {
+                    match spec_changes {
                         SpuSpecChange::Add(new_spu) => {
                             self.add_spu(new_spu).await;
                         }
@@ -147,7 +148,6 @@ impl ConnManager {
                             self.remove_spu(spu).await;
                         }
                     }
-                    self.send_client_notification(ClientNotification::SPU(spec_changes));
                 },
                 ConnectionRequest::RefreshSpu(spu_id) => {
                     log_on_err!(self.refresh_spu(spu_id).await);
@@ -163,7 +163,6 @@ impl ConnManager {
                         }
                         _ => {}
                     }
-                    self.send_client_notification(ClientNotification::Partition(partition_req))
                 }
             }
         }
@@ -187,11 +186,14 @@ impl ConnManager {
 
     /// add spu,
     async fn add_spu(&self, spu: SpuSpec) {
+        
+
         self.inner_add_spu(&spu);
 
         // send new SPU spec to all SPUS
-        let spu_msg = SpuMsg::update(spu.into());
-        self.send_msg_to_all_live_spus(vec![spu_msg]).await;
+        let spu_msg = vec![SpuMsg::update(spu.into())];
+        self.send_msg_to_all_live_spus(&spu_msg).await;
+        self.send_client_notification(ClientNotification::SPU(UpdateSpuResponse::new(spu_msg)));
     }
 
     /// update spu connection, we do similar thing as add.
@@ -201,8 +203,9 @@ impl ConnManager {
         self.inner_remove_spu(&old_spu);
         self.inner_add_spu(&new_spu);
 
-        let spu_msg = SpuMsg::update(old_spu.into());
-        self.send_msg_to_all_live_spus(vec![spu_msg]).await;
+        let spu_msg = vec![SpuMsg::update(old_spu.into())];
+        self.send_msg_to_all_live_spus(&spu_msg).await;
+        self.send_client_notification(ClientNotification::SPU(UpdateSpuResponse::new(spu_msg)));
     }
 
     /// remove spu connection parameters & socket.
@@ -211,8 +214,9 @@ impl ConnManager {
         self.sinks.clear_sink(&old_spu.id);
        
 
-        let spu_msg = SpuMsg::delete(old_spu.into());
-        self.send_msg_to_all_live_spus(vec![spu_msg]).await;
+        let spu_msg = vec![SpuMsg::delete(old_spu.into())];
+        self.send_msg_to_all_live_spus(&spu_msg).await;
+        self.send_client_notification(ClientNotification::SPU(UpdateSpuResponse::new(spu_msg)));
     }
 
     /// remove spu connection parameters & socket.
@@ -242,7 +246,7 @@ impl ConnManager {
             spec.replicas.clone(),
         )));
 
-        let request = UpdateReplicaRequest::encode_request(replica_msgs);
+        let request = UpdateReplicaRequest::encode_request(replica_msgs.clone());
         let mut message = RequestMessage::new_request(request);
         message.get_mut_header().set_client_id("controller");
 
@@ -268,6 +272,9 @@ impl ConnManager {
                 ),
             }
         }
+
+        self.send_client_notification(ClientNotification::Replica(UpdateReplicaResponse::new(replica_msgs)));
+
     }
 
     /// looks-up metadata and sends all SPUs and Replicas leaders associated with the SPU.
@@ -306,7 +313,7 @@ impl ConnManager {
     }
 
     /// send messages to all live SPU
-    async fn send_msg_to_all_live_spus(&self, msgs: Vec<SpuMsg>) {
+    async fn send_msg_to_all_live_spus(&self, msgs: &Vec<SpuMsg>) {
         let online_spus = self.spu_store.online_spus();
         debug!(
             "trying to send SPU spec to active Spus: {}",

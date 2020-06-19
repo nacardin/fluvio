@@ -1,6 +1,6 @@
 use kf_protocol::derive::Decode;
 use kf_protocol::derive::Encode;
-use flv_metadata::api::Message;
+use flv_metadata::api::*;
 
 
 use super::replica::ReplicaLeader;
@@ -8,13 +8,13 @@ use super::replica::ReplicaLeader;
 pub type ReplicaMsg = Message<ReplicaLeader>;
 
 /// Changes in the Replica Specs
-#[derive(Decode, Encode, Debug, Default)]
+#[derive(Decode, Encode, Debug, Clone, Default)]
 pub struct UpdateReplicaResponse {
-    pub replicas: Vec<ReplicaMsg>,
+    pub replicas: ReplicaMsgs,
 }
 
 impl UpdateReplicaResponse {
-    pub fn new(replica_msgs: Vec<ReplicaMsg>) -> Self {
+    pub fn new(replica_msgs: ReplicaMsgs) -> Self {
         Self {
             replicas: replica_msgs,
         }

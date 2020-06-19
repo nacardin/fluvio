@@ -3,16 +3,14 @@ use std::time::Duration;
 
 use log::debug;
 use log::error;
-use futures::io::*;
-use async_trait::async_trait;
-use tokio::select;
 use event_listener::Event;
+use futures::io::AsyncRead;
+use futures::io::AsyncWrite;
 
-use kf_protocol::api::RequestMessage;
+use kf_protocol::api::*;
 use sc_api::metadata::*;
-use kf_socket::InnerExclusiveKfSink;
+use kf_socket::*;
 use flv_future_aio::zero_copy::ZeroCopyWrite;
-use flv_future_aio::actor::AsyncDispatcher;
 use flv_future_aio::timer::sleep;
 use flv_future_aio::sync::broadcast::*;
 
@@ -28,7 +26,7 @@ pub struct ClientMetadataController<S> {
     response_sink: InnerExclusiveKfSink<S>,
     context: SharedContext,
     metadata_request: UpdateMetadataRequest,
-    correlation_id: i32,
+    header: RequestHeader,
     end_event: Arc<Event>
 }
 
@@ -48,7 +46,7 @@ impl<S>  ClientMetadataController<S>
         let controller = Self {
             response_sink,
             context,
-            correlation_id: header.correlation_id(),
+            header,
             metadata_request,
             end_event
         };
@@ -58,45 +56,45 @@ impl<S>  ClientMetadataController<S>
     }
 
     /// send out all metadata to client
-    async fn update_all(&self) {
+    async fn update_all(&mut self) -> Result<(),KfSocketError> {
 
-        /*
-        let spu_specs = self.context.spus().all_specs();
-        let partitions = self.context
-            .partitions()
-            .all_specs()
-            .into_iter()
-            .map(|partition_spec| ReplicaLeader { id: partition_spec.key, leader: partition_spec.leader })
-            .collect();
         
+        let spu_specs = self.context.spus().all_specs();
+        let partitions = self.context.partitions().leaders();
+         
         let response = UpdateAllMetadataResponse::new(spu_specs, partitions);
-        */
+        
+        self.response_sink.send_response(&ResponseMessage::new(self.header.correlation_id(), response), self.header.api_version()).await
 
     }
-}
 
-#[async_trait]
-impl<S> AsyncDispatcher for ClientMetadataController<S>
-    where S: AsyncWrite + AsyncRead + Unpin + Send + ZeroCopyWrite + 'static, 
-{
+    pub fn run(self) {
 
+        use flv_future_aio::task::spawn;
+
+        spawn(self.dispatch_loop());
+    }
    
     async fn dispatch_loop(mut self) {
+
+        use tokio::select;
 
         let mut counter: i32 = 0;
         let mut receiver = self.context.new_client_subscriber();
         let sink_id = self.response_sink.id();
-        let correlation_id = self.correlation_id;
+        let correlation_id = self.header.correlation_id();
 
         // first send everything
-
+        if let Err(err) = self.update_all().await {
+            error!("error updating all schema: {}, error: {}",sink_id,err);   
+        }
 
         loop {
 
             counter += 1;
             debug!("waiting on conn: {}: correlation: {}, counter: {}",
                 sink_id,
-                self.correlation_id,
+                correlation_id,
                 counter
             );
 
@@ -105,12 +103,30 @@ impl<S> AsyncDispatcher for ClientMetadataController<S>
 
                 _ = (sleep(Duration::from_secs(60))) => {
 
+                    debug!("metadata reconcillation: {}, correlation: {}",sink_id,correlation_id);
+                    if let Err(err) = self.update_all().await {
+                        error!("error updating all schema: {}, error: {}",sink_id,err);   
+                    }
+
                 },
                 client_event = receiver.recv() => {
 
-                    
                     match client_event {
-                        Ok(value) => {},
+                        Ok(value) => {
+
+                            use crate::controllers::conn_manager::*;
+
+                            match value {
+                                ClientNotification::SPU(spu) => {
+                                    let response = UpdateSpuResponse::new(spu);
+                                },
+                                ClientNotification::Partition(partition) => {
+                                    let response = UpdateReplicaResponse::new(partition);
+                                }
+                                
+                            };
+
+                        },
                         Err(err) => {
                             match err {
                                 RecvError::Closed => {
@@ -124,7 +140,14 @@ impl<S> AsyncDispatcher for ClientMetadataController<S>
                         }
                     }
                     
+                },
+
+                _ = self.end_event.listen() => {
+                    debug!("socket: {}, terminated, ending loop",sink_id);
+                    break;
                 }
+
+
              }
 
         }

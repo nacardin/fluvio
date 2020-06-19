@@ -59,6 +59,6 @@ pub enum ConnectionRequest {
 /// notify client of changes
 #[derive(Debug,Clone)]
 pub enum ClientNotification {
-    SPU(SpuSpecChange),
-    Partition(PartitionSpecChange)
+    SPU(sc_api::metadata::UpdateSpuResponse),
+    Replica(sc_api::metadata::UpdateReplicaResponse)
 }

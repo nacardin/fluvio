@@ -7,7 +7,7 @@ use flv_metadata::api::SpuMsg;
 
 
 /// Changes to Spu specs
-#[derive(Decode, Encode, Debug, Default)]
+#[derive(Decode, Encode, Debug, Clone, Default)]
 pub struct UpdateSpuResponse {
     pub spus: Vec<SpuMsg>,
 }

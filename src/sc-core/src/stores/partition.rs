@@ -15,6 +15,7 @@ use flv_metadata::topic::TopicSpec;
 use k8_metadata::partition::PartitionSpec as K8PartitionSpec;
 use k8_metadata::metadata::K8Obj;
 use flv_types::SpuId;
+use sc_api::metadata::*;
 
 use super::*;
 use crate::metadata::default_convert_from_k8;
@@ -138,6 +139,16 @@ impl PartitionLocalStore {
         );
         msgs
     }
+
+    pub fn leaders(&self) -> Vec<ReplicaLeader> {
+    
+        self.inner_store()
+            .read()
+            .iter()
+            .map(|(key, value)| ReplicaLeader { id: key.clone(), leader: value.spec.leader })
+            .collect()
+    }
+
 
     pub fn table_fmt(&self) -> String {
         let mut table = String::new();
