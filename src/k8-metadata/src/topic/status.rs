@@ -38,45 +38,54 @@ impl Status for TopicStatus {}
 #[cfg(feature = "flv")]
 mod convert {
 
-    use k8_metadata::topic::TopicStatus as K8TopicStatus;
-    use k8_metadata::topic::TopicStatusResolution as K8TopicStatusResolution;
+    use flv_metadata::topic::TopicStatus as FlvTopicStatus;
+    use flv_metadata::topic::TopicResolution as FlvTopicStatusResolution;
+    use super::*;
 
-    impl From<K8TopicStatus> for TopicStatus {
-        fn from(kv_status: K8TopicStatus) -> Self {
-            let resolution = match kv_status.resolution {
-                K8TopicStatusResolution::Provisioned => TopicResolution::Provisioned,
-                K8TopicStatusResolution::Init => TopicResolution::Init,
-                K8TopicStatusResolution::Pending => TopicResolution::Pending,
-                K8TopicStatusResolution::InsufficientResources => {
-                    TopicResolution::InsufficientResources
-                }
-                K8TopicStatusResolution::InvalidConfig => TopicResolution::InvalidConfig,
-            };
-
-            TopicStatus {
-                resolution,
-                replica_map: kv_status.replica_map.clone(),
-                reason: kv_status.reason.clone(),
+    impl Into<FlvTopicStatus> for TopicStatus {
+        fn into(self) -> FlvTopicStatus {
+        
+            FlvTopicStatus {
+                resolution: self.resolution.into(),
+                replica_map: self.replica_map.clone(),
+                reason: self.reason.clone(),
             }
         }
     }
 
-    impl From<TopicStatus> for K8TopicStatus {
-        fn from(status: TopicStatus) -> K8TopicStatus {
-            let resolution = match status.resolution {
-                TopicResolution::Provisioned => K8TopicStatusResolution::Provisioned,
-                TopicResolution::Init => K8TopicStatusResolution::Init,
-                TopicResolution::Pending => K8TopicStatusResolution::Pending,
-                TopicResolution::InsufficientResources => {
-                    K8TopicStatusResolution::InsufficientResources
-                }
-                TopicResolution::InvalidConfig => K8TopicStatusResolution::InvalidConfig,
-            };
+    impl Into<FlvTopicStatusResolution> for TopicStatusResolution {
+        fn into(self) -> FlvTopicStatusResolution {
+            match self {
+                Self::Provisioned => FlvTopicStatusResolution::Provisioned,
+                Self::Init => FlvTopicStatusResolution::Init,
+                Self::Pending => FlvTopicStatusResolution::Pending,
+                Self::InsufficientResources => FlvTopicStatusResolution::InsufficientResources,
+                Self::InvalidConfig => FlvTopicStatusResolution::InvalidConfig
+            }
+        }
+    }
 
-            K8TopicStatus {
-                resolution: resolution,
+
+
+    impl From<FlvTopicStatus> for TopicStatus {
+        fn from(status: FlvTopicStatus) -> Self {
+        
+            Self {
+                resolution: status.resolution.into(),
                 replica_map: status.replica_map.clone(),
                 reason: status.reason.clone(),
+            }
+        }
+    }
+
+    impl From<FlvTopicStatusResolution> for TopicStatusResolution {
+        fn from(status: FlvTopicStatusResolution) -> Self {
+            match status {
+                FlvTopicStatusResolution::Provisioned => Self::Provisioned,
+                FlvTopicStatusResolution::Init => Self::Init,
+                FlvTopicStatusResolution::Pending => Self::Pending,
+                FlvTopicStatusResolution::InsufficientResources => Self::InsufficientResources,
+                FlvTopicStatusResolution::InvalidConfig => Self::InvalidConfig,
             }
         }
     }
