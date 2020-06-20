@@ -40,21 +40,21 @@ mod convert {
 
     use std::convert::Into;
 
-    use flv_metadata::partition::PartitionSpec as KFPartitionSpec;
+    use flv_metadata::partition::PartitionSpec as KfPartitionSpec;
     use super::*;
 
-    impl Into<KFPartitionSpec> for PartitionSpec {
-        fn from(kv_spec: PartitionSpec) -> Self {
-            KFPartitionSpec {
-                leader: kv_spec.leader,
-                replicas: kv_spec.replicas,
+    impl Into<KfPartitionSpec> for PartitionSpec {
+        fn into(self) -> KfPartitionSpec {
+            KfPartitionSpec {
+                leader: self.leader,
+                replicas: self.replicas,
             }
         }
     }
 
-    impl From<PartitionSpec> for K8PartitionSpec {
-        fn from(spec: PartitionSpec) -> K8PartitionSpec {
-            K8PartitionSpec {
+    impl From<KfPartitionSpec> for PartitionSpec {
+        fn from(spec: KfPartitionSpec) -> Self {
+            Self {
                 leader: spec.leader,
                 replicas: spec.replicas,
             }

@@ -24,8 +24,8 @@ use super::ElectionScoring;
 pub struct PartitionStatus {
     pub resolution: PartitionResolution,
     pub leader: ReplicaStatus,
-    lsr: u32,
-    replicas: Vec<ReplicaStatus>,
+    pub lsr: u32,
+    pub replicas: Vec<ReplicaStatus>,
 }
 
 impl fmt::Display for PartitionStatus {

@@ -46,29 +46,32 @@ impl Status for PartitionStatus {}
 #[cfg(feature ="kf")]
 mod convert {
 
-    use k8_metadata::partition::PartitionStatus as K8PartitionStatus;
-    use k8_metadata::partition::ReplicaStatus as K8ReplicaStatus;
-    use k8_metadata::partition::PartitionResolution as K8PartitionResolution;
+    use std::convert::Into;
 
+    use flv_metadata::partition::PartitionStatus as KfPartitionStatus;
+    use flv_metadata::partition::ReplicaStatus as KfReplicaStatus;
+    use flv_metadata::partition::PartitionResolution as KfPartitionResolution;
 
-    impl From<K8PartitionStatus> for PartitionStatus {
-        fn from(kv_status: K8PartitionStatus) -> Self {
-            Self {
-                resolution: kv_status.resolution.into(),
-                leader: kv_status.leader.into(),
-                replicas: kv_status
+    use super::*;
+
+    impl Into<KfPartitionStatus> for PartitionStatus {
+        fn into(self) -> KfPartitionStatus {
+            KfPartitionStatus {
+                resolution: self.resolution.into(),
+                leader: self.leader.into(),
+                replicas: self
                     .replicas
                     .into_iter()
                     .map(|lrs| lrs.into())
                     .collect(),
-                lsr: kv_status.lsr,
+                lsr: self.lsr,
             }
         }
     }
 
-    impl From<PartitionStatus> for K8PartitionStatus {
-        fn from(status: PartitionStatus) -> K8PartitionStatus {
-            K8PartitionStatus {
+    impl From<KfPartitionStatus> for PartitionStatus {
+        fn from(status: KfPartitionStatus) -> Self {
+            Self {
                 resolution: status.resolution.into(),
                 leader: status.leader.into(),
                 replicas: status.replicas.into_iter().map(|lrs| lrs.into()).collect(),
@@ -78,47 +81,47 @@ mod convert {
     }
 
 
-impl From<K8PartitionResolution> for PartitionResolution {
-    fn from(resolution: K8PartitionResolution) -> Self {
-        match resolution {
-            K8PartitionResolution::Offline => Self::Offline,
-            K8PartitionResolution::Online => Self::Online,
-            K8PartitionResolution::ElectionLeaderFound => Self::ElectionLeaderFound,
-            K8PartitionResolution::LeaderOffline => Self::LeaderOffline,
+    impl Into<KfPartitionResolution> for PartitionResolution {
+        fn into(self) -> KfPartitionResolution {
+            match self {
+                Self::Offline => KfPartitionResolution::Offline,
+                Self::Online => KfPartitionResolution::Online,
+                Self::ElectionLeaderFound => KfPartitionResolution::ElectionLeaderFound,
+                Self::LeaderOffline => KfPartitionResolution::LeaderOffline,
+            }
         }
     }
-}
 
-impl From<PartitionResolution> for K8PartitionResolution {
-    fn from(resolution: PartitionResolution) -> Self {
-        match resolution {
-            PartitionResolution::Offline => Self::Offline,
-            PartitionResolution::Online => Self::Online,
-            PartitionResolution::LeaderOffline => Self::LeaderOffline,
-            PartitionResolution::ElectionLeaderFound => Self::ElectionLeaderFound,
+    impl From<KfPartitionResolution> for PartitionResolution {
+        fn from(resolution: KfPartitionResolution) -> Self {
+            match resolution {
+                KfPartitionResolution::Offline => Self::Offline,
+                KfPartitionResolution::Online => Self::Online,
+                KfPartitionResolution::LeaderOffline => Self::LeaderOffline,
+                KfPartitionResolution::ElectionLeaderFound => Self::ElectionLeaderFound,
+            }
         }
     }
-}
 
 
-impl From<K8ReplicaStatus> for ReplicaStatus {
-    fn from(status: K8ReplicaStatus) -> Self {
-        Self {
-            spu: status.spu,
-            hw: status.hw,
-            leo: status.leo,
+    impl Into<KfReplicaStatus> for ReplicaStatus {
+        fn into(self) -> KfReplicaStatus {
+            KfReplicaStatus {
+                spu: self.spu,
+                hw: self.hw,
+                leo: self.leo,
+            }
         }
     }
-}
 
-impl From<ReplicaStatus> for K8ReplicaStatus {
-    fn from(status: ReplicaStatus) -> Self {
-        Self {
-            spu: status.spu,
-            hw: status.hw,
-            leo: status.leo,
+    impl From<KfReplicaStatus> for ReplicaStatus {
+        fn from(status: KfReplicaStatus) -> Self {
+            Self {
+                spu: status.spu,
+                hw: status.hw,
+                leo: status.leo,
+            }
         }
     }
-}
 
 }
