@@ -181,6 +181,8 @@ impl AdminClient for ScAdminClient {
 
     type TopicMetadata = TopicMetadata;
 
+    
+
     /// Connect to replica leader for a topic/partition
     async fn find_replica_for_topic_partition(
         &mut self,

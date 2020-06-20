@@ -23,7 +23,7 @@ use kf_protocol::message::offset::KfOffsetFetchRequest;
 
 use crate::error::CliError;
 
-use flv_client::profile::KfConfig;
+use flv_client::kf::KfConfig;
 use crate::advanced::RequestApi;
 use crate::Terminal;
 
