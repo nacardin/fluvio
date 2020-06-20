@@ -24,7 +24,7 @@ pub struct FlvCreateSpuGroupRequest {
 impl Request for FlvCreateSpuGroupRequest {
     const API_KEY: u16 = ScPublicApiKey::FlvCreateSpuGroup as u16;
     const DEFAULT_API_VERSION: i16 = 1;
-    type Response = FlvCreateSpuGroupsResponse;
+    type Response = FlvCreateSpuGroupResponse;
 }
 
 
@@ -33,7 +33,7 @@ impl Request for FlvCreateSpuGroupRequest {
 // -----------------------------------
 
 #[derive(Encode, Decode, Default, Debug)]
-pub struct FlvCreateSpuGroupsResponse {
+pub struct FlvCreateSpuGroupResponse {
     /// The spu group creation result messages.
-    pub response: FlvResponseMessage
+    pub status: FlvResponseMessage
 }

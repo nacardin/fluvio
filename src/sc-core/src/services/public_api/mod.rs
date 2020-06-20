@@ -3,8 +3,7 @@ mod spg;
 mod spu;
 mod topic;
 mod metadata;
-
-
+mod api_version;
 
 pub use context::*;
 
@@ -86,7 +85,7 @@ mod context {
 
         /// Create input metadata for our context
         /// which has namespace
-        pub async fn create<S>(&self, name: String, spec: S) -> Result<(), C::MetadataClientError>
+        pub async fn create<S>(&self, name: &str, spec: S) -> Result<(), C::MetadataClientError>
         where
             S: K8Spec + Serialize + Default + Debug + Clone + DeserializeOwned + Send,
             <S as K8Spec>::Status: Default + Debug + Serialize + DeserializeOwned + Send,
@@ -96,7 +95,7 @@ mod context {
                 api_version: S::api_version(),
                 kind: S::kind(),
                 metadata: InputObjectMeta {
-                    name,
+                    name: name.to_owned(),
                     namespace: self.namespace.clone(),
                     ..Default::default()
                 },

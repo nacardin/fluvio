@@ -5,3 +5,5 @@ mod fetch;
 pub use create::*;
 pub use fetch::*;
 pub use delete::*;
+
+use super::PublicContext;

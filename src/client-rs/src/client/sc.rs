@@ -137,7 +137,7 @@ impl ScAdminClient {
         &mut self,
         group: SpuGroupSpec,
     ) -> Result<(), ClientError> {
-        let request: FlvCreateSpuGroupsRequest = group.into();
+        let request: FlvCreateSpuGroupRequest = group.into();
 
         let responses = self.0.send_receive(request).await?;
 
@@ -145,8 +145,8 @@ impl ScAdminClient {
     }
 
     pub async fn delete_group(&mut self, group: &str) -> Result<(), ClientError> {
-        let request = FlvDeleteSpuGroupsRequest {
-            spu_groups: vec![group.to_owned()],
+        let request = FlvDeleteSpuGroupRequest {
+            group: group.to_owned()
         };
 
         let responses = self.0.send_receive(request).await?;
