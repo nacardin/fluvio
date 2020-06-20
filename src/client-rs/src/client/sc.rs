@@ -135,7 +135,7 @@ impl ScAdminClient {
 
     pub async fn create_group(
         &mut self,
-        group: FlvCreateSpuGroupRequest,
+        group: SpuGroupSpec,
     ) -> Result<(), ClientError> {
         let request: FlvCreateSpuGroupsRequest = group.into();
 

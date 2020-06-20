@@ -10,3 +10,8 @@ pub mod core {
 pub mod app {
     pub use k8_obj_app::*;
 }
+
+
+pub mod metadata {
+    pub use k8_obj_metadata::*;
+}

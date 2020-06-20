@@ -124,3 +124,83 @@ impl StorageConfig {
         self.size.clone().unwrap_or("1Gi".to_owned())
     }
 }
+
+
+
+#[cfg(feature ="kf")]
+mod convert {
+
+    use flv_metadata::spg::SpgSpec as FlvSpgSpec;
+
+    use crate::metadata::TemplateSpec;
+    use crate::metadata::K8Obj;
+    use super::*;
+
+impl Into<(String, SpuGroupSpec, SpuGroupStatus)> for FlvFetchSpuGroup {
+    fn into(self) -> (String, SpuGroupSpec, SpuGroupStatus) {
+        (
+            self.name,
+            SpuGroupSpec {
+                replicas: self.replicas,
+                min_id: Some(self.min_id),
+                template: TemplateSpec {
+                    spec: SpuTemplate {
+                        rack: self.rack,
+                        storage: Some(StorageConfig {
+                            size: Some(self.size),
+                            ..Default::default()
+                        }),
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                },
+            },
+            SpuGroupStatus {
+                resolution: self.resolution.into(),
+                ..Default::default()
+            },
+        )
+    }
+}
+
+impl From<K8Obj<SpuGroupSpec>> for FlvFetchSpuGroup {
+    fn from(item: K8Obj<SpuGroupSpec>) -> Self {
+        let (name, spec, status) = (item.metadata.name, item.spec, item.status);
+        let min_id = spec.min_id();
+        let (replicas, template) = (spec.replicas, spec.template.spec);
+        let (rack, storage) = (template.rack, template.storage.unwrap_or_default());
+        Self {
+            name,
+            replicas,
+            min_id,
+            rack,
+            size: storage.size(),
+            resolution: status.resolution.into(),
+            reason: None,
+        }
+    }
+}
+
+impl From<SpuGroupStatusResolution> for FlvSpuGroupResolution {
+    fn from(res: SpuGroupStatusResolution) -> Self {
+        match res {
+            SpuGroupStatusResolution::Init => FlvSpuGroupResolution::Init,
+            SpuGroupStatusResolution::Invalid => FlvSpuGroupResolution::Invalid,
+            SpuGroupStatusResolution::Reserved => FlvSpuGroupResolution::Reserved,
+        }
+    }
+}
+
+impl Into<SpuGroupStatusResolution> for FlvSpuGroupResolution {
+    fn into(self) -> SpuGroupStatusResolution {
+        match self {
+            Self::Init => SpuGroupStatusResolution::Init,
+            Self::Invalid => SpuGroupStatusResolution::Invalid,
+            Self::Reserved => SpuGroupStatusResolution::Reserved,
+        }
+    }
+}
+
+
+
+}

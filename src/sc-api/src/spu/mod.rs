@@ -13,3 +13,6 @@ pub use create_spu_groups::*;
 pub use delete_spu_groups::*;
 pub use fetch_spu_groups::*;
 pub use flv_spus::*;
+
+pub use flv_metadata::spg::*;
+pub use flv_metadata::spu::*;
