@@ -23,14 +23,14 @@ pub enum ScPublicApiKey {
     //  FlvUpdateReplicaMetadata = 1002,
 
     // Topics
-    FlvCreateTopics = 2001,
-    FlvDeleteTopics = 2002,
+    FlvCreateTopic = 2001,
+    FlvDeleteTopic = 2002,
     FlvFetchTopics = 2003,
     FlvTopicComposition = 2004,
 
     // Custom SPUs
-    FlvRegisterCustomSpus = 2005,
-    FlvUnregisterCustomSpus = 2006,
+    FlvRegisterCustomSpu = 2005,
+    FlvUnregisterCustomSpu = 2006,
     FlvFetchSpus = 2007,
 
     // SPU Groups

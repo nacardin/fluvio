@@ -7,48 +7,41 @@
 use log::{debug, trace};
 use std::io::Error;
 
-use k8_metadata::spg::SpuGroupSpec;
+
 use k8_metadata_client::MetadataClient;
 use kf_protocol::api::FlvErrorCode;
 use kf_protocol::api::{RequestMessage, ResponseMessage};
-use sc_api::{FlvResponseMessage};
+use sc_api::FlvStatus;
 use sc_api::spu::{FlvDeleteSpuGroupsRequest, FlvDeleteSpuGroupsResponse};
 
 use super::PublicContext;
 
 /// Handler for delete spu group request
-pub async fn handle_delete_spu_groups_request<C>(
+pub async fn handle_delete_spu_group_request<C>(
     request: RequestMessage<FlvDeleteSpuGroupsRequest>,
     ctx: &PublicContext<C>,
 ) -> Result<ResponseMessage<FlvDeleteSpuGroupsResponse>, Error>
 where
     C: MetadataClient,
 {
-    let mut response = FlvDeleteSpuGroupsResponse::default();
-    let mut results: Vec<FlvResponseMessage> = vec![];
+    use k8_metadata::spg::SpuGroupSpec as K8SpgSpec;
 
-    debug!(
-        ">>>>>>>>>>> DELETE SPU GROUP REQ GOES HERE {:#?}",
-        request.request
-    );
+    let (header, req) = request.get_header_request();
 
-    for spg_name in &request.request.spu_groups {
-        debug!("api request: delete spu group '{}'", spg_name);
+    let name = req.name;
+    debug!("delete spg group: {}",name);
 
-        let result = match ctx.delete::<SpuGroupSpec>(spg_name).await {
-            Ok(_) => FlvResponseMessage::new_ok(spg_name.clone()),
-            Err(err) => {
-                let error = Some(err.to_string());
-                FlvResponseMessage::new(spg_name.clone(), FlvErrorCode::SpuError, error)
-            }
-        };
+    let status = match ctx.delete::<K8SpgSpec>(&name).await {
+        Ok(_) => FlvStatus::new_ok(name),
+        Err(err) => {
+              let error = Some(err.to_string());
+              FlvStatus::new(name, FlvErrorCode::SpuError, error)
+        }
+    };
 
-        results.push(result);
-    }
+    trace!("flv delete spu group resp {:#?}", status);   
 
-    // update response
-    response.results = results;
-    trace!("flv delete spu group resp {:#?}", response);
-
-    Ok(request.new_response(response))
+    Ok(ResponseMessage::from_header(&header,status))
 }
+
+

@@ -108,7 +108,7 @@ impl ScAdminClient {
 
     pub async fn unregister_custom_spu(&mut self, spu: FlvCustomSpu) -> Result<(), ClientError> {
         let request = FlvUnregisterCustomSpusRequest {
-            custom_spus: vec![spu],
+           spu
         };
 
         let responses = self.0.send_receive(request).await?;
@@ -146,7 +146,7 @@ impl ScAdminClient {
 
     pub async fn delete_group(&mut self, group: &str) -> Result<(), ClientError> {
         let request = FlvDeleteSpuGroupRequest {
-            group: group.to_owned()
+            name: group.to_owned()
         };
 
         let responses = self.0.send_receive(request).await?;

@@ -10,9 +10,8 @@ use flv_metadata::spg::*;
 
 
 use crate::ScPublicApiKey;
-use crate::FlvResponseMessage;
+use crate::FlvStatus;
 
-use super::FlvSpuGroupResolution;
 use super::SpuGroupSpec;
 
 /// Fetch SPU Groups by type
@@ -27,7 +26,7 @@ impl Request for FlvFetchSpuGroupsRequest {
 
 #[derive(Encode, Decode, Default, Debug)]
 pub struct FlvFetchSpuGroupsResponse {
-    pub error: FlvResponseMessage,
+    pub error: FlvStatus,
     /// Each spu in the response.
     pub spu_groups: Vec<FlvFetchSpuGroup>,
 }

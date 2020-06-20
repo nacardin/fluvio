@@ -4,15 +4,13 @@
 //! Public API to fetch SPU metadata from the SC
 //!
 use kf_protocol::api::Request;
-use kf_protocol::api::FlvErrorCode;
 use kf_protocol::derive::Decode;
 use kf_protocol::derive::Encode;
 
+use flv_metadata::spu::*;
+
 use crate::ScPublicApiKey;
-use super::FlvRequestSpuType;
-use super::FlvSpuType;
-use super::FlvSpuResolution;
-use super::FlvEndPointMetadata;
+
 
 // -----------------------------------
 // FlvFetchSpusRequest
@@ -22,7 +20,7 @@ use super::FlvEndPointMetadata;
 #[derive(Decode, Encode, Default, Debug)]
 pub struct FlvFetchSpusRequest {
     /// SPU type All or Custom
-    pub req_spu_type: FlvRequestSpuType,
+    pub spu_type: SpuType,
 }
 
 impl Request for FlvFetchSpusRequest {
@@ -39,38 +37,16 @@ impl Request for FlvFetchSpusRequest {
 #[derive(Encode, Decode, Default, Debug)]
 pub struct FlvFetchSpusResponse {
     /// Each spu in the response.
-    pub spus: Vec<FlvFetchSpuResponse>,
+    pub spus: Vec<FlvFetchSpu>,
 }
 
-#[derive(Encode, Decode, Default, Debug)]
-pub struct FlvFetchSpuResponse {
-    /// The error code, None for no errors
-    pub error_code: FlvErrorCode,
-
-    /// The spu name
-    pub name: String,
-
-    /// Spu parameters, None if error
-    pub spu: Option<FlvFetchSpu>,
-}
 
 #[derive(Encode, Decode, Default, Debug)]
 pub struct FlvFetchSpu {
-    /// Spu globally unique id.
-    pub id: i32,
 
-    /// Spu type: true for managed, false for custom.
-    pub spu_type: FlvSpuType,
+    pub name: String,
 
-    /// Public endpoint server interface.
-    pub public_ep: FlvEndPointMetadata,
+    pub spec: SpuSpec,
 
-    /// Private endpoint server interface.
-    pub private_ep: FlvEndPointMetadata,
-
-    /// Rack label, optional parameter used by replica assignment algorithm.
-    pub rack: Option<String>,
-
-    /// Status resolution
-    pub resolution: FlvSpuResolution,
+    pub status: SpuStatus,
 }
