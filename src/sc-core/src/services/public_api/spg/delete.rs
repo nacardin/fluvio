@@ -12,15 +12,15 @@ use k8_metadata_client::MetadataClient;
 use kf_protocol::api::FlvErrorCode;
 use kf_protocol::api::{RequestMessage, ResponseMessage};
 use sc_api::FlvStatus;
-use sc_api::spu::{FlvDeleteSpuGroupsRequest, FlvDeleteSpuGroupsResponse};
+use sc_api::spu::FlvDeleteSpuGroupRequest;
 
 use super::PublicContext;
 
 /// Handler for delete spu group request
 pub async fn handle_delete_spu_group_request<C>(
-    request: RequestMessage<FlvDeleteSpuGroupsRequest>,
+    request: RequestMessage<FlvDeleteSpuGroupRequest>,
     ctx: &PublicContext<C>,
-) -> Result<ResponseMessage<FlvDeleteSpuGroupsResponse>, Error>
+) -> Result<ResponseMessage<FlvStatus>, Error>
 where
     C: MetadataClient,
 {

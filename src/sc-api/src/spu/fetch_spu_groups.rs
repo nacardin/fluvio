@@ -33,6 +33,7 @@ pub struct FlvFetchSpuGroupsResponse {
 
 #[derive(Encode, Decode, Default, Debug)]
 pub struct FlvFetchSpuGroup {
+    name: String,
     spec: SpuGroupSpec,
     status: SpuGroupResponse
 }

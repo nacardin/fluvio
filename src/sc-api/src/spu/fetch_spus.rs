@@ -20,13 +20,25 @@ use crate::ScPublicApiKey;
 #[derive(Decode, Encode, Default, Debug)]
 pub struct FlvFetchSpusRequest {
     /// SPU type All or Custom
-    pub spu_type: SpuType,
+    pub spu_type: FlvRequestSpuType,
 }
 
 impl Request for FlvFetchSpusRequest {
     const API_KEY: u16 = ScPublicApiKey::FlvFetchSpus as u16;
     const DEFAULT_API_VERSION: i16 = 1;
     type Response = FlvFetchSpusResponse;
+}
+
+#[derive(Decode, Encode, Debug)]
+pub enum FlvRequestSpuType {
+    All,
+    Custom,
+}
+
+impl Default for FlvRequestSpuType {
+    fn default() -> FlvRequestSpuType {
+        FlvRequestSpuType::All
+    }
 }
 
 

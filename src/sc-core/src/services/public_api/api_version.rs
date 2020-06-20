@@ -19,14 +19,14 @@ pub async fn handle_api_versions_request(
 
     // topic versions
     response.api_keys.push(make_version_key(
-        ScPublicApiKey::FlvCreateTopics,
-        FlvCreateTopicsRequest::DEFAULT_API_VERSION,
-        FlvCreateTopicsRequest::DEFAULT_API_VERSION,
+        ScPublicApiKey::FlvCreateTopic,
+        FlvCreateTopicRequest::DEFAULT_API_VERSION,
+        FlvCreateTopicRequest::DEFAULT_API_VERSION,
     ));
     response.api_keys.push(make_version_key(
-        ScPublicApiKey::FlvDeleteTopics,
-        FlvDeleteTopicsRequest::DEFAULT_API_VERSION,
-        FlvDeleteTopicsRequest::DEFAULT_API_VERSION,
+        ScPublicApiKey::FlvDeleteTopic,
+        FlvDeleteTopicRequest::DEFAULT_API_VERSION,
+        FlvDeleteTopicRequest::DEFAULT_API_VERSION,
     ));
     response.api_keys.push(make_version_key(
         ScPublicApiKey::FlvFetchTopics,

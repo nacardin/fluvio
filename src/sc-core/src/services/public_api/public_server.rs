@@ -74,13 +74,13 @@ where
                 "metadata request handler"
             ),
 
-            ScPublicRequest::FlvCreateTopicsRequest(request) => call_service!(
+            ScPublicRequest::FlvCreateTopicRequest(request) => call_service!(
                 request,
                 super::topic::handle_create_topics_request(request, &ctx),
                 shared_sink,
                 "create topic handler"
             ),
-            ScPublicRequest::FlvDeleteTopicsRequest(request) => call_service!(
+            ScPublicRequest::FlvDeleteTopicRequest(request) => call_service!(
                 request,
                 super::topic::handle_delete_topics_request(request, &ctx),
                 shared_sink,
@@ -100,15 +100,15 @@ where
             ),
 
             
-            ScPublicRequest::FlvRegisterCustomSpusRequest(request) => call_service!(
+            ScPublicRequest::FlvRegisterCustomSpuRequest(request) => call_service!(
                 request,
-                super::spu::handle_register_custom_spus_request(request, &ctx),
+                super::spu::handle_register_custom_spu_request(request, &ctx),
                 shared_sink,
                 "create custom spus handler"
             ),
-            ScPublicRequest::FlvUnregisterCustomSpusRequest(request) => call_service!(
+            ScPublicRequest::FlvUnregisterCustomSpuRequest(request) => call_service!(
                 request,
-                super::spu::handle_unregister_custom_spus_request(request, &ctx),
+                super::spu::handle_unregister_custom_spu_request(request, &ctx),
                 shared_sink,
                 "delete custom spus handler"
             ),
@@ -125,13 +125,13 @@ where
                 shared_sink,
                 "create spu groups handler"
             ),
-            ScPublicRequest::FlvDeleteSpuGroupsRequest(request) => call_service!(
+            ScPublicRequest::FlvDeleteSpuGroupRequest(request) => call_service!(
                 request,
                 super::spg::handle_delete_spu_groups_request(request, &ctx),
                 shared_sink,
                 "delete spu groups handler"
             ),
-            ScPublicRequest::FlvFetchSpuGroupsRequest(request) => call_service!(
+            ScPublicRequest::FlvFetchSpuGroupRequest(request) => call_service!(
                 request,
                 super::spg::handle_fetch_spu_groups_request(request, &ctx),
                 shared_sink,

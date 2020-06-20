@@ -18,20 +18,13 @@ use crate::ScPublicApiKey;
 #[derive(Encode, Decode, Default, Debug)]
 pub struct FlvRegisterCustomSpuRequest {
 
-    pub custom_spus: FlvCustomSpu
+    pub name: String,
+    pub spec: SpuSpec,
+    pub dry_run: bool
 }
 
 impl Request for FlvRegisterCustomSpuRequest {
     const API_KEY: u16 = ScPublicApiKey::FlvRegisterCustomSpu as u16;
     const DEFAULT_API_VERSION: i16 = 1;
     type Response = FlvStatus;
-}
-
-#[derive(Encode, Decode, Default, Debug)]
-pub struct FlvCustomSpu {
-
-    /// The name of the custom spu
-    pub name: String,
-
-    pub spec: SpuSpec,
 }

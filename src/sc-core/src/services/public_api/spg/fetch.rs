@@ -7,8 +7,8 @@ use kf_protocol::api::{RequestMessage, ResponseMessage};
 use k8_metadata::spg::{SpuGroupSpec};
 use k8_metadata_client::MetadataClient;
 
-use sc_api::spu::{FlvFetchSpuGroupsRequest, FlvFetchSpuGroupsResponse};
-use sc_api::FlvResponseMessage;
+use sc_api::spu::*;
+use sc_api::FlvStatus;
 
 use super::PublicContext;
 
@@ -24,14 +24,22 @@ where
     match ctx.retrieve_items::<SpuGroupSpec>().await {
         Ok(k8_list) => {
             debug!("fetched: {} spgs", k8_list.items.len());
-            for group in k8_list.items {
-                response.spu_groups.push(group.into());
-            }
+
+            response.spu_groups = k8_list.items.into_iter()
+                .map(|k8_obj| {
+                    FlvFetchSpuGroup {
+                        name: k8_obj.metadata.name,
+                        spec: k8_obj.spec.into(),
+                        status: k8_obj.status.into()
+                    }
+                })
+                .collect();
+            
         }
         Err(err) => {
             let error = Some(err.to_string());
             response.error =
-                FlvResponseMessage::new("error".to_owned(), FlvErrorCode::SpuError, error);
+            FlvStatus::new("error".to_owned(), FlvErrorCode::SpuError, error);
         }
     }
 

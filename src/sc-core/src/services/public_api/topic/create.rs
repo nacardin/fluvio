@@ -19,7 +19,7 @@ use kf_protocol::api::FlvErrorCode;
 use k8_metadata::metadata::ObjectMeta;
 use k8_metadata_client::MetadataClient;
 
-use sc_api::FlvResponseMessage;
+use sc_api::FlvStatus;
 use sc_api::topics::*;
 
 use flv_metadata::topic::TopicSpec;
@@ -32,44 +32,30 @@ use super::PublicContext;
 
 /// Handler for create topic request
 pub async fn handle_create_topics_request<C>(
-    request: RequestMessage<FlvCreateTopicsRequest>,
+    request: RequestMessage<FlvCreateTopicRequest>,
     ctx: &PublicContext<C>,
-) -> Result<ResponseMessage<FlvCreateTopicsResponse>, Error>
+) -> Result<ResponseMessage<FlvStatus>, Error>
 where
     C: MetadataClient,
 {
-    let (header, topic_request) = request.get_header_request();
+    let (header, req) = request.get_header_request();
 
-    let validate_only = topic_request.validate_only;
-    let mut response = FlvCreateTopicsResponse::default();
-    let mut topic_results: Vec<FlvResponseMessage> = vec![];
+    let validate_only = req.validate_only;
+  
 
-    // process create topic requests in sequence
-    for topic_req in topic_request.topics {
-        let name = topic_req.name;
-        let topic_spec = topic_req.topic;
-        debug!("api request: create topic '{}'", name);
+    let name = req.name;
+    let topic_spec = req.spec;
+    debug!("api request: create topic '{}'", name);
 
-        // validate topic request
-        if let Err(validation_message) = validate_topic_request(&name, &topic_spec, ctx.context())
-        {
-            topic_results.push(validation_message);
-            continue;
-        }
-        if validate_only {
-            topic_results.push(FlvResponseMessage::new_ok(name.to_string()));
-            continue;
-        }
-        // process topic request
-        let result = process_topic_request(ctx, name, topic_spec).await;
-        topic_results.push(result);
+    // validate topic request
+    let mut status = validate_topic_request(&name, &topic_spec, ctx.context());
+    if !validate_only {
+        status = process_topic_request(ctx, name, topic_spec).await;
     }
 
-    // send response
-    response.results = topic_results;
-    trace!("create topics request response {:#?}", response);
+    trace!("create topics request response {:#?}", status);
 
-    Ok(RequestMessage::<FlvCreateTopicsRequest>::response_with_header(&header, response))
+    Ok(ResponseMessage::from_header(&header, status))
 }
 
 /// Validate topic, takes advantage of the validation routines inside topic action workflow
@@ -77,12 +63,12 @@ fn validate_topic_request(
     name: &str,
     topic_spec: &TopicSpec,
     metadata: &Context,
-) -> Result<(), FlvResponseMessage> {
+) -> Result<(), FlvStatus> {
     debug!("validating topic: {}", name);
 
     // check if topic already exists
     if metadata.topics().contains_key(name) {
-        return Err(FlvResponseMessage::new(
+        return Err(FlvStatus::new(
             name.to_string(),
             FlvErrorCode::TopicAlreadyExists,
             Some(format!("topic '{}' already defined", name)),
@@ -96,7 +82,7 @@ fn validate_topic_request(
             let next_state = topic_kv.validate_computed_topic_parameters(param);
             trace!("validating, computed topic: {:#?}", next_state);
             if next_state.resolution.is_invalid() {
-                Err(FlvResponseMessage::new(
+                Err(FlvStatus::new(
                     name.to_string(),
                     FlvErrorCode::TopicError,
                     Some(next_state.reason),
@@ -105,7 +91,7 @@ fn validate_topic_request(
                 let next_state = topic_kv.generate_replica_map(metadata.spus(), param);
                 trace!("validating, generate replica map topic: {:#?}", next_state);
                 if next_state.resolution.no_resource() {
-                    Err(FlvResponseMessage::new(
+                    Err(FlvStatus::new(
                         name.to_string(),
                         FlvErrorCode::TopicError,
                         Some(next_state.reason),
@@ -119,7 +105,7 @@ fn validate_topic_request(
             let next_state = topic_kv.validate_assigned_topic_parameters(partition_map);
             trace!("validating, computed topic: {:#?}", next_state);
             if next_state.resolution.is_invalid() {
-                Err(FlvResponseMessage::new(
+                Err(FlvStatus::new(
                     name.to_string(),
                     FlvErrorCode::TopicError,
                     Some(next_state.reason),
@@ -129,7 +115,7 @@ fn validate_topic_request(
                     topic_kv.update_replica_map_for_assigned_topic(partition_map, metadata.spus());
                 trace!("validating, assign replica map topic: {:#?}", next_state);
                 if next_state.resolution.is_invalid() {
-                    Err(FlvResponseMessage::new(
+                    Err(FlvStatus::new(
                         name.to_string(),
                         FlvErrorCode::TopicError,
                         Some(next_state.reason),
@@ -147,15 +133,15 @@ async fn process_topic_request<C>(
     ctx: &PublicContext<C>,
     name: String,
     topic_spec: TopicSpec,
-) -> FlvResponseMessage
+) -> FlvStatus
 where
     C: MetadataClient,
 {
     if let Err(err) = create_topic(ctx, name.clone(), topic_spec).await {
         let error = Some(err.to_string());
-        FlvResponseMessage::new(name, FlvErrorCode::TopicError, error)
+        FlvStatus::new(name, FlvErrorCode::TopicError, error)
     } else {
-        FlvResponseMessage::new_ok(name)
+        FlvStatus::new_ok(name)
     }
 }
 

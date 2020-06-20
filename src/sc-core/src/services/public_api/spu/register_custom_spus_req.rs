@@ -11,9 +11,8 @@ use kf_protocol::api::FlvErrorCode;
 
 use k8_metadata::metadata::ObjectMeta;
 use k8_metadata_client::MetadataClient;
-use flv_metadata::spu::{SpuSpec, Endpoint, SpuType, IngressPort};
 
-use sc_api::FlvResponseMessage;
+use sc_api::FlvStatus;
 use sc_api::spu::*;
 use crate::core::Context;
 use crate::stores::spu::*;
@@ -23,56 +22,50 @@ use crate::stores::*;
 use super::PublicContext;
 
 /// Handler for create spus request
-pub async fn handle_register_custom_spus_request<C>(
-    request: RequestMessage<FlvRegisterCustomSpusRequest>,
+pub async fn handle_register_custom_spu_request<C>(
+    request: RequestMessage<FlvRegisterCustomSpuRequest>,
     ctx: &PublicContext<C>,
-) -> Result<ResponseMessage<FlvRegisterCustomSpusResponse>, Error>
+) -> Result<ResponseMessage<FlvStatus>, Error>
 where
     C: MetadataClient,
 {
-    let (header, custom_spu_req) = request.get_header_request();
+    let (header, req) = request.get_header_request();
 
-    let mut response = FlvRegisterCustomSpusResponse::default();
-    let mut results: Vec<FlvResponseMessage> = vec![];
+    debug!(
+        "api request: create custom-spu '{}({})'",
+        req.name, req.spec.id
+    );
 
-    // process create custom spus requests in sequence
-    for custom_spu_req in custom_spu_req.custom_spus {
-        debug!(
-            "api request: create custom-spu '{}({})'",
-            custom_spu_req.name, custom_spu_req.id
-        );
+    let mut status = FlvStatus::default();
 
-        // validate custom-spu request
-        if let Err(err_msg) = validate_custom_spu_request(&custom_spu_req, ctx.context()) {
-            results.push(err_msg);
-            continue;
-        }
-
-        // process custom-spu request
-        let result = process_custom_spu_request(ctx, custom_spu_req).await;
-        results.push(result);
+    // validate custom-spu request
+    if let Err(err) = validate_custom_spu_request(&req, ctx.context()) {
+        status = err;
     }
 
-    // send response
-    response.results = results;
-    trace!("create custom-spus response {:#?}", response);
+    if req.dry_run {
+        status = process_custom_spu_request(ctx, req).await;
 
-    Ok(RequestMessage::<FlvRegisterCustomSpusRequest>::response_with_header(&header, response))
+    }
+
+    trace!("create custom-spus response {:#?}", status);
+
+    Ok(ResponseMessage::from_header(&header, status))
 }
 
 /// Validate custom_spu requests (one at a time)
 fn validate_custom_spu_request(
     custom_spu_req: &FlvRegisterCustomSpuRequest,
     metadata: &Context,
-) -> Result<(), FlvResponseMessage> {
-    let spu_id = &custom_spu_req.id;
+) -> Result<(), FlvStatus> {
+    let spu_id = &custom_spu_req.spec.id;
     let spu_name = &custom_spu_req.name;
 
     debug!("validating custom-spu: {}({})", spu_name, spu_id);
 
     // look-up SPU by name or id to check if already exists
     if metadata.spus().spu(spu_name).is_some() || metadata.spus().get_by_id(spu_id).is_some() {
-        Err(FlvResponseMessage::new(
+        Err(FlvStatus::new(
             spu_name.clone(),
             FlvErrorCode::SpuAlreadyExists,
             Some(format!("spu '{}({})' already defined", spu_name, spu_id)),
@@ -86,7 +79,7 @@ fn validate_custom_spu_request(
 async fn process_custom_spu_request<C>(
     ctx: &PublicContext<C>,
     custom_spu_req: FlvRegisterCustomSpuRequest,
-) -> FlvResponseMessage
+) -> FlvStatus
 where
     C: MetadataClient,
 {
@@ -94,9 +87,9 @@ where
 
     if let Err(err) = register_custom_spu(ctx, custom_spu_req).await {
         let error = Some(err.to_string());
-        FlvResponseMessage::new(name, FlvErrorCode::SpuError, error)
+        FlvStatus::new(name, FlvErrorCode::SpuError, error)
     } else {
-        FlvResponseMessage::new_ok(name)
+        FlvStatus::new_ok(name)
     }
 }
 
@@ -108,17 +101,7 @@ where
     C: MetadataClient,
 {
     let meta = ObjectMeta::new(spu_req.name.clone(), ctx.namespace.clone());
-    let public_endpoint =
-        IngressPort::from_port_host(spu_req.public_server.port, spu_req.public_server.host);
-    let private_endpoint =
-        Endpoint::from_port_host(spu_req.private_server.port, spu_req.private_server.host);
-    let spu_spec = SpuSpec {
-        id: spu_req.id,
-        spu_type: SpuType::Custom,
-        public_endpoint,
-        private_endpoint,
-        rack: spu_req.rack.clone(),
-    };
+    let spu_spec = spu_req.spec.into();
     let kv_ctx = KvContext::default().with_ctx(meta);
     let custom_spu_kv = SpuKV::new_with_context(spu_req.name.clone(), spu_spec, kv_ctx);
 
