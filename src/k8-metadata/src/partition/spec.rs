@@ -35,25 +35,25 @@ impl PartitionSpec {
 }
 
 
-#[cfg(feature ="kf")]
+#[cfg(feature ="flv")]
 mod convert {
 
     use std::convert::Into;
 
-    use flv_metadata::partition::PartitionSpec as KfPartitionSpec;
+    use flv_metadata::partition::PartitionSpec as FlvPartitionSpec;
     use super::*;
 
-    impl Into<KfPartitionSpec> for PartitionSpec {
-        fn into(self) -> KfPartitionSpec {
-            KfPartitionSpec {
+    impl Into<FlvPartitionSpec> for PartitionSpec {
+        fn into(self) -> FlvPartitionSpec {
+            FlvPartitionSpec {
                 leader: self.leader,
                 replicas: self.replicas,
             }
         }
     }
 
-    impl From<KfPartitionSpec> for PartitionSpec {
-        fn from(spec: KfPartitionSpec) -> Self {
+    impl From<FlvPartitionSpec> for PartitionSpec {
+        fn from(spec: FlvPartitionSpec) -> Self {
             Self {
                 leader: spec.leader,
                 replicas: spec.replicas,

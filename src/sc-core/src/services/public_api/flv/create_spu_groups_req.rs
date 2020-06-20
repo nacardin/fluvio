@@ -15,6 +15,7 @@ use k8_metadata::metadata::Env;
 use k8_metadata_client::MetadataClient;
 use k8_metadata::metadata::Spec as K8Spec;
 use k8_metadata::metadata::TemplateSpec;
+use k8_metadata::spg::SpgGroupSpu;
 use sc_api::FlvResponseMessage;
 use sc_api::spu::{FlvCreateSpuGroupsRequest, FlvCreateSpuGroupsResponse};
 use sc_api::spu::FlvCreateSpuGroupRequest;

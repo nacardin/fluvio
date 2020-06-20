@@ -61,3 +61,33 @@ impl fmt::Display for SpuGroupStatusResolution {
         }
     }
 }
+
+
+#[cfg(feature = "flv")]
+mod convert {
+
+    use flv_metadata::spg::FlvSpuGroupResolution;
+    use super::*;
+
+    impl Into<FlvSpuGroupResolution> for SpuGroupStatusResolution {
+        fn into(self) -> FlvSpuGroupResolution {
+            match self {
+                Self::Init => FlvSpuGroupResolution::Init,
+                Self::Invalid => FlvSpuGroupResolution::Invalid,
+                Self::Reserved => FlvSpuGroupResolution::Reserved,
+            }
+        }
+    }
+
+    impl From<FlvSpuGroupResolution> for SpuGroupStatusResolution {
+        fn from(status: FlvSpuGroupResolution) -> Self {
+            match status {
+                FlvSpuGroupResolution::Init => SpuGroupStatusResolution::Init,
+                FlvSpuGroupResolution::Invalid => SpuGroupStatusResolution::Invalid,
+                FlvSpuGroupResolution::Reserved => SpuGroupStatusResolution::Reserved,
+            }
+        }
+    }
+
+
+}

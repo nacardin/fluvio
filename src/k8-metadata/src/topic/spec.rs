@@ -96,40 +96,37 @@ impl Partition {
     }
 }
 
-
-#[cfg(feature ="kf")]
+#[cfg(feature = "flv")]
 mod convert {
 
     use k8_metadata::topic::TopicSpec as K8TopicSpec;
-use k8_metadata::topic::Partition as K8Partition;
+    use k8_metadata::topic::Partition as K8Partition;
 
-impl From<TopicSpec> for K8TopicSpec {
-    fn from(spec: TopicSpec) -> Self {
-        match spec {
-            TopicSpec::Computed(computed_param) => K8TopicSpec::new(
-                Some(computed_param.partitions),
-                Some(computed_param.replication_factor),
-                Some(computed_param.ignore_rack_assignment),
-                None,
-            ),
-            TopicSpec::Assigned(assign_param) => K8TopicSpec::new(
-                None,
-                None,
-                None,
-                Some(replica_map_to_k8_partition(assign_param)),
-            ),
+    impl From<TopicSpec> for K8TopicSpec {
+        fn from(spec: TopicSpec) -> Self {
+            match spec {
+                TopicSpec::Computed(computed_param) => K8TopicSpec::new(
+                    Some(computed_param.partitions),
+                    Some(computed_param.replication_factor),
+                    Some(computed_param.ignore_rack_assignment),
+                    None,
+                ),
+                TopicSpec::Assigned(assign_param) => K8TopicSpec::new(
+                    None,
+                    None,
+                    None,
+                    Some(replica_map_to_k8_partition(assign_param)),
+                ),
+            }
         }
     }
-}
 
-
-/// Translate Fluvio Replica Map to K8 Partitions to KV store notification
-fn replica_map_to_k8_partition(partition_maps: PartitionMaps) -> Vec<K8Partition> {
-    let mut k8_partitions: Vec<K8Partition> = vec![];
-    for partition in partition_maps.maps() {
-        k8_partitions.push(K8Partition::new(partition.id, partition.replicas.clone()));
+    /// Translate Fluvio Replica Map to K8 Partitions to KV store notification
+    fn replica_map_to_k8_partition(partition_maps: PartitionMaps) -> Vec<K8Partition> {
+        let mut k8_partitions: Vec<K8Partition> = vec![];
+        for partition in partition_maps.maps() {
+            k8_partitions.push(K8Partition::new(partition.id, partition.replicas.clone()));
+        }
+        k8_partitions
     }
-    k8_partitions
-}
-
 }

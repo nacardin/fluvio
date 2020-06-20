@@ -41,36 +41,30 @@ impl Default for PartitionResolution {
 
 impl Status for PartitionStatus {}
 
-
-
-#[cfg(feature ="kf")]
+#[cfg(feature = "flv")]
 mod convert {
 
     use std::convert::Into;
 
-    use flv_metadata::partition::PartitionStatus as KfPartitionStatus;
-    use flv_metadata::partition::ReplicaStatus as KfReplicaStatus;
-    use flv_metadata::partition::PartitionResolution as KfPartitionResolution;
+    use flv_metadata::partition::PartitionStatus as FlvPartitionStatus;
+    use flv_metadata::partition::ReplicaStatus as FlvReplicaStatus;
+    use flv_metadata::partition::PartitionResolution as FlvPartitionResolution;
 
     use super::*;
 
-    impl Into<KfPartitionStatus> for PartitionStatus {
-        fn into(self) -> KfPartitionStatus {
-            KfPartitionStatus {
+    impl Into<FlvPartitionStatus> for PartitionStatus {
+        fn into(self) -> FlvPartitionStatus {
+            FlvPartitionStatus {
                 resolution: self.resolution.into(),
                 leader: self.leader.into(),
-                replicas: self
-                    .replicas
-                    .into_iter()
-                    .map(|lrs| lrs.into())
-                    .collect(),
+                replicas: self.replicas.into_iter().map(|lrs| lrs.into()).collect(),
                 lsr: self.lsr,
             }
         }
     }
 
-    impl From<KfPartitionStatus> for PartitionStatus {
-        fn from(status: KfPartitionStatus) -> Self {
+    impl From<FlvPartitionStatus> for PartitionStatus {
+        fn from(status: FlvPartitionStatus) -> Self {
             Self {
                 resolution: status.resolution.into(),
                 leader: status.leader.into(),
@@ -80,33 +74,31 @@ mod convert {
         }
     }
 
-
-    impl Into<KfPartitionResolution> for PartitionResolution {
-        fn into(self) -> KfPartitionResolution {
+    impl Into<FlvPartitionResolution> for PartitionResolution {
+        fn into(self) -> FlvPartitionResolution {
             match self {
-                Self::Offline => KfPartitionResolution::Offline,
-                Self::Online => KfPartitionResolution::Online,
-                Self::ElectionLeaderFound => KfPartitionResolution::ElectionLeaderFound,
-                Self::LeaderOffline => KfPartitionResolution::LeaderOffline,
+                Self::Offline => FlvPartitionResolution::Offline,
+                Self::Online => FlvPartitionResolution::Online,
+                Self::ElectionLeaderFound => FlvPartitionResolution::ElectionLeaderFound,
+                Self::LeaderOffline => FlvPartitionResolution::LeaderOffline,
             }
         }
     }
 
-    impl From<KfPartitionResolution> for PartitionResolution {
-        fn from(resolution: KfPartitionResolution) -> Self {
+    impl From<FlvPartitionResolution> for PartitionResolution {
+        fn from(resolution: FlvPartitionResolution) -> Self {
             match resolution {
-                KfPartitionResolution::Offline => Self::Offline,
-                KfPartitionResolution::Online => Self::Online,
-                KfPartitionResolution::LeaderOffline => Self::LeaderOffline,
-                KfPartitionResolution::ElectionLeaderFound => Self::ElectionLeaderFound,
+                FlvPartitionResolution::Offline => Self::Offline,
+                FlvPartitionResolution::Online => Self::Online,
+                FlvPartitionResolution::LeaderOffline => Self::LeaderOffline,
+                FlvPartitionResolution::ElectionLeaderFound => Self::ElectionLeaderFound,
             }
         }
     }
 
-
-    impl Into<KfReplicaStatus> for ReplicaStatus {
-        fn into(self) -> KfReplicaStatus {
-            KfReplicaStatus {
+    impl Into<FlvReplicaStatus> for ReplicaStatus {
+        fn into(self) -> FlvReplicaStatus {
+            FlvReplicaStatus {
                 spu: self.spu,
                 hw: self.hw,
                 leo: self.leo,
@@ -114,8 +106,8 @@ mod convert {
         }
     }
 
-    impl From<KfReplicaStatus> for ReplicaStatus {
-        fn from(status: KfReplicaStatus) -> Self {
+    impl From<FlvReplicaStatus> for ReplicaStatus {
+        fn from(status: FlvReplicaStatus) -> Self {
             Self {
                 spu: status.spu,
                 hw: status.hw,
@@ -123,5 +115,4 @@ mod convert {
             }
         }
     }
-
 }

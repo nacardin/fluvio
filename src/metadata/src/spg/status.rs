@@ -2,9 +2,11 @@ use std::io::{Error, ErrorKind};
 
 use kf_protocol::{Decoder, Encoder};
 use kf_protocol::Version;
+use kf_protocol::derive::*;
 use kf_protocol::bytes::{Buf, BufMut};
 
 
+#[derive(Encode, Decode, Default, Debug)]
 pub struct SpuGroupResponse {
     /// Status resolution
     pub resolution: FlvSpuGroupResolution,

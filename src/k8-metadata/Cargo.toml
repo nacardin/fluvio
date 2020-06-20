@@ -11,7 +11,7 @@ license = "Apache-2.0"
 name = "k8_metadata"
 
 [features]
-kf = ["flv-metadata"]
+flv = ["flv-metadata"]
 
 [dependencies]
 log = "0.4.8"

@@ -4,15 +4,13 @@ use kf_protocol::derive::{Decode, Encode};
 #[derive(Encode, Decode, Default, Debug)]
 pub struct SpuGroupSpec {
 
-    /// The name of the managed spu group
-    pub name: String,
 
     /// The number of replicas for the spu group
     pub replicas: u16,
 
     /// The base spu id that the spu group uses to increment the spu ids
     /// Note: Spu id is a globally unique resource and it cannot be shared
-    pub min_id: Option<i32>,
+    pub min_id: i32,
 
     /// Configuration elements to be applied to each SPUs in the group
     pub config: GroupConfig,
@@ -22,6 +20,7 @@ pub struct SpuGroupSpec {
     pub rack: Option<String>,
 }
 
+/// equivalent to spu template
 #[derive(Encode, Decode, Default, Debug)]
 pub struct GroupConfig {
     pub storage: Option<StorageConfig>,
