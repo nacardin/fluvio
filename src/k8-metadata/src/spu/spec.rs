@@ -115,59 +115,49 @@ impl Default for EncryptionEnum {
 #[cfg(feature = "flv")]
 mod convert {
 
-    use k8_metadata::spu::SpuSpec as K8SpuSpec;
-    use k8_metadata::spu::SpuType as K8SpuType;
-    use k8_metadata::spu::EncryptionEnum as K8EncryptionEnum;
-    use k8_metadata::spu::Endpoint as K8Endpoint;
-    use k8_metadata::spu::IngressPort as K8IngressPort;
-    use k8_metadata::spu::IngressAddr as K8IngressAddr;
+    use flv_metadata::spu::SpuSpec as FlvSpuSpec;
+    use flv_metadata::spu::SpuType as FlvSpuType;
+    use flv_metadata::spu::EncryptionEnum as FlvEncryptionEnum;
+    use flv_metadata::spu::Endpoint as FlvEndpoint;
+    use flv_metadata::spu::IngressPort as FlvIngressPort;
+    use flv_metadata::spu::IngressAddr as FlvIngressAddr;
     use super::*;
 
-    impl From<K8SpuSpec> for SpuSpec {
-        fn from(kv_spec: K8SpuSpec) -> Self {
+    impl Into<FlvSpuSpec> for SpuSpec {
+        fn into(self) -> FlvSpuSpec {
             // convert spu-type, defaults to Custom for none
-            let spu_type = if let Some(kv_spu_type) = kv_spec.spu_type {
+            let spu_type = if let Some(kv_spu_type) = self.spu_type {
                 kv_spu_type.into()
             } else {
-                SpuType::Custom
+                FlvSpuType::Custom
             };
 
             // spu spec
-            SpuSpec {
-                id: kv_spec.spu_id,
-                spu_type: spu_type,
-                public_endpoint: kv_spec.public_endpoint.into(),
-                private_endpoint: kv_spec.private_endpoint.into(),
-                rack: kv_spec.rack.clone(),
-            }
-        }
-    }
-
-    impl Into<K8SpuSpec> for SpuSpec {
-        fn into(self) -> K8SpuSpec {
-            K8SpuSpec {
-                spu_id: self.id,
-                spu_type: Some(self.spu_type.into()),
+            FlvSpuSpec {
+                id: self.spu_id,
+                spu_type,
                 public_endpoint: self.public_endpoint.into(),
                 private_endpoint: self.private_endpoint.into(),
-                rack: self.rack,
+                rack: self.rack
             }
         }
     }
 
-    impl From<K8IngressPort> for IngressPort {
-        fn from(ingress_port: K8IngressPort) -> Self {
+    impl From<FlvSpuSpec> for SpuSpec {
+        fn from(spec: FlvSpuSpec) -> Self {
             Self {
-                port: ingress_port.port,
-                ingress: ingress_port.ingress.into_iter().map(|a| a.into()).collect(),
-                encryption: ingress_port.encryption.into(),
+                spu_id: spec.id,
+                spu_type: Some(spec.spu_type.into()),
+                public_endpoint: spec.public_endpoint.into(),
+                private_endpoint: spec.private_endpoint.into(),
+                rack: spec.rack,
             }
         }
     }
 
-    impl Into<K8IngressPort> for IngressPort {
-        fn into(self) -> K8IngressPort {
-            K8IngressPort {
+    impl Into<FlvIngressPort> for IngressPort {
+        fn into(self) -> FlvIngressPort {
+            FlvIngressPort {
                 port: self.port,
                 ingress: self.ingress.into_iter().map(|a| a.into()).collect(),
                 encryption: self.encryption.into(),
@@ -175,8 +165,27 @@ mod convert {
         }
     }
 
-    impl From<K8IngressAddr> for IngressAddr {
-        fn from(addr: K8IngressAddr) -> Self {
+    impl From<FlvIngressPort> for IngressPort {
+        fn from(port: FlvIngressPort) -> Self {
+            Self {
+                port: port.port,
+                ingress: port.ingress.into_iter().map(|a| a.into()).collect(),
+                encryption: port.encryption.into(),
+            }
+        }
+    }
+
+    impl Into<FlvIngressAddr> for IngressAddr {
+        fn into(self) -> FlvIngressAddr {
+            FlvIngressAddr {
+                hostname: self.hostname,
+                ip: self.ip,
+            }
+        }
+    }
+
+    impl From<FlvIngressAddr> for IngressAddr {
+        fn from(addr: FlvIngressAddr) -> Self {
             Self {
                 hostname: addr.hostname,
                 ip: addr.ip,
@@ -184,17 +193,18 @@ mod convert {
         }
     }
 
-    impl Into<K8IngressAddr> for IngressAddr {
-        fn into(self) -> K8IngressAddr {
-            K8IngressAddr {
-                hostname: self.hostname,
-                ip: self.ip,
+    impl Into<FlvEndpoint> for Endpoint {
+        fn into(self) -> FlvEndpoint {
+            FlvEndpoint {
+                port: self.port,
+                host: self.host,
+                encryption: self.encryption.into(),
             }
         }
     }
 
-    impl From<K8Endpoint> for Endpoint {
-        fn from(pt: K8Endpoint) -> Self {
+    impl From<FlvEndpoint> for Endpoint {
+        fn from(pt: FlvEndpoint) -> Endpoint {
             Self {
                 port: pt.port,
                 host: pt.host,
@@ -203,60 +213,39 @@ mod convert {
         }
     }
 
-    impl Into<K8Endpoint> for Endpoint {
-        fn into(self) -> K8Endpoint {
-            K8Endpoint {
-                port: self.port,
-                host: self.host,
-                encryption: self.encryption.into(),
+
+    impl Into<FlvEncryptionEnum> for EncryptionEnum {
+        fn into(self) -> FlvEncryptionEnum {
+            match self {
+                Self::PLAINTEXT => FlvEncryptionEnum::PLAINTEXT,
+                Self::SSL => FlvEncryptionEnum::SSL,
             }
         }
     }
 
-    // EndPoint
-    pub fn new(ep: K8Endpoint) -> Self {
-        Self {
-            port: ep.port,
-            host: ep.host,
-            encryption: match ep.encryption {
-                K8EncryptionEnum::PLAINTEXT => EncryptionEnum::PLAINTEXT,
-                K8EncryptionEnum::SSL => EncryptionEnum::SSL,
-            },
-        }
-    }
-
-    impl From<K8EncryptionEnum> for EncryptionEnum {
-        fn from(enc: K8EncryptionEnum) -> Self {
+    impl From<FlvEncryptionEnum> for EncryptionEnum {
+        fn from(enc: FlvEncryptionEnum) -> Self {
             match enc {
-                K8EncryptionEnum::PLAINTEXT => Self::PLAINTEXT,
-                K8EncryptionEnum::SSL => Self::SSL,
+                FlvEncryptionEnum::PLAINTEXT => Self::PLAINTEXT,
+                FlvEncryptionEnum::SSL => Self::SSL,
             }
         }
     }
 
-    impl Into<K8EncryptionEnum> for EncryptionEnum {
-        fn into(self) -> K8EncryptionEnum {
+    impl Into<FlvSpuType> for SpuType {
+        fn into(self) -> FlvSpuType {
             match self {
-                Self::PLAINTEXT => K8EncryptionEnum::PLAINTEXT,
-                Self::SSL => K8EncryptionEnum::SSL,
+                Self::Managed => FlvSpuType::Managed,
+                Self::Custom => FlvSpuType::Custom,
             }
         }
     }
 
-    impl From<K8SpuType> for SpuType {
-        fn from(kv_spu_type: K8SpuType) -> Self {
-            match kv_spu_type {
-                K8SpuType::Managed => SpuType::Managed,
-                K8SpuType::Custom => SpuType::Custom,
-            }
-        }
-    }
-
-    impl Into<K8SpuType> for SpuType {
-        fn into(self) -> K8SpuType {
-            match self {
-                SpuType::Managed => K8SpuType::Managed,
-                SpuType::Custom => K8SpuType::Custom,
+    impl From<FlvSpuType> for SpuType {
+        fn from(ty: FlvSpuType) -> SpuType {
+            match ty {
+                FlvSpuType::Managed => Self::Managed,
+                FlvSpuType::Custom => Self::Custom,
             }
         }
     }

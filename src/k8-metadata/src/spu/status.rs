@@ -35,29 +35,44 @@ impl Status for SpuStatus {}
 #[cfg(feature = "flv")]
 mod convert {
 
-    use k8_metadata::spu::SpuStatus as K8SpuStatus;
-    use k8_metadata::spu::SpuStatusResolution as K8SpuStatusResolution;
+    use flv_metadata::spu::SpuStatus as  FlvSpuStatus;
+    use flv_metadata::spu::SpuResolution as FlvSpuStatusResolution;
 
-    impl From<K8SpuStatus> for SpuStatus {
-        fn from(kv_status: K8SpuStatus) -> Self {
-            SpuStatus {
-                resolution: match kv_status.resolution {
-                    K8SpuStatusResolution::Online => SpuResolution::Online,
-                    K8SpuStatusResolution::Offline => SpuResolution::Offline,
-                    K8SpuStatusResolution::Init => SpuResolution::Init,
-                },
+    use super::*;
+
+    impl Into<FlvSpuStatus> for SpuStatus {
+        fn into(self) -> FlvSpuStatus {
+            FlvSpuStatus {
+                resolution: self.resolution.into()
             }
         }
     }
 
-    impl From<SpuStatus> for K8SpuStatus {
-        fn from(status: SpuStatus) -> K8SpuStatus {
-            K8SpuStatus {
-                resolution: (match status.resolution {
-                    SpuResolution::Online => K8SpuStatusResolution::Online,
-                    SpuResolution::Offline => K8SpuStatusResolution::Offline,
-                    SpuResolution::Init => K8SpuStatusResolution::Init,
-                }),
+    impl Into<FlvSpuStatusResolution> for SpuStatusResolution {
+        fn into(self) -> FlvSpuStatusResolution {
+            match self {
+                Self::Online => FlvSpuStatusResolution::Online,
+                Self::Offline => FlvSpuStatusResolution::Offline,
+                Self::Init => FlvSpuStatusResolution::Init,
+                
+            }
+        }
+    }
+
+    impl From<FlvSpuStatus> for SpuStatus {
+        fn from(status: FlvSpuStatus) -> Self {
+            Self {
+                resolution: status.resolution.into()
+            }
+        }
+    }
+
+    impl From<FlvSpuStatusResolution> for SpuStatusResolution {
+        fn from(resolution: FlvSpuStatusResolution) -> Self {
+           match resolution {
+            FlvSpuStatusResolution::Online => Self::Online,
+            FlvSpuStatusResolution::Offline => Self::Offline,
+            FlvSpuStatusResolution::Init => Self::Init,
             }
         }
     }
