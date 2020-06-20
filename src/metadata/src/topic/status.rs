@@ -8,8 +8,6 @@ use std::fmt;
 
 use kf_protocol::derive::{Decode, Encode};
 
-use k8_metadata::topic::TopicStatus as K8TopicStatus;
-use k8_metadata::topic::TopicStatusResolution as K8TopicStatusResolution;
 
 use flv_types::{ReplicaMap, SpuId};
 
@@ -75,45 +73,6 @@ impl std::fmt::Display for TopicResolution {
 // Encode - from KV Topic Status
 // -----------------------------------
 
-impl From<K8TopicStatus> for TopicStatus {
-    fn from(kv_status: K8TopicStatus) -> Self {
-        let resolution = match kv_status.resolution {
-            K8TopicStatusResolution::Provisioned => TopicResolution::Provisioned,
-            K8TopicStatusResolution::Init => TopicResolution::Init,
-            K8TopicStatusResolution::Pending => TopicResolution::Pending,
-            K8TopicStatusResolution::InsufficientResources => {
-                TopicResolution::InsufficientResources
-            }
-            K8TopicStatusResolution::InvalidConfig => TopicResolution::InvalidConfig,
-        };
-
-        TopicStatus {
-            resolution,
-            replica_map: kv_status.replica_map.clone(),
-            reason: kv_status.reason.clone(),
-        }
-    }
-}
-
-impl From<TopicStatus> for K8TopicStatus {
-    fn from(status: TopicStatus) -> K8TopicStatus {
-        let resolution = match status.resolution {
-            TopicResolution::Provisioned => K8TopicStatusResolution::Provisioned,
-            TopicResolution::Init => K8TopicStatusResolution::Init,
-            TopicResolution::Pending => K8TopicStatusResolution::Pending,
-            TopicResolution::InsufficientResources => {
-                K8TopicStatusResolution::InsufficientResources
-            }
-            TopicResolution::InvalidConfig => K8TopicStatusResolution::InvalidConfig,
-        };
-
-        K8TopicStatus {
-            resolution: resolution,
-            replica_map: status.replica_map.clone(),
-            reason: status.reason.clone(),
-        }
-    }
-}
 
 /*
 // -----------------------------------

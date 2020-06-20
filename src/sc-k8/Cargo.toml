@@ -22,6 +22,6 @@ flv-types = { path ="../types", version = "0.2.0"}
 flv-future-aio = { version = "2.2.1", features = ["tls"] }
 flv-util = { version = "0.2.0"}
 utils = { path = "../utils"}
-k8-flv-metadata = { path = "../k8-metadata", version = "1.1.0"}
+k8-flv-metadata = { path = "../k8-metadata", version = "2.0.0"}
 flv-sc-core = { path = "../sc-core"}
 flv-metadata = { path = "../metadata"}

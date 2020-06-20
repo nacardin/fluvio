@@ -4,7 +4,7 @@
 //!
 use flv_types::SpuId;
 use kf_protocol::derive::{Decode, Encode};
-use k8_metadata::partition::PartitionSpec as K8PartitionSpec;
+
 
 /// Spec for Partition
 /// Each partition has replicas spread among SPU
@@ -15,24 +15,6 @@ pub struct PartitionSpec {
     pub replicas: Vec<SpuId>,
 }
 
-
-impl From<K8PartitionSpec> for PartitionSpec {
-    fn from(kv_spec: K8PartitionSpec) -> Self {
-        PartitionSpec {
-            leader: kv_spec.leader,
-            replicas: kv_spec.replicas,
-        }
-    }
-}
-
-impl From<PartitionSpec> for K8PartitionSpec {
-    fn from(spec: PartitionSpec) -> K8PartitionSpec {
-        K8PartitionSpec {
-            leader: spec.leader,
-            replicas: spec.replicas,
-        }
-    }
-}
 
 
 impl std::default::Default for PartitionSpec {
@@ -65,3 +47,4 @@ impl From<Vec<i32>> for PartitionSpec {
         }
     }
 }
+

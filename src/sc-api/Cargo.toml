@@ -14,5 +14,4 @@ serde = { version ="1.0.103", features = ['derive'] }
 kf-protocol = { version = "2.0.0" } 
 flv-metadata = { version = "2.0.0",path = "../metadata"}
 flv-types = { version = "0.2.0", path ="../types" }
-k8-flv-metadata = { version = "1.0.0",path = "../k8-metadata"}
 flv-util = { version = "0.2.0"}

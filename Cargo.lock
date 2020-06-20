@@ -686,7 +686,6 @@ dependencies = [
  "flv-metadata",
  "flv-types",
  "flv-util 0.2.1",
- "k8-flv-metadata",
  "kf-protocol 2.0.3",
  "log",
  "serde",
@@ -746,51 +745,6 @@ dependencies = [
  "rustls 0.17.0",
  "tokio",
  "webpki",
-]
-
-[[package]]
-name = "flv-k8-partition"
-version = "1.0.0"
-dependencies = [
- "k8-obj-metadata",
- "log",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "flv-k8-spg"
-version = "1.0.0"
-dependencies = [
- "flv-k8-spu",
- "flv-types",
- "k8-obj-metadata",
- "log",
- "serde",
- "serde_derive",
- "serde_json",
- "serde_qs 0.4.6",
-]
-
-[[package]]
-name = "flv-k8-spu"
-version = "1.0.0"
-dependencies = [
- "k8-obj-core",
- "k8-obj-metadata",
- "log",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "flv-k8-topic"
-version = "1.0.0"
-dependencies = [
- "k8-obj-metadata",
- "log",
- "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -1341,16 +1295,16 @@ dependencies = [
 
 [[package]]
 name = "k8-flv-metadata"
-version = "1.1.0"
+version = "2.0.0"
 dependencies = [
- "flv-k8-partition",
- "flv-k8-spg",
- "flv-k8-spu",
- "flv-k8-topic",
+ "flv-metadata",
+ "flv-types",
  "k8-obj-app",
  "k8-obj-core",
  "k8-obj-metadata",
  "log",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
