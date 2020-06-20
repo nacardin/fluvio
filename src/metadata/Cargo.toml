@@ -10,6 +10,5 @@ license = "Apache-2.0"
 [dependencies]
 log = "0.4.8"
 kf-protocol =  "2.0.0" 
-k8-flv-metadata = {  version = "1.0.0", path = "../k8-metadata"}
 flv-types = { path ="../types", version = "0.2.0" }
 flv-util = { version = "0.2.0"}

@@ -799,7 +799,6 @@ version = "2.0.0"
 dependencies = [
  "flv-types",
  "flv-util 0.2.1",
- "k8-flv-metadata",
  "kf-protocol 2.0.3",
  "log",
 ]

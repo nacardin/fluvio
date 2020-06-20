@@ -1,6 +1,5 @@
-pub mod metadata {
-    pub use k8_obj_metadata::*;
-}
+pub mod topic;
+pub mod 
 
 pub mod core {
     pub use k8_obj_core::*;
