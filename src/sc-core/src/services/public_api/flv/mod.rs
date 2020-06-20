@@ -1,6 +1,5 @@
 mod api_versions_req;
-mod register_custom_spus_req;
-mod unregister_custom_spus_req;
+
 mod fetch_spu_req;
 mod create_spu_groups_req;
 mod delete_spu_groups_req;

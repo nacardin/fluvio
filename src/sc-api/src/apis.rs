@@ -34,8 +34,8 @@ pub enum ScPublicApiKey {
     FlvFetchSpus = 2007,
 
     // SPU Groups
-    FlvCreateSpuGroups = 2008,
-    FlvDeleteSpuGroups = 2009,
+    FlvCreateSpuGroup = 2008,
+    FlvDeleteSpuGroup = 2009,
     FlvFetchSpuGroups = 2010,
 }
 

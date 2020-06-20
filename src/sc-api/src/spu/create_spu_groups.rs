@@ -10,31 +10,21 @@ use flv_metadata::spg::*;
 
 use crate::FlvResponseMessage;
 use crate::ScPublicApiKey;
-use crate::ApiError;
 
 // -----------------------------------
 // FlvCreateSpuGroupsRequest
 // -----------------------------------
 
 #[derive(Encode, Decode, Default, Debug)]
-pub struct FlvCreateSpuGroupsRequest {
-    /// A list of one or more spu groups to be created.
-    pub spu_groups: Vec<SpuGroupSpec>,
+pub struct FlvCreateSpuGroupRequest {
+    pub name: String,
+    pub spec: SpuGroupSpec
 }
 
-impl Request for FlvCreateSpuGroupsRequest {
-    const API_KEY: u16 = ScPublicApiKey::FlvCreateSpuGroups as u16;
+impl Request for FlvCreateSpuGroupRequest {
+    const API_KEY: u16 = ScPublicApiKey::FlvCreateSpuGroup as u16;
     const DEFAULT_API_VERSION: i16 = 1;
     type Response = FlvCreateSpuGroupsResponse;
-}
-
-// quick way to convert a single group into groups requests
-impl From<SpuGroupSpec> for FlvCreateSpuGroupsRequest {
-    fn from(group: SpuGroupSpec) -> Self {
-        let mut groups = Self::default();
-        groups.spu_groups.push(group);
-        groups
-    }
 }
 
 
@@ -45,17 +35,5 @@ impl From<SpuGroupSpec> for FlvCreateSpuGroupsRequest {
 #[derive(Encode, Decode, Default, Debug)]
 pub struct FlvCreateSpuGroupsResponse {
     /// The spu group creation result messages.
-    pub results: Vec<FlvResponseMessage>,
-}
-
-impl FlvCreateSpuGroupsResponse {
-    /// validate and extract a single response
-    pub fn validate(self) -> Result<(), ApiError> {
-        // ? what is name, so just find first item
-        if let Some(item) = self.results.into_iter().find(|_| true) {
-            item.as_result()
-        } else {
-            Err(ApiError::NoResourceFounded("custom spu".to_owned()))
-        }
-    }
+    pub response: FlvResponseMessage
 }

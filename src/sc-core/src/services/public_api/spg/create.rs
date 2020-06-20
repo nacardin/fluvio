@@ -8,19 +8,18 @@ use std::io::Error;
 
 use kf_protocol::api::{RequestMessage, ResponseMessage};
 use kf_protocol::api::FlvErrorCode;
-use k8_metadata::spg::SpuGroupSpec;
-use k8_metadata::spg::SpuTemplate;
-use k8_metadata::spg::StorageConfig;
-use k8_metadata::metadata::Env;
+use k8_metadata::spg::SpuGroupSpec as K8SpuGroupspec;
+use k8_metadata::spg::SpuTemplate as K8SpuTemplate;
+use k8_metadata::spg::StorageConfig as K8StorageConfig;
+use k8_metadata::metadata::Env as K8Env;
 use k8_metadata_client::MetadataClient;
 use k8_metadata::metadata::Spec as K8Spec;
-use k8_metadata::metadata::TemplateSpec;
-use k8_metadata::spg::SpgGroupSpu;
+use k8_metadata::metadata::TemplateSpec as K8TemplateSpec;
 use sc_api::FlvResponseMessage;
 use sc_api::spu::{FlvCreateSpuGroupsRequest, FlvCreateSpuGroupsResponse};
-use sc_api::spu::FlvCreateSpuGroupRequest;
-use sc_api::spu::FlvEnvVar;
-use sc_api::spu::FlvStorageConfig;
+use sc_api::spu::SpuGroupSpec;
+use sc_api::spu::EnvVar;
+use sc_api::spu::StorageConfig;
 
 use super::PublicContext;
 
@@ -55,7 +54,7 @@ where
 /// Process custom spu, converts spu spec to K8 and sends to KV store
 async fn process_custom_spu_request<C>(
     ctx: &PublicContext<C>,
-    group_req: FlvCreateSpuGroupRequest,
+    group_req: SpuGroupSpec,
 ) -> FlvResponseMessage
 where
     C: MetadataClient,
@@ -67,57 +66,6 @@ where
         Err(err) => {
             let error = Some(err.to_string());
             FlvResponseMessage::new(name, FlvErrorCode::SpuError, error)
-        }
-    }
-}
-
-// convert
-trait K8Request<S>
-where
-    S: K8Spec,
-{
-    fn to_spec(self) -> (String, S);
-}
-
-impl K8Request<SpuGroupSpec> for FlvCreateSpuGroupRequest {
-    fn to_spec(self) -> (String, SpuGroupSpec) {
-        (
-            self.name,
-            SpuGroupSpec {
-                replicas: self.replicas,
-                min_id: self.min_id.clone(),
-                template: TemplateSpec::new(SpuTemplate {
-                    rack: self.rack.clone(),
-                    storage: self.config.storage.map(|cfg| cfg.convert()),
-                    env: self
-                        .config
-                        .env
-                        .into_iter()
-                        .map(|env| env.convert())
-                        .collect(),
-                    ..Default::default()
-                }),
-            },
-        )
-    }
-}
-
-// simplify convert
-pub trait Convert<T> {
-    fn convert(self) -> T;
-}
-
-impl Convert<Env> for FlvEnvVar {
-    fn convert(self) -> Env {
-        Env::key_value(self.name, self.value)
-    }
-}
-
-impl Convert<StorageConfig> for FlvStorageConfig {
-    fn convert(self) -> StorageConfig {
-        StorageConfig {
-            log_dir: self.log_dir,
-            size: self.size,
         }
     }
 }
