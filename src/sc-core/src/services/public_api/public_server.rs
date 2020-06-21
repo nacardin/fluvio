@@ -66,33 +66,26 @@ where
                 "api version handler"
             ),
 
-   
-            ScPublicRequest::KfMetadataRequest(request) => call_service!(
-                request,
-                super::metadata::handle_kf_metadata_request(request, ctx.shared_context.clone()),
-                shared_sink,
-                "metadata request handler"
-            ),
 
-            ScPublicRequest::FlvCreateTopicRequest(request) => call_service!(
+            ScPublicRequest::CreateTopicRequest(request) => call_service!(
                 request,
                 super::topic::handle_create_topics_request(request, &ctx),
                 shared_sink,
                 "create topic handler"
             ),
-            ScPublicRequest::FlvDeleteTopicRequest(request) => call_service!(
+            ScPublicRequest::DeleteTopicRequest(request) => call_service!(
                 request,
                 super::topic::handle_delete_topic_request(request, &ctx),
                 shared_sink,
                 "delete topic handler"
             ),
-            ScPublicRequest::FlvFetchTopicsRequest(request) => call_service!(
+            ScPublicRequest::FetchTopicsRequest(request) => call_service!(
                 request,
                 super::topic::handle_fetch_topics_request(request, ctx.shared_context.clone()),
                 shared_sink,
                 "fetch topic handler"
             ),
-            ScPublicRequest::FlvTopicCompositionRequest(request) => call_service!(
+            ScPublicRequest::TopicCompositionRequest(request) => call_service!(
                 request,
                 super::metadata::handle_topic_composition_request(request, ctx.shared_context.clone()),
                 shared_sink,
@@ -100,38 +93,38 @@ where
             ),
 
             
-            ScPublicRequest::FlvRegisterCustomSpuRequest(request) => call_service!(
+            ScPublicRequest::RegisterCustomSpuRequest(request) => call_service!(
                 request,
                 super::spu::handle_register_custom_spu_request(request, &ctx),
                 shared_sink,
                 "create custom spus handler"
             ),
-            ScPublicRequest::FlvUnregisterCustomSpuRequest(request) => call_service!(
+            ScPublicRequest::UnregisterCustomSpuRequest(request) => call_service!(
                 request,
                 super::spu::handle_unregister_custom_spu_request(request, &ctx),
                 shared_sink,
                 "delete custom spus handler"
             ),
-            ScPublicRequest::FlvFetchSpusRequest(request) => call_service!(
+            ScPublicRequest::FetchSpusRequest(request) => call_service!(
                 request,
                 super::spu::handle_fetch_spus_request(request, ctx.shared_context.clone()),
                 shared_sink,
                 "fetch spus handler"
             ),
 
-            ScPublicRequest::FlvCreateSpuGroupRequest(request) => call_service!(
+            ScPublicRequest::CreateSpuGroupRequest(request) => call_service!(
                 request,
                 super::spg::handle_create_spu_group_request(request, &ctx),
                 shared_sink,
                 "create spu groups handler"
             ),
-            ScPublicRequest::FlvDeleteSpuGroupRequest(request) => call_service!(
+            ScPublicRequest::DeleteSpuGroupRequest(request) => call_service!(
                 request,
                 super::spg::handle_delete_spu_group_request(request, &ctx),
                 shared_sink,
                 "delete spu groups handler"
             ),
-            ScPublicRequest::FlvFetchSpuGroupsRequest(request) => call_service!(
+            ScPublicRequest::FetchSpuGroupsRequest(request) => call_service!(
                 request,
                 super::spg::handle_fetch_spu_groups_request(request, &ctx),
                 shared_sink,

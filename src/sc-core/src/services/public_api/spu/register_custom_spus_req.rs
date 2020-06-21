@@ -23,7 +23,7 @@ use super::PublicContext;
 
 /// Handler for create spus request
 pub async fn handle_register_custom_spu_request<C>(
-    request: RequestMessage<FlvRegisterCustomSpuRequest>,
+    request: RequestMessage<RegisterCustomSpuRequest>,
     ctx: &PublicContext<C>,
 ) -> Result<ResponseMessage<FlvStatus>, Error>
 where
@@ -55,7 +55,7 @@ where
 
 /// Validate custom_spu requests (one at a time)
 fn validate_custom_spu_request(
-    custom_spu_req: &FlvRegisterCustomSpuRequest,
+    custom_spu_req: &RegisterCustomSpuRequest,
     metadata: &Context,
 ) -> Result<(), FlvStatus> {
     let spu_id = &custom_spu_req.spec.id;
@@ -78,7 +78,7 @@ fn validate_custom_spu_request(
 /// Process custom spu, converts spu spec to K8 and sends to KV store
 async fn process_custom_spu_request<C>(
     ctx: &PublicContext<C>,
-    custom_spu_req: FlvRegisterCustomSpuRequest,
+    custom_spu_req: RegisterCustomSpuRequest,
 ) -> FlvStatus
 where
     C: MetadataClient,
@@ -95,7 +95,7 @@ where
 
 async fn register_custom_spu<C>(
     ctx: &PublicContext<C>,
-    spu_req: FlvRegisterCustomSpuRequest,
+    spu_req: RegisterCustomSpuRequest,
 ) -> Result<(), C::MetadataClientError>
 where
     C: MetadataClient,

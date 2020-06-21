@@ -11,32 +11,35 @@ use kf_protocol::derive::Encode;
 use flv_metadata::topic::{TopicSpec, TopicStatus};
 
 use crate::ScPublicApiKey;
+use crate::AdminRequest;
 
 // -----------------------------------
 // FlvFetchTopicsRequest
 // -----------------------------------
 
 #[derive(Decode, Encode, Default, Debug)]
-pub struct FlvFetchTopicsRequest {
+pub struct FetchTopicsRequest {
     /// A list of one or more topics to be retrieved.
     /// None retrieves all topics.
     pub names: Option<Vec<String>>,
 }
 
-impl Request for FlvFetchTopicsRequest {
-    const API_KEY: u16 = ScPublicApiKey::FlvFetchTopics as u16;
-    type Response = FlvFetchTopicsResponse;
+impl Request for FetchTopicsRequest {
+    const API_KEY: u16 = ScPublicApiKey::FetchTopics as u16;
+    type Response = FetchTopicsResponse;
 }
+
+impl AdminRequest for FetchTopicsRequest{}
 
 
 #[derive(Encode, Decode, Default, Debug)]
-pub struct FlvFetchTopicsResponse {
+pub struct FetchTopicsResponse {
     /// The list of topics that have been retrieved.
-    pub topics: Vec<FlvFetchTopicResponse>,
+    pub topics: Vec<FetchTopicResponse>,
 }
 
 #[derive(Encode, Decode, Default, Debug)]
-pub struct FlvFetchTopicResponse {
+pub struct FetchTopicResponse {
     /// The error code, None for no errors
     pub error_code: FlvErrorCode,
 
@@ -44,11 +47,11 @@ pub struct FlvFetchTopicResponse {
     pub name: String,
 
     /// Topic parameters, None if error
-    pub topic: Option<FlvFetchTopic>,
+    pub topic: Option<FetchTopic>,
 }
 
 #[derive(Encode, Decode, Default, Debug)]
-pub struct FlvFetchTopic {
+pub struct FetchTopic {
     /// Topic spec
     pub spec: TopicSpec,
 
@@ -56,11 +59,11 @@ pub struct FlvFetchTopic {
     pub status: TopicStatus,
 
     /// Replica assignment for each partition
-    pub partition_replicas: Option<Vec<FlvPartitionReplica>>,
+    pub partition_replicas: Option<Vec<PartitionReplica>>,
 }
 
 #[derive(Encode, Decode, Default, Debug)]
-pub struct FlvPartitionReplica {
+pub struct PartitionReplica {
     /// Partition id
     pub id: i32,
 
@@ -75,18 +78,18 @@ pub struct FlvPartitionReplica {
 }
 
 
-impl FlvFetchTopicResponse {
+impl FetchTopicResponse {
     /// Constructor for topics found
     pub fn new(
         name: String,
         spec: TopicSpec,
         status: TopicStatus,
-        partition_replicas: Option<Vec<FlvPartitionReplica>>,
+        partition_replicas: Option<Vec<PartitionReplica>>,
     ) -> Self {
-        FlvFetchTopicResponse {
+        FetchTopicResponse {
             name: name,
             error_code: FlvErrorCode::None,
-            topic: Some(FlvFetchTopic {
+            topic: Some(FetchTopic {
                 spec,
                 status,
                 partition_replicas,
@@ -96,7 +99,7 @@ impl FlvFetchTopicResponse {
 
     /// Constructor for topics that are not found
     pub fn new_not_found(name: String) -> Self {
-        FlvFetchTopicResponse {
+        FetchTopicResponse {
             name: name,
             error_code: FlvErrorCode::TopicNotFound,
             topic: None,
@@ -106,7 +109,7 @@ impl FlvFetchTopicResponse {
     /// Update topic partitions.
     /// Requirements:
     ///  * Must be called with valid topic, otherwise, update will fail silently
-    pub fn update_partitions(&mut self, partition_replicas: Option<Vec<FlvPartitionReplica>>) {
+    pub fn update_partitions(&mut self, partition_replicas: Option<Vec<PartitionReplica>>) {
         if self.topic.is_some() {
             self.topic.as_mut().unwrap().partition_replicas = partition_replicas;
         }

@@ -10,10 +10,10 @@ use kf_protocol::api::FlvErrorCode;
 use crate::core::SharedContext;
 
 pub async fn handle_topic_composition_request(
-    request: RequestMessage<FlvTopicCompositionRequest>,
+    request: RequestMessage<TopicCompositionRequest>,
     metadata: SharedContext,
-) -> Result<ResponseMessage<FlvTopicCompositionResponse>, Error> {
-    let mut topic_comp_resp = FlvTopicCompositionResponse::default();
+) -> Result<ResponseMessage<TopicCompositionResponse>, Error> {
+    let mut topic_comp_resp = TopicCompositionResponse::default();
     let mut spu_ids = vec![];
 
     debug!("request topics '{:#?}'", request.request.topic_names);

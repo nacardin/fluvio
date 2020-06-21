@@ -9,16 +9,18 @@ use kf_protocol::derive::{Decode, Encode};
 
 use crate::FlvStatus;
 use crate::ScPublicApiKey;
-use super::FlvCustomSpu;
+use crate::AdminRequest;
+use super::CustomSpu;
 
 #[derive(Encode, Decode, Default, Debug)]
-pub struct FlvUnregisterCustomSpuRequest {
-   
-    pub spu: FlvCustomSpu,
+pub struct UnregisterCustomSpuRequest {
+       pub spu: CustomSpu,
 }
 
-impl Request for FlvUnregisterCustomSpuRequest {
-    const API_KEY: u16 = ScPublicApiKey::FlvUnregisterCustomSpu as u16;
+impl Request for UnregisterCustomSpuRequest {
+    const API_KEY: u16 = ScPublicApiKey::UnregisterCustomSpu as u16;
     const DEFAULT_API_VERSION: i16 = 1;
     type Response = FlvStatus;
 }
+
+impl AdminRequest for UnregisterCustomSpuRequest{}

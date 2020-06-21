@@ -10,7 +10,7 @@ use sc_api::versions::{ApiVersionsRequest, ApiVersionsResponse};
 use sc_api::ScPublicApiKey;
 use sc_api::topics::*;
 use sc_api::metadata::*;
-use sc_api::spu::FlvFetchSpusRequest;
+use sc_api::spu::FetchSpusRequest;
 
 pub async fn handle_api_versions_request(
     request: RequestMessage<ApiVersionsRequest>,
@@ -19,31 +19,31 @@ pub async fn handle_api_versions_request(
 
     // topic versions
     response.api_keys.push(make_version_key(
-        ScPublicApiKey::FlvCreateTopic,
-        FlvCreateTopicRequest::DEFAULT_API_VERSION,
-        FlvCreateTopicRequest::DEFAULT_API_VERSION,
+        ScPublicApiKey::CreateTopic,
+        CreateTopicRequest::DEFAULT_API_VERSION,
+        CreateTopicRequest::DEFAULT_API_VERSION,
     ));
     response.api_keys.push(make_version_key(
-        ScPublicApiKey::FlvDeleteTopic,
-        FlvDeleteTopicRequest::DEFAULT_API_VERSION,
-        FlvDeleteTopicRequest::DEFAULT_API_VERSION,
+        ScPublicApiKey::DeleteTopic,
+        DeleteTopicRequest::DEFAULT_API_VERSION,
+        DeleteTopicRequest::DEFAULT_API_VERSION,
     ));
     response.api_keys.push(make_version_key(
-        ScPublicApiKey::FlvFetchTopics,
-        FlvFetchTopicsRequest::DEFAULT_API_VERSION,
-        FlvFetchTopicsRequest::DEFAULT_API_VERSION,
+        ScPublicApiKey::FetchTopics,
+        FetchTopicsRequest::DEFAULT_API_VERSION,
+        FetchTopicsRequest::DEFAULT_API_VERSION,
     ));
     response.api_keys.push(make_version_key(
-        ScPublicApiKey::FlvTopicComposition,
-        FlvTopicCompositionRequest::DEFAULT_API_VERSION,
-        FlvTopicCompositionRequest::DEFAULT_API_VERSION,
+        ScPublicApiKey::TopicComposition,
+        TopicCompositionRequest::DEFAULT_API_VERSION,
+        TopicCompositionRequest::DEFAULT_API_VERSION,
     ));
 
     // spus versions
     response.api_keys.push(make_version_key(
-        ScPublicApiKey::FlvFetchSpus,
-        FlvFetchSpusRequest::DEFAULT_API_VERSION,
-        FlvFetchSpusRequest::DEFAULT_API_VERSION,
+        ScPublicApiKey::FetchSpus,
+        FetchSpusRequest::DEFAULT_API_VERSION,
+        FetchSpusRequest::DEFAULT_API_VERSION,
     ));
 
     trace!("flv api versions response: {:#?}", response);

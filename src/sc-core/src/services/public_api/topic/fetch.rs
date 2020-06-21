@@ -11,9 +11,9 @@ use crate::stores::topic::*;
 use crate::stores::partition::*;
 
 pub async fn handle_fetch_topics_request(
-    request: RequestMessage<FlvFetchTopicsRequest>,
+    request: RequestMessage<FetchTopicsRequest>,
     metadata: SharedContext,
-) -> Result<ResponseMessage<FlvFetchTopicsResponse>, Error> {
+) -> Result<ResponseMessage<FetchTopicsResponse>, Error> {
     // is names is provided, return list, otherwise generate all names
     let topic_names = match &request.request.names {
         Some(topic_names) => topic_names.clone(),
@@ -43,7 +43,7 @@ pub async fn handle_fetch_topics_request(
     }
 
     // prepare response
-    let mut response = FlvFetchTopicsResponse::default();
+    let mut response = FetchTopicsResponse::default();
     response.topics = topics;
 
     debug!("flv fetch topics resp: {} items", response.topics.len());
@@ -56,16 +56,16 @@ pub async fn handle_fetch_topics_request(
 pub fn topic_store_metadata_to_topic_response(
     topics: &TopicLocalStore,
     topic_name: &String,
-) -> FlvFetchTopicResponse {
+) -> FetchTopicResponse {
     if let Some(topic) = topics.topic(topic_name) {
-        FlvFetchTopicResponse::new(
+        FetchTopicResponse::new(
             topic_name.clone(),
             topic.spec.clone(),
             topic.status.clone(),
             None,
         )
     } else {
-        FlvFetchTopicResponse::new_not_found(topic_name.clone())
+        FetchTopicResponse::new_not_found(topic_name.clone())
     }
 }
 
@@ -73,13 +73,13 @@ pub fn topic_store_metadata_to_topic_response(
 pub fn partition_metadata_to_replica_response(
     partitions: &PartitionLocalStore,
     topic: &String,
-) -> Vec<FlvPartitionReplica> {
-    let mut res: Vec<FlvPartitionReplica> = Vec::default();
+) -> Vec<PartitionReplica> {
+    let mut res: Vec<PartitionReplica> = Vec::default();
     let partition_cnt = partitions.count_topic_partitions(topic);
     for idx in 0..partition_cnt {
         let name = ReplicaKey::new(topic.clone(), idx);
         if let Some(partition) = partitions.value(&name) {
-            res.push(FlvPartitionReplica {
+            res.push(PartitionReplica {
                 id: idx,
                 leader: partition.spec.leader,
                 replicas: partition.spec.replicas.clone(),

@@ -11,23 +11,30 @@ use flv_types::SpuId;
 use flv_util::socket_helpers::ServerAddress;
 
 use crate::ScPublicApiKey;
+use crate::AdminRequest;
 
-// -----------------------------------
-// FlvTopicCompositionRequest
-// -----------------------------------
 
 /// Use id to fetch one entry, None to fetch all
 #[derive(Decode, Encode, Default, Debug)]
-pub struct FlvTopicCompositionRequest {
+pub struct TopicCompositionRequest {
     pub topic_names: Vec<String>,
 }
+
+impl Request for TopicCompositionRequest {
+    const API_KEY: u16 = ScPublicApiKey::TopicComposition as u16;
+    const DEFAULT_API_VERSION: i16 = 1;
+    type Response = TopicCompositionResponse;
+}
+
+impl AdminRequest for TopicCompositionRequest{}
+
 
 // -----------------------------------
 // FlvTopicCompositionResponse
 // -----------------------------------
 
 #[derive(Encode, Decode, Default, Debug)]
-pub struct FlvTopicCompositionResponse {
+pub struct TopicCompositionResponse {
     /// The topics requested
     pub topics: Vec<FetchTopicResponse>,
 
@@ -84,14 +91,4 @@ impl FetchSpuResponse {
     pub fn into(&self) -> ServerAddress {
         ServerAddress::new(self.host.clone(), self.port)
     }
-}
-
-// -----------------------------------
-// Implementation
-// -----------------------------------
-
-impl Request for FlvTopicCompositionRequest {
-    const API_KEY: u16 = ScPublicApiKey::FlvTopicComposition as u16;
-    const DEFAULT_API_VERSION: i16 = 1;
-    type Response = FlvTopicCompositionResponse;
 }

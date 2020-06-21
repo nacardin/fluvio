@@ -32,7 +32,7 @@ use super::PublicContext;
 
 /// Handler for create topic request
 pub async fn handle_create_topics_request<C>(
-    request: RequestMessage<FlvCreateTopicRequest>,
+    request: RequestMessage<CreateTopicRequest>,
     ctx: &PublicContext<C>,
 ) -> Result<ResponseMessage<FlvStatus>, Error>
 where

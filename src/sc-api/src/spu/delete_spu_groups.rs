@@ -10,15 +10,17 @@ use kf_protocol::derive::{Decode, Encode};
 
 use crate::FlvStatus;
 use crate::ScPublicApiKey;
-
+use crate::AdminRequest;
 
 #[derive(Encode, Decode, Default, Debug)]
-pub struct FlvDeleteSpuGroupRequest {
+pub struct DeleteSpuGroupRequest {
     pub name: String
 }
 
-impl Request for FlvDeleteSpuGroupRequest {
-    const API_KEY: u16 = ScPublicApiKey::FlvDeleteSpuGroup as u16;
+impl Request for DeleteSpuGroupRequest {
+    const API_KEY: u16 = ScPublicApiKey::DeleteSpuGroup as u16;
     const DEFAULT_API_VERSION: i16 = 1;
     type Response = FlvStatus;
 }
+
+impl AdminRequest for DeleteSpuGroupRequest{}

@@ -22,7 +22,7 @@ pub struct TopicMetadata {
 }
 
 impl TopicMetadata {
-    pub fn new(fetched_topic_metadata: FlvFetchTopicResponse) -> Self {
+    pub fn new(fetched_topic_metadata: FetchTopicResponse) -> Self {
         // if topic is present, convert it
         let topic = if let Some(fetched_topic) = fetched_topic_metadata.topic {
             Some(Topic::new(fetched_topic))
@@ -68,7 +68,7 @@ pub struct Topic {
 }
 
 impl Topic {
-    pub fn new(fetched_topic: FlvFetchTopic) -> Self {
+    pub fn new(fetched_topic: FetchTopic) -> Self {
         let reason = fetched_topic.status.reason_str().clone();
         let topic_resolution = TopicResolution::new(fetched_topic.status.resolution);
 
@@ -126,7 +126,7 @@ pub struct PartitionReplica {
 }
 
 impl PartitionReplica {
-    pub fn new(flv_partition_replica: FlvPartitionReplica) -> Self {
+    pub fn new(flv_partition_replica: PartitionReplica) -> Self {
         PartitionReplica {
             id: flv_partition_replica.id,
             leader: flv_partition_replica.leader,

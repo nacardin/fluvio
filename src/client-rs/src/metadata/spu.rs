@@ -5,10 +5,10 @@
 //!
 use serde::Serialize;
 
-use sc_api::spu::FlvFetchSpuResponse;
-use sc_api::spu::FlvFetchSpu;
-use sc_api::spu::FlvSpuResolution;
-use sc_api::spu::FlvSpuType;
+use sc_api::spu::FetchSpuResponse;
+use sc_api::spu::FetchSpu;
+use sc_api::spu::SpuResolution;
+use sc_api::spu::SpuType;
 use sc_api::errors::FlvErrorCode;
 
 use super::endpoint::Endpoint;
@@ -24,14 +24,14 @@ pub struct SpuMetadata {
     pub spu: Option<Spu>,
 }
 
-impl From<FlvFetchSpuResponse> for SpuMetadata {
-    fn from(spu: FlvFetchSpuResponse) -> Self {
+impl From<FetchSpuResponse> for SpuMetadata {
+    fn from(spu: FetchSpuResponse) -> Self {
         Self::new(spu)
     }
 }
 
 impl SpuMetadata {
-    pub fn new(fetch_spu_resp: FlvFetchSpuResponse) -> Self {
+    pub fn new(fetch_spu_resp: FetchSpuResponse) -> Self {
         let (f_spu, f_error_code, f_name) = (
             fetch_spu_resp.spu,
             fetch_spu_resp.error_code,
@@ -88,7 +88,7 @@ pub enum SpuResolution {
 }
 
 impl Spu {
-    pub fn new(spu_name: String, fetched_spu: FlvFetchSpu) -> Self {
+    pub fn new(spu_name: String, fetched_spu: FetchSpu) -> Self {
         let (public_eps, private_ep) = (fetched_spu.public_ep, fetched_spu.private_ep);
 
         Spu {
@@ -114,10 +114,10 @@ impl Spu {
 }
 
 impl SpuType {
-    pub fn new(flv_spu_type: &FlvSpuType) -> Self {
+    pub fn new(flv_spu_type: &SpuType) -> Self {
         match flv_spu_type {
-            FlvSpuType::Custom => SpuType::Custom,
-            FlvSpuType::Managed => SpuType::Managed,
+            SpuType::Custom => SpuType::Custom,
+            SpuType::Managed => SpuType::Managed,
         }
     }
 
@@ -130,11 +130,11 @@ impl SpuType {
 }
 
 impl SpuResolution {
-    pub fn new(flv_spu_resolution: &FlvSpuResolution) -> Self {
+    pub fn new(flv_spu_resolution: &SpuResolution) -> Self {
         match flv_spu_resolution {
-            FlvSpuResolution::Online => SpuResolution::Online,
-            FlvSpuResolution::Offline => SpuResolution::Offline,
-            FlvSpuResolution::Init => SpuResolution::Init,
+            SpuResolution::Online => SpuResolution::Online,
+            SpuResolution::Offline => SpuResolution::Offline,
+            SpuResolution::Init => SpuResolution::Init,
         }
     }
 

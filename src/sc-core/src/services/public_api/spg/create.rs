@@ -11,7 +11,7 @@ use kf_protocol::api::FlvErrorCode;
 
 use k8_metadata_client::MetadataClient;
 use sc_api::FlvStatus;
-use sc_api::spu::FlvCreateSpuGroupRequest;
+use sc_api::spu::CreateSpuGroupRequest;
 use sc_api::spu::SpuGroupSpec;
 
 
@@ -19,7 +19,7 @@ use super::PublicContext;
 
 /// Handler for spu groups request
 pub async fn handle_create_spu_group_request<C>(
-    request: RequestMessage<FlvCreateSpuGroupRequest>,
+    request: RequestMessage<CreateSpuGroupRequest>,
     ctx: &PublicContext<C>,
 ) -> Result<ResponseMessage<FlvStatus>, Error>
 where

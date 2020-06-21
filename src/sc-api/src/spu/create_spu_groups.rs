@@ -10,19 +10,19 @@ use flv_metadata::spg::*;
 
 use crate::FlvStatus;
 use crate::ScPublicApiKey;
+use crate::AdminRequest;
 
-// -----------------------------------
-// FlvCreateSpuGroupsRequest
-// -----------------------------------
 
 #[derive(Encode, Decode, Default, Debug)]
-pub struct FlvCreateSpuGroupRequest {
+pub struct CreateSpuGroupRequest {
     pub name: String,
     pub spec: SpuGroupSpec
 }
 
-impl Request for FlvCreateSpuGroupRequest {
-    const API_KEY: u16 = ScPublicApiKey::FlvCreateSpuGroup as u16;
+impl Request for CreateSpuGroupRequest {
+    const API_KEY: u16 = ScPublicApiKey::CreateSpuGroup as u16;
     const DEFAULT_API_VERSION: i16 = 1;
     type Response = FlvStatus;
 }
+
+impl AdminRequest for CreateSpuGroupRequest{}

@@ -43,7 +43,7 @@ mod request {
     }
 
     impl Request for UpdateMetadataRequest {
-        const API_KEY: u16 = ScPublicApiKey::FlvUpdateMetadata as u16;
+        const API_KEY: u16 = ScPublicApiKey::UpdateMetadata as u16;
         type Response = UpdateMetadataResponse;
     }
 

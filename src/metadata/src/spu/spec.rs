@@ -248,7 +248,7 @@ impl Default for SpuType {
 // -----------------------------------
 
 #[derive(Debug)]
-pub enum FlvCustomSpu {
+pub enum CustomSpu {
     Name(String),
     Id(i32),
 }
@@ -256,19 +256,19 @@ pub enum FlvCustomSpu {
 // -----------------------------------
 // Implementation - CustomSpu
 // -----------------------------------
-impl Default for FlvCustomSpu {
-    fn default() -> FlvCustomSpu {
-        FlvCustomSpu::Name("".to_string())
+impl Default for CustomSpu {
+    fn default() -> CustomSpu {
+        CustomSpu::Name("".to_string())
     }
 }
 
-impl Encoder for FlvCustomSpu {
+impl Encoder for CustomSpu {
     // compute size
     fn write_size(&self, version: Version) -> usize {
         let type_size = (0 as u8).write_size(version);
         match self {
-            FlvCustomSpu::Name(name) => type_size + name.write_size(version),
-            FlvCustomSpu::Id(id) => type_size + id.write_size(version),
+            CustomSpu::Name(name) => type_size + name.write_size(version),
+            CustomSpu::Id(id) => type_size + id.write_size(version),
         }
     }
 
@@ -289,12 +289,12 @@ impl Encoder for FlvCustomSpu {
         }
 
         match self {
-            FlvCustomSpu::Name(name) => {
+            CustomSpu::Name(name) => {
                 let typ: u8 = 0;
                 typ.encode(dest, version)?;
                 name.encode(dest, version)?;
             }
-            FlvCustomSpu::Id(id) => {
+            CustomSpu::Id(id) => {
                 let typ: u8 = 1;
                 typ.encode(dest, version)?;
                 id.encode(dest, version)?;
@@ -305,7 +305,7 @@ impl Encoder for FlvCustomSpu {
     }
 }
 
-impl Decoder for FlvCustomSpu {
+impl Decoder for CustomSpu {
     fn decode<T>(&mut self, src: &mut T, version: Version) -> Result<(), IoError>
     where
         T: Buf,
@@ -316,12 +316,12 @@ impl Decoder for FlvCustomSpu {
             0 => {
                 let mut name: String = String::default();
                 name.decode(src, version)?;
-                *self = FlvCustomSpu::Name(name)
+                *self = CustomSpu::Name(name)
             }
             1 => {
                 let mut id: i32 = 0;
                 id.decode(src, version)?;
-                *self = FlvCustomSpu::Id(id)
+                *self = CustomSpu::Id(id)
             }
             _ => {
                 return Err(IoError::new(

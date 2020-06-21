@@ -11,20 +11,25 @@ use flv_metadata::spu::*;
 
 use crate::FlvStatus;
 use crate::ScPublicApiKey;
-
-// -----------------------------------
-// FlvRegisterCustomSpusRequest
-// -----------------------------------
+use crate::AdminRequest;
 
 #[derive(Encode, Decode, Default, Debug)]
-pub struct FlvRegisterCustomSpuRequest {
+pub struct RegisterCustomSpuRequest {
 
     pub name: String,
     pub spec: SpuSpec,
     pub dry_run: bool
 }
 
-impl FlvRegisterCustomSpuRequest {
+impl Request for RegisterCustomSpuRequest {
+    const API_KEY: u16 = ScPublicApiKey::RegisterCustomSpu as u16;
+    const DEFAULT_API_VERSION: i16 = 1;
+    type Response = FlvStatus;
+}
+
+impl AdminRequest for RegisterCustomSpuRequest{}
+
+impl RegisterCustomSpuRequest {
 
     pub fn new(id: i32,
         name: String,
@@ -36,23 +41,19 @@ impl FlvRegisterCustomSpuRequest {
             name,
             spec: SpuSpec {
                 id,
-                public_server: IngressPort {
-                    host: public_server.host,
-                    port: public_server.port,
-                    ..Defaults::default()
-                },
-                private_server: Endpoint {
-                    host: private_server.host.clone(),
-                    port: private_server.port,
-                },
+                spu_type: SpuType::Custom,
+                public_endpoint: IngressPort::from_port_host(
+                    public_server.port,
+                    public_server.host,
+                ),
+                private_endpoint: Endpoint::from_port_host(
+                    private_server.port,
+                    private_server.host
+                ),
                 rack,
-            }
+            },
+            ..Default::default()
         }
     }
 }
 
-impl Request for FlvRegisterCustomSpuRequest {
-    const API_KEY: u16 = ScPublicApiKey::FlvRegisterCustomSpu as u16;
-    const DEFAULT_API_VERSION: i16 = 1;
-    type Response = FlvStatus;
-}

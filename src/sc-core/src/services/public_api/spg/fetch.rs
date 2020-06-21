@@ -13,13 +13,13 @@ use sc_api::FlvStatus;
 use super::PublicContext;
 
 pub async fn handle_fetch_spu_groups_request<C>(
-    request: RequestMessage<FlvFetchSpuGroupsRequest>,
+    request: RequestMessage<FetchSpuGroupsRequest>,
     ctx: &PublicContext<C>,
-) -> Result<ResponseMessage<FlvFetchSpuGroupsResponse>, Error>
+) -> Result<ResponseMessage<FetchSpuGroupsResponse>, Error>
 where
     C: MetadataClient,
 {
-    let mut response = FlvFetchSpuGroupsResponse::default();
+    let mut response = FetchSpuGroupsResponse::default();
 
     match ctx.retrieve_items::<SpuGroupSpec>().await {
         Ok(k8_list) => {
@@ -27,7 +27,7 @@ where
 
             response.spu_groups = k8_list.items.into_iter()
                 .map(|k8_obj| {
-                    FlvFetchSpuGroup {
+                    FetchSpuGroup {
                         name: k8_obj.metadata.name,
                         spec: k8_obj.spec.into(),
                         status: k8_obj.status.into()

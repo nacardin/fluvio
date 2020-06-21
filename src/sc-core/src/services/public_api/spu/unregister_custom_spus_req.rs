@@ -19,7 +19,7 @@ use super::PublicContext;
 
 /// Handler for delete custom spu request
 pub async fn handle_unregister_custom_spu_request<C>(
-    request: RequestMessage<FlvUnregisterCustomSpuRequest>,
+    request: RequestMessage<UnregisterCustomSpuRequest>,
     ctx: &PublicContext<C>,
 ) -> Result<ResponseMessage<FlvStatus>, Error>
 where
@@ -28,7 +28,7 @@ where
     let (header, req) = request.get_header_request();
 
     let status = match req.spu {
-        FlvCustomSpu::Name(spu_name) => {
+        CustomSpu::Name(spu_name) => {
             debug!("api request: delete custom-spu with name '{}'", spu_name);
 
             // spu-name must exist
@@ -43,7 +43,7 @@ where
                 )
             }
         }
-        FlvCustomSpu::Id(spu_id) => {
+        CustomSpu::Id(spu_id) => {
             debug!("api request: delete custom-spu with id '{}'", spu_id);
 
             // spu-id must exist

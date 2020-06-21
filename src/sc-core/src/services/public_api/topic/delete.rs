@@ -18,7 +18,7 @@ use super::PublicContext;
 
 /// Handler for delete topic request
 pub async fn handle_delete_topic_request<C>(
-    request: RequestMessage<FlvDeleteTopicRequest>,
+    request: RequestMessage<DeleteTopicRequest>,
     ctx: &PublicContext<C>,
 ) -> Result<ResponseMessage<FlvStatus>, Error>
 where

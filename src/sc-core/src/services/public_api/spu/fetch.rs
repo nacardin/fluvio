@@ -9,20 +9,20 @@ use crate::core::SharedContext;
 use crate::stores::spu::*;
 
 pub async fn handle_fetch_spus_request(
-    request: RequestMessage<FlvFetchSpusRequest>,
+    request: RequestMessage<FetchSpusRequest>,
     metadata: SharedContext,
-) -> Result<ResponseMessage<FlvFetchSpusResponse>, Error> {
+) -> Result<ResponseMessage<FetchSpusResponse>, Error> {
 
     let (header, req) = request.get_header_request();
 
     // identify query type
     let (query_custom, query_type) = match req.spu_type {
-        FlvRequestSpuType::Custom => (true, "custom"),
-        FlvRequestSpuType::All => (false, "all"),
+        RequestSpuType::Custom => (true, "custom"),
+        RequestSpuType::All => (false, "all"),
     };
 
     // traverse and convert spus to FLV response
-    let mut flv_spu: Vec<FlvFetchSpu> = Vec::default();
+    let mut flv_spu: Vec<FetchSpu> = Vec::default();
     for (name, spu) in metadata.spus().inner_store().read().iter() {
         // skip custom if necessary
         if query_custom && !spu.is_custom() {
@@ -39,16 +39,16 @@ pub async fn handle_fetch_spus_request(
     trace!("flv fetch {} spus resp {:#?}", query_type, flv_spu);
 
     // prepare response
-    let mut response = FlvFetchSpusResponse::default();
+    let mut response = FetchSpusResponse::default();
     response.spus = flv_spu;
 
     Ok(ResponseMessage::from_header(&header,response))
 }
 
 /// Encode Spus metadata into SPU FLV response
-fn spu_store_metadata_to_spu_response(name: &str, spu: &SpuKV) -> FlvFetchSpu {
+fn spu_store_metadata_to_spu_response(name: &str, spu: &SpuKV) -> FetchSpu {
     
-    FlvFetchSpu {
+    FetchSpu {
         name: name.to_owned(),
         spec: spu.spec.clone(),
         status: spu.status.clone()

@@ -10,34 +10,32 @@ use kf_protocol::derive::Encode;
 use flv_metadata::spu::*;
 
 use crate::ScPublicApiKey;
-
-
-// -----------------------------------
-// FlvFetchSpusRequest
-// -----------------------------------
+use crate::AdminRequest;
 
 /// Fetch SPUs by type
 #[derive(Decode, Encode, Default, Debug)]
-pub struct FlvFetchSpusRequest {
+pub struct FetchSpusRequest {
     /// SPU type All or Custom
-    pub spu_type: FlvRequestSpuType,
+    pub spu_type: RequestSpuType,
 }
 
-impl Request for FlvFetchSpusRequest {
-    const API_KEY: u16 = ScPublicApiKey::FlvFetchSpus as u16;
+impl Request for FetchSpusRequest {
+    const API_KEY: u16 = ScPublicApiKey::FetchSpus as u16;
     const DEFAULT_API_VERSION: i16 = 1;
-    type Response = FlvFetchSpusResponse;
+    type Response = FetchSpusResponse;
 }
+
+impl AdminRequest for FetchSpusRequest{}
 
 #[derive(Decode, Encode, Debug)]
-pub enum FlvRequestSpuType {
+pub enum RequestSpuType {
     All,
     Custom,
 }
 
-impl Default for FlvRequestSpuType {
-    fn default() -> FlvRequestSpuType {
-        FlvRequestSpuType::All
+impl Default for RequestSpuType {
+    fn default() -> Self {
+        Self::All
     }
 }
 
@@ -47,14 +45,14 @@ impl Default for FlvRequestSpuType {
 // -----------------------------------
 
 #[derive(Encode, Decode, Default, Debug)]
-pub struct FlvFetchSpusResponse {
+pub struct FetchSpusResponse {
     /// Each spu in the response.
-    pub spus: Vec<FlvFetchSpu>,
+    pub spus: Vec<FetchSpu>,
 }
 
 
 #[derive(Encode, Decode, Default, Debug)]
-pub struct FlvFetchSpu {
+pub struct FetchSpu {
 
     pub name: String,
 
