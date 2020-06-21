@@ -38,9 +38,6 @@ pub struct ListTopicsOpt {
     #[structopt(short = "c", long = "sc", value_name = "host:port")]
     sc: Option<String>,
 
-    #[structopt(flatten)]
-    kf: crate::common::KfConfig,
-
     /// Output
     #[structopt(
         short = "o",

@@ -4,8 +4,6 @@ mod replica;
 //mod sc;
 pub mod client;
 
-
-pub mod metadata;
 pub mod profile;
 pub mod query_params;
 

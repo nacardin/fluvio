@@ -7,8 +7,12 @@ description = "Fluvio metadata"
 repository = "https://github.com/infinyon/fluvio"
 license = "Apache-2.0"
 
+[features]
+use_serde = ["serde"]
+
 [dependencies]
 log = "0.4.8"
+serde = { version ="1.0.0", features = ['derive'], optional = true }
 kf-protocol =  "2.0.0" 
 flv-types = { path ="../types", version = "0.2.0" }
 flv-util = { version = "0.2.0"}

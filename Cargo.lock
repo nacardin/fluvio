@@ -755,6 +755,7 @@ dependencies = [
  "flv-util 0.2.1",
  "kf-protocol 2.0.3",
  "log",
+ "serde",
 ]
 
 [[package]]

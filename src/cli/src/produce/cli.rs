@@ -79,24 +79,6 @@ pub struct ProduceLogOpt {
     #[structopt(short = "c", long = "sc", value_name = "host:port")]
     pub sc: Option<String>,
 
-    ///Address of Streaming Processing Unit
-    #[structopt(
-        short = "u",
-        long = "spu",
-        value_name = "host:port",
-        conflicts_with = "sc"
-    )]
-    pub spu: Option<String>,
-
-    /// Address of Kafka Controller
-    #[structopt(
-        short = "k",
-        long = "kf",
-        value_name = "host:port",
-        conflicts_with = "sc",
-        conflicts_with = "spu"
-    )]
-    pub kf: Option<String>,
 
     #[structopt(flatten)]
     tls: TlsConfig,

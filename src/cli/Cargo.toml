@@ -10,8 +10,6 @@ name = "fluvio"
 path = "src/bin/main.rs"
 doc = false
 
-[features]
-kafka = []
 
 
 [dependencies]

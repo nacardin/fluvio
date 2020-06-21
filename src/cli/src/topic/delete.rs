@@ -35,14 +35,6 @@ pub struct DeleteTopicOpt {
     #[structopt(short = "c", long = "sc", value_name = "host:port")]
     sc: Option<String>,
 
-    /// Address of Kafka Controller
-    #[structopt(
-        short = "k",
-        long = "kf",
-        value_name = "host:port",
-        conflicts_with = "sc"
-    )]
-    kf: Option<String>,
 
     #[structopt(flatten)]
     tls: TlsConfig,

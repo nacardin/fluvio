@@ -8,6 +8,7 @@ use std::io::Error as IoError;
 use std::io::ErrorKind;
 use std::fmt;
 
+
 use flv_util::socket_helpers::EndPoint as SocketEndPoint;
 use flv_util::socket_helpers::EndPointEncryption;
 use flv_types::defaults::{SPU_PRIVATE_HOSTNAME, SPU_PRIVATE_PORT};
@@ -20,16 +21,16 @@ use kf_protocol::{Decoder, Encoder};
 use kf_protocol::bytes::{Buf, BufMut};
 use kf_protocol::Version;
 
-// -----------------------------------
-// Data Structures
-// -----------------------------------
+
 
 #[derive(Decode, Encode, Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "use_serde", derive(serde::Serialize))]
 pub struct SpuSpec {
     pub id: SpuId,
     pub spu_type: SpuType,
     pub public_endpoint: IngressPort,
     pub private_endpoint: Endpoint,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub rack: Option<String>,
 }
 
@@ -98,6 +99,7 @@ impl SpuSpec {
 }
 
 #[derive(Decode, Encode, Default, Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "use_serde", derive(serde::Serialize))]
 pub struct IngressPort {
     pub port: u16,
     pub ingress: Vec<IngressAddr>,
@@ -141,6 +143,7 @@ impl IngressPort {
 }
 
 #[derive(Decode, Encode, Default, Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "use_serde", derive(serde::Serialize))]
 pub struct IngressAddr {
     pub hostname: Option<String>,
     pub ip: Option<String>,
@@ -161,6 +164,7 @@ impl IngressAddr {
 }
 
 #[derive(Decode, Encode, Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "use_serde", derive(serde::Serialize))]
 pub struct Endpoint {
     pub port: u16,
     pub host: String,
@@ -219,6 +223,7 @@ impl Endpoint {
 }
 
 #[derive(Decode, Encode, Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "use_serde", derive(serde::Serialize))]
 pub enum EncryptionEnum {
     PLAINTEXT,
     SSL,
@@ -231,6 +236,7 @@ impl Default for EncryptionEnum {
 }
 
 #[derive(Decode, Encode, Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "use_serde", derive(serde::Serialize))]
 pub enum SpuType {
     Managed,
     Custom,
