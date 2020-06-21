@@ -9,13 +9,10 @@ use kf_protocol::derive::{Decode, Encode};
 
 
 
-// -----------------------------------
-// Data Structures
-// -----------------------------------
-
 #[derive(Decode, Encode, Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "use_serde", derive(serde::Serialize,serde::Deserialize))]
 pub struct SpuStatus {
-    pub resolution: SpuResolution,
+    pub resolution: SpuStatusResolution,
 }
 
 impl fmt::Display for SpuStatus {
@@ -28,7 +25,7 @@ impl fmt::Display for SpuStatus {
 impl Default for SpuStatus {
     fn default() -> Self {
         SpuStatus {
-            resolution: SpuResolution::default(),
+            resolution: SpuStatusResolution::default(),
         }
     }
 }
@@ -37,45 +34,42 @@ impl SpuStatus {
     /// Resolution to string label
     pub fn resolution_label(&self) -> &'static str {
         match self.resolution {
-            SpuResolution::Online => "online",
-            SpuResolution::Offline => "offline",
-            SpuResolution::Init => "Init",
+            SpuStatusResolution::Online => "online",
+            SpuStatusResolution::Offline => "offline",
+            SpuStatusResolution::Init => "Init",
         }
     }
 
     /// Checks if resoultion is marked online. true for online, false otherwise
     pub fn is_online(&self) -> bool {
-        self.resolution == SpuResolution::Online
+        self.resolution == SpuStatusResolution::Online
     }
 
     pub fn is_offline(&self) -> bool {
-        self.resolution == SpuResolution::Offline
+        self.resolution == SpuStatusResolution::Offline
     }
 
     /// Set resolution to status to online
     pub fn set_online(&mut self) {
-        self.resolution = SpuResolution::Online;
+        self.resolution = SpuStatusResolution::Online;
     }
 
     /// Set resolution to status to offline
     pub fn set_offline(&mut self) {
-        self.resolution = SpuResolution::Offline;
+        self.resolution = SpuStatusResolution::Offline;
     }
 }
 
 #[derive(Decode, Encode, Debug, Clone, PartialEq)]
-pub enum SpuResolution {
+#[cfg_attr(feature = "use_serde", derive(serde::Serialize,serde::Deserialize))]
+pub enum SpuStatusResolution {
     Online,
     Offline,
     Init,
 }
 
-// -----------------------------------
-// Implementation - SpuResolution
-// -----------------------------------
-
-impl Default for SpuResolution {
+impl Default for SpuStatusResolution {
     fn default() -> Self {
-        SpuResolution::Init
+        Self::Init
     }
 }

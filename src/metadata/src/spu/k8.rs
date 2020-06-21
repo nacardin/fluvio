@@ -1,9 +1,7 @@
-use k8_obj_metadata::Crd;
-use k8_obj_metadata::Spec;
-use k8_obj_metadata::DefaultHeader;
-
+use k8_obj_metadata::*;
 
 use super::SpuStatus;
+use super::SpuSpec;
 
 const SPU_API: Crd = Crd {
     group: GROUP,
@@ -24,3 +22,5 @@ impl Spec for SpuSpec {
         &SPU_API
     }
 }
+
+impl Status for SpuStatus {}
