@@ -40,9 +40,8 @@ where
 {
     let (header, req) = request.get_header_request();
 
-    let validate_only = req.validate_only;
+    let validate_only = req.dry_run;
   
-
     let name = req.name;
     let topic_spec = req.spec;
     debug!("api request: create topic '{}'", name);
@@ -63,16 +62,16 @@ fn validate_topic_request(
     name: &str,
     topic_spec: &TopicSpec,
     metadata: &Context,
-) -> Result<(), FlvStatus> {
+) -> FlvStatus {
     debug!("validating topic: {}", name);
 
     // check if topic already exists
     if metadata.topics().contains_key(name) {
-        return Err(FlvStatus::new(
+        return FlvStatus::new(
             name.to_string(),
             FlvErrorCode::TopicAlreadyExists,
             Some(format!("topic '{}' already defined", name)),
-        ));
+        );
     }
 
     // create temporary topic status to return validation result
@@ -82,22 +81,22 @@ fn validate_topic_request(
             let next_state = topic_kv.validate_computed_topic_parameters(param);
             trace!("validating, computed topic: {:#?}", next_state);
             if next_state.resolution.is_invalid() {
-                Err(FlvStatus::new(
+                FlvStatus::new(
                     name.to_string(),
                     FlvErrorCode::TopicError,
                     Some(next_state.reason),
-                ))
+                )
             } else {
                 let next_state = topic_kv.generate_replica_map(metadata.spus(), param);
                 trace!("validating, generate replica map topic: {:#?}", next_state);
                 if next_state.resolution.no_resource() {
-                    Err(FlvStatus::new(
+                    FlvStatus::new(
                         name.to_string(),
                         FlvErrorCode::TopicError,
                         Some(next_state.reason),
-                    ))
+                    )
                 } else {
-                    Ok(())
+                    FlvStatus::new_ok(name.to_owned())
                 }
             }
         }
@@ -105,23 +104,23 @@ fn validate_topic_request(
             let next_state = topic_kv.validate_assigned_topic_parameters(partition_map);
             trace!("validating, computed topic: {:#?}", next_state);
             if next_state.resolution.is_invalid() {
-                Err(FlvStatus::new(
+                FlvStatus::new(
                     name.to_string(),
                     FlvErrorCode::TopicError,
                     Some(next_state.reason),
-                ))
+                )
             } else {
                 let next_state =
                     topic_kv.update_replica_map_for_assigned_topic(partition_map, metadata.spus());
                 trace!("validating, assign replica map topic: {:#?}", next_state);
                 if next_state.resolution.is_invalid() {
-                    Err(FlvStatus::new(
+                    FlvStatus::new(
                         name.to_string(),
                         FlvErrorCode::TopicError,
                         Some(next_state.reason),
-                    ))
+                    )
                 } else {
-                    Ok(())
+                    FlvStatus::new_ok(name.to_owned())
                 }
             }
         }

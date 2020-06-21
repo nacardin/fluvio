@@ -82,7 +82,7 @@ where
             ),
             ScPublicRequest::FlvDeleteTopicRequest(request) => call_service!(
                 request,
-                super::topic::handle_delete_topics_request(request, &ctx),
+                super::topic::handle_delete_topic_request(request, &ctx),
                 shared_sink,
                 "delete topic handler"
             ),
@@ -114,7 +114,7 @@ where
             ),
             ScPublicRequest::FlvFetchSpusRequest(request) => call_service!(
                 request,
-                super::spu::handle_fetch_spu_request(request, ctx.shared_context.clone()),
+                super::spu::handle_fetch_spus_request(request, ctx.shared_context.clone()),
                 shared_sink,
                 "fetch spus handler"
             ),
@@ -127,11 +127,11 @@ where
             ),
             ScPublicRequest::FlvDeleteSpuGroupRequest(request) => call_service!(
                 request,
-                super::spg::handle_delete_spu_groups_request(request, &ctx),
+                super::spg::handle_delete_spu_group_request(request, &ctx),
                 shared_sink,
                 "delete spu groups handler"
             ),
-            ScPublicRequest::FlvFetchSpuGroupRequest(request) => call_service!(
+            ScPublicRequest::FlvFetchSpuGroupsRequest(request) => call_service!(
                 request,
                 super::spg::handle_fetch_spu_groups_request(request, &ctx),
                 shared_sink,
