@@ -24,13 +24,14 @@ use kf_protocol::Version;
 
 
 #[derive(Decode, Encode, Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "use_serde", derive(serde::Serialize))]
+#[cfg_attr(feature = "use_serde", derive(serde::Serialize,serde::Deserialize),serde(rename_all = "camelCase"))]
 pub struct SpuSpec {
     pub id: SpuId,
+    #[cfg_attr(feature = "use_serde",serde(default))]
     pub spu_type: SpuType,
     pub public_endpoint: IngressPort,
     pub private_endpoint: Endpoint,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "use_serde", serde(skip_serializing_if = "Option::is_none"))]
     pub rack: Option<String>,
 }
 
@@ -99,7 +100,7 @@ impl SpuSpec {
 }
 
 #[derive(Decode, Encode, Default, Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "use_serde", derive(serde::Serialize))]
+#[cfg_attr(feature = "use_serde", derive(serde::Serialize,serde::Deserialize),serde(rename_all = "camelCase",default))]
 pub struct IngressPort {
     pub port: u16,
     pub ingress: Vec<IngressAddr>,
@@ -143,7 +144,7 @@ impl IngressPort {
 }
 
 #[derive(Decode, Encode, Default, Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "use_serde", derive(serde::Serialize))]
+#[cfg_attr(feature = "use_serde", derive(serde::Serialize,serde::Deserialize))]
 pub struct IngressAddr {
     pub hostname: Option<String>,
     pub ip: Option<String>,
@@ -164,7 +165,7 @@ impl IngressAddr {
 }
 
 #[derive(Decode, Encode, Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "use_serde", derive(serde::Serialize))]
+#[cfg_attr(feature = "use_serde", derive(serde::Serialize,serde::Deserialize),serde(rename_all = "camelCase"))]
 pub struct Endpoint {
     pub port: u16,
     pub host: String,
@@ -223,7 +224,7 @@ impl Endpoint {
 }
 
 #[derive(Decode, Encode, Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "use_serde", derive(serde::Serialize))]
+#[cfg_attr(feature = "use_serde", derive(serde::Serialize,serde::Deserialize))]
 pub enum EncryptionEnum {
     PLAINTEXT,
     SSL,
@@ -236,7 +237,7 @@ impl Default for EncryptionEnum {
 }
 
 #[derive(Decode, Encode, Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "use_serde", derive(serde::Serialize))]
+#[cfg_attr(feature = "use_serde", derive(serde::Serialize,serde::Deserialize))]
 pub enum SpuType {
     Managed,
     Custom,
@@ -249,9 +250,6 @@ impl Default for SpuType {
 }
 
 
-// -----------------------------------
-// Data Structures - CustomSpu
-// -----------------------------------
 
 #[derive(Debug)]
 pub enum CustomSpu {
