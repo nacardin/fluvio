@@ -66,25 +66,44 @@ impl fmt::Display for SpuGroupStatusResolution {
 #[cfg(feature = "flv")]
 mod convert {
 
-    use flv_metadata::spg::FlvSpuGroupResolution;
+    use flv_metadata::spg::SpuGroupStatus as FlvSpuGroupStatus;
+    use flv_metadata::spg::SpuGroupStatusResolution as FlvSpgStatusResolution;
     use super::*;
 
-    impl Into<FlvSpuGroupResolution> for SpuGroupStatusResolution {
-        fn into(self) -> FlvSpuGroupResolution {
-            match self {
-                Self::Init => FlvSpuGroupResolution::Init,
-                Self::Invalid => FlvSpuGroupResolution::Invalid,
-                Self::Reserved => FlvSpuGroupResolution::Reserved,
+    impl Into<FlvSpuGroupStatus> for SpuGroupStatus {
+        fn into(self) -> FlvSpuGroupStatus {
+            FlvSpuGroupStatus {
+                resolution: self.resolution.into(),
+                reason: self.reason.into()
             }
         }
     }
 
-    impl From<FlvSpuGroupResolution> for SpuGroupStatusResolution {
-        fn from(status: FlvSpuGroupResolution) -> Self {
+    impl From<FlvSpuGroupStatus> for SpuGroupStatus {
+        fn from(status: FlvSpuGroupStatus) -> Self {
+            Self {
+                resolution: status.resolution.into(),
+                reason: status.reason.into()
+            }
+        }
+    }
+
+    impl Into<FlvSpgStatusResolution> for SpuGroupStatusResolution {
+        fn into(self) -> FlvSpgStatusResolution {
+            match self {
+                Self::Init => FlvSpgStatusResolution::Init,
+                Self::Invalid => FlvSpgStatusResolution::Invalid,
+                Self::Reserved => FlvSpgStatusResolution::Reserved,
+            }
+        }
+    }
+
+    impl From<FlvSpgStatusResolution> for SpuGroupStatusResolution {
+        fn from(status: FlvSpgStatusResolution) -> Self {
             match status {
-                FlvSpuGroupResolution::Init => SpuGroupStatusResolution::Init,
-                FlvSpuGroupResolution::Invalid => SpuGroupStatusResolution::Invalid,
-                FlvSpuGroupResolution::Reserved => SpuGroupStatusResolution::Reserved,
+                FlvSpgStatusResolution::Init => Self::Init,
+                FlvSpgStatusResolution::Invalid => Self::Invalid,
+                FlvSpgStatusResolution::Reserved => Self::Reserved,
             }
         }
     }

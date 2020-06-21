@@ -7,9 +7,9 @@ use kf_protocol::bytes::{Buf, BufMut};
 
 
 #[derive(Encode, Decode, Default, Debug)]
-pub struct SpuGroupResponse {
+pub struct SpuGroupStatus {
     /// Status resolution
-    pub resolution: FlvSpuGroupResolution,
+    pub resolution: SpuGroupStatusResolution,
 
     /// Reason for Status resolution (if applies)
     pub reason: Option<String>,
@@ -17,7 +17,7 @@ pub struct SpuGroupResponse {
 
 
 #[derive(Debug)]
-pub enum FlvSpuGroupResolution {
+pub enum SpuGroupStatusResolution {
     Init,
     Invalid,
     Reserved,
@@ -26,13 +26,13 @@ pub enum FlvSpuGroupResolution {
 // -----------------------------------
 // Implementation - FlvSpuGroupResolution
 // -----------------------------------
-impl Default for FlvSpuGroupResolution {
-    fn default() -> FlvSpuGroupResolution {
-        FlvSpuGroupResolution::Init
+impl Default for SpuGroupStatusResolution {
+    fn default() -> Self {
+        Self::Init
     }
 }
 
-impl Encoder for FlvSpuGroupResolution {
+impl Encoder for SpuGroupStatusResolution {
    
     fn write_size(&self, version: Version) -> usize {
         (0 as u8).write_size(version)
@@ -55,15 +55,15 @@ impl Encoder for FlvSpuGroupResolution {
         }
 
         match self {
-            FlvSpuGroupResolution::Init => {
+            Self::Init => {
                 let typ: u8 = 0;
                 typ.encode(dest, version)?;
             }
-            FlvSpuGroupResolution::Invalid => {
+            Self::Invalid => {
                 let typ: u8 = 1;
                 typ.encode(dest, version)?;
             }
-            FlvSpuGroupResolution::Reserved => {
+            Self::Reserved => {
                 let typ: u8 = 2;
                 typ.encode(dest, version)?;
             }
@@ -73,7 +73,7 @@ impl Encoder for FlvSpuGroupResolution {
     }
 }
 
-impl Decoder for FlvSpuGroupResolution {
+impl Decoder for SpuGroupStatusResolution {
     fn decode<T>(&mut self, src: &mut T, version: Version) -> Result<(), Error>
     where
         T: Buf,
@@ -81,9 +81,9 @@ impl Decoder for FlvSpuGroupResolution {
         let mut value: u8 = 0;
         value.decode(src, version)?;
         match value {
-            0 => *self = FlvSpuGroupResolution::Init,
-            1 => *self = FlvSpuGroupResolution::Invalid,
-            2 => *self = FlvSpuGroupResolution::Reserved,
+            0 => *self = Self::Init,
+            1 => *self = Self::Invalid,
+            2 => *self = Self::Reserved,
             _ => {
                 return Err(Error::new(
                     ErrorKind::UnexpectedEof,

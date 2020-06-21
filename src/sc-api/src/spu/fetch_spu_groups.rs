@@ -35,6 +35,6 @@ pub struct FlvFetchSpuGroupsResponse {
 pub struct FlvFetchSpuGroup {
     name: String,
     spec: SpuGroupSpec,
-    status: SpuGroupResponse
+    status: SpuGroupStatus
 }
 

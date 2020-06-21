@@ -12,6 +12,7 @@ use sc_api::errors::FlvErrorCode;
 use sc_api::metadata::*;
 use sc_api::spu::*;
 use sc_api::topics::*;
+use sc_api::FlvStatus;
 use kf_socket::KfSocketError;
 use kf_socket::AllMultiplexerSocket;
 
@@ -77,12 +78,8 @@ impl ScAdminClient {
 
     pub async fn register_custom_spu(
         &mut self,
-        id: i32,
-        name: String,
-        public_server: ServerAddress,
-        private_server: ServerAddress,
-        rack: Option<String>,
-    ) -> Result<(), ClientError> {
+        request: FlvRegisterCustomSpuRequest
+    ) -> Result<FlvStatus, ClientError> {
         let spu = FlvRegisterCustomSpuRequest {
             id,
             name: name.to_owned(),
