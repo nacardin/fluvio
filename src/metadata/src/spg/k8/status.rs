@@ -12,47 +12,47 @@ use k8_obj_metadata::Status;
 
 #[derive(Deserialize, Serialize, Debug, Default, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct SpuGroupStatus {
-    pub resolution: SpuGroupStatusResolution,
+pub struct K8SpuGroupStatus {
+    pub resolution: K8SpuGroupStatusResolution,
     pub reason: Option<String>,
 }
 
-impl Status for SpuGroupStatus {}
+impl Status for K8SpuGroupStatus {}
 
-impl SpuGroupStatus {
+impl K8SpuGroupStatus {
     pub fn invalid(reason: String) -> Self {
         Self {
-            resolution: SpuGroupStatusResolution::Invalid,
+            resolution: K8SpuGroupStatusResolution::Invalid,
             reason: Some(reason),
         }
     }
 
     pub fn reserved() -> Self {
         Self {
-            resolution: SpuGroupStatusResolution::Reserved,
+            resolution: K8SpuGroupStatusResolution::Reserved,
             ..Default::default()
         }
     }
 
     pub fn is_already_valid(&self) -> bool {
-        self.resolution == SpuGroupStatusResolution::Reserved
+        self.resolution == K8SpuGroupStatusResolution::Reserved
     }
 }
 
 #[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
-pub enum SpuGroupStatusResolution {
+pub enum K8SpuGroupStatusResolution {
     Init,
     Invalid,
     Reserved,
 }
 
-impl Default for SpuGroupStatusResolution {
+impl Default for K8SpuGroupStatusResolution {
     fn default() -> Self {
         Self::Init
     }
 }
 
-impl fmt::Display for SpuGroupStatusResolution {
+impl fmt::Display for K8SpuGroupStatusResolution {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Self::Init => write!(f, "Init"),
@@ -63,7 +63,7 @@ impl fmt::Display for SpuGroupStatusResolution {
 }
 
 
-#[cfg(feature = "flv")]
+
 mod convert {
 
     use flv_metadata::spg::SpuGroupStatus as FlvSpuGroupStatus;

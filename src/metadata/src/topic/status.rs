@@ -16,6 +16,7 @@ use flv_types::{ReplicaMap, SpuId};
 // -----------------------------------
 
 #[derive(Decode, Encode, Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "use_serde", derive(serde::Serialize,serde::Deserialize),serde(rename_all = "camelCase"))]
 pub struct TopicStatus {
     pub resolution: TopicResolution,
     pub replica_map: BTreeMap<i32, Vec<i32>>,
@@ -29,6 +30,7 @@ impl fmt::Display for TopicStatus {
 }
 
 #[derive(Decode, Encode, Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "use_serde", derive(serde::Serialize,serde::Deserialize))]
 pub enum TopicResolution {
     Init,                  // initializing this is starting state.
     Pending,               // Has valid config, ready for replica mapping assignment

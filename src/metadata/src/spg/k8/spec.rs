@@ -18,10 +18,10 @@ use flv_types::defaults::SPU_PUBLIC_PORT;
 use flv_types::defaults::SPU_PRIVATE_PORT;
 
 use super::SPG_API;
-use super::SpuGroupStatus;
+use super::K8SpuGroupStatus;
 
-impl Spec for SpuGroupSpec {
-    type Status = SpuGroupStatus;
+impl Spec for K8SpuGroupSpec {
+    type Status = K8SpuGroupStatus;
     type Header = DefaultHeader;
     fn metadata() -> &'static Crd {
         &SPG_API
@@ -30,7 +30,7 @@ impl Spec for SpuGroupSpec {
 
 #[derive(Deserialize, Serialize, Default, Debug, Clone)]
 #[serde(rename_all = "camelCase", default)]
-pub struct SpuGroupSpec {
+pub struct K8SpuGroupSpec {
     pub template: TemplateSpec<SpuTemplate>,
     pub replicas: u16,
     #[serde(default)]
@@ -50,9 +50,9 @@ pub struct SpuTemplate {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub controller_svc: Option<ControllerEndPoint>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub replication: Option<ReplicationConfig>,
+    pub replication: Option<K8ReplicationConfig>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub storage: Option<StorageConfig>,
+    pub storage: Option<K8StorageConfig>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub env: Vec<Env>,
 }
@@ -97,20 +97,20 @@ pub struct ControllerEndPoint {
 
 #[derive(Deserialize, Default, Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct ReplicationConfig {
+pub struct K8ReplicationConfig {
     pub in_sync_replica_min: Option<u16>,
 }
 
 #[derive(Deserialize, Serialize, Debug, Default, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct StorageConfig {
+pub struct K8StorageConfig {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub log_dir: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub size: Option<String>,
 }
 
-impl StorageConfig {
+impl K8StorageConfig {
     pub fn log_dir(&self) -> String {
         self.log_dir.clone().unwrap_or("/tmp/fluvio".to_owned())
     }
@@ -120,19 +120,19 @@ impl StorageConfig {
     }
 }
 
-#[cfg(feature = "flv")]
+
 mod convert {
 
-    use flv_metadata::spg::SpuGroupSpec as FlvSpgSpec;
-    use flv_metadata::spg::GroupConfig as FlvGroupConfig;
-    use flv_metadata::spg::StorageConfig as FlvStorageConfig;
+    use k8_obj_metadata::*;
+    use crate::spg::SpuGroupSpec;
+    use crate::spg::GroupConfig;
+    use crate::spg::StorageConfig;
 
 
-    use crate::metadata::TemplateSpec;
     use super::*;
 
-    impl From<FlvSpgSpec> for SpuGroupSpec {
-        fn from(spec: FlvSpgSpec) -> Self {
+    impl From<SpuGroupSpec> for K8SpuGroupSpec {
+        fn from(spec: SpuGroupSpec) -> Self {
            
             Self {
                 replicas: spec.replicas,
@@ -149,26 +149,17 @@ mod convert {
         }
     }
 
-   impl From<FlvStorageConfig> for StorageConfig {
-       fn from(storage: FlvStorageConfig) -> Self {
-           Self {
-               log_dir: storage.log_dir,
-               size: storage.size
-           }
-       }
-   }
+    impl From<K8SpuGroupSpec> for SpuGroupSpec {
+        fn from(spec: K8SpuGroupSpec) -> SpuGroupSpec {
 
-    impl Into<FlvSpgSpec> for SpuGroupSpec {
-        fn into(self) -> FlvSpgSpec {
-
-            let min_id = self.min_id;
-            let (replicas, template) = (self.replicas, self.template.spec);
+            let min_id = spec.min_id;
+            let (replicas, template) = (spec.replicas, spec.template.spec);
             let (rack, storage) = (template.rack, template.storage.unwrap_or_default());
-            FlvSpgSpec {
+            Self {
                 replicas,
                 min_id,
                 rack,
-                config: FlvGroupConfig {
+                config: GroupConfig {
                     storage: Some(storage.into()),
                     ..Default::default()
                 }
@@ -177,12 +168,21 @@ mod convert {
         }
     }
 
-    impl Into<FlvStorageConfig> for StorageConfig {
-        fn into(self) -> FlvStorageConfig {
+   impl From<StorageConfig> for K8StorageConfig {
+       fn from(storage: StorageConfig) -> Self {
+           Self {
+               log_dir: storage.log_dir,
+               size: storage.size
+           }
+       }
+   }
 
-            FlvStorageConfig {
-                log_dir: self.log_dir,
-                size: self.size
+    impl From<K8StorageConfig> for StorageConfig {
+        fn from(config: K8StorageConfig) -> Self {
+
+            Self {
+                log_dir: config.log_dir,
+                size: config.size
             }
 
         }
