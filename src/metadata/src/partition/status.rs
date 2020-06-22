@@ -21,6 +21,7 @@ use super::ElectionScoring;
 // -----------------------------------
 
 #[derive(Decode, Encode, Default, Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "use_serde", derive(serde::Serialize,serde::Deserialize),serde(rename_all = "camelCase"))]
 pub struct PartitionStatus {
     pub resolution: PartitionResolution,
     pub leader: ReplicaStatus,
@@ -173,6 +174,7 @@ fn find_status(status: &mut Vec<ReplicaStatus>, spu: SpuId) -> Option<&'_ mut Re
 
 
 #[derive(Decode, Encode, Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "use_serde", derive(serde::Serialize,serde::Deserialize))]
 pub enum PartitionResolution {
     Offline,             // No leader available for serving partition
     Online,              // Partition is running normally, status contains replica info
@@ -187,6 +189,7 @@ impl Default for PartitionResolution {
 }
 
 #[derive(Decode, Encode, Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "use_serde", derive(serde::Serialize,serde::Deserialize),serde(rename_all = "camelCase"))]
 pub struct ReplicaStatus {
     pub spu: i32,
     pub hw: i64,

@@ -10,12 +10,11 @@ use kf_protocol::derive::{Decode, Encode};
 /// Each partition has replicas spread among SPU
 /// one of replica is leader which is duplicated in the leader field
 #[derive(Decode, Encode, Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "use_serde", derive(serde::Serialize,serde::Deserialize),serde(rename_all = "camelCase"))]
 pub struct PartitionSpec {
     pub leader: SpuId,
     pub replicas: Vec<SpuId>,
 }
-
-
 
 impl std::default::Default for PartitionSpec {
     fn default() -> Self {
@@ -25,7 +24,6 @@ impl std::default::Default for PartitionSpec {
         }
     }
 }
-
 
 
 impl PartitionSpec {

@@ -66,21 +66,12 @@ impl fmt::Display for K8SpuGroupStatusResolution {
 
 mod convert {
 
-    use flv_metadata::spg::SpuGroupStatus as FlvSpuGroupStatus;
-    use flv_metadata::spg::SpuGroupStatusResolution as FlvSpgStatusResolution;
+    use crate::spg::SpuGroupStatus;
+    use crate::spg::SpuGroupStatusResolution;
     use super::*;
 
-    impl Into<FlvSpuGroupStatus> for SpuGroupStatus {
-        fn into(self) -> FlvSpuGroupStatus {
-            FlvSpuGroupStatus {
-                resolution: self.resolution.into(),
-                reason: self.reason.into()
-            }
-        }
-    }
-
-    impl From<FlvSpuGroupStatus> for SpuGroupStatus {
-        fn from(status: FlvSpuGroupStatus) -> Self {
+    impl From<K8SpuGroupStatus> for SpuGroupStatus {
+        fn from(status: K8SpuGroupStatus) -> Self {
             Self {
                 resolution: status.resolution.into(),
                 reason: status.reason.into()
@@ -88,22 +79,31 @@ mod convert {
         }
     }
 
-    impl Into<FlvSpgStatusResolution> for SpuGroupStatusResolution {
-        fn into(self) -> FlvSpgStatusResolution {
-            match self {
-                Self::Init => FlvSpgStatusResolution::Init,
-                Self::Invalid => FlvSpgStatusResolution::Invalid,
-                Self::Reserved => FlvSpgStatusResolution::Reserved,
+    impl From<SpuGroupStatus> for K8SpuGroupStatus {
+        fn from(status: SpuGroupStatus) -> Self {
+            Self {
+                resolution: status.resolution.into(),
+                reason: status.reason.into()
             }
         }
     }
 
-    impl From<FlvSpgStatusResolution> for SpuGroupStatusResolution {
-        fn from(status: FlvSpgStatusResolution) -> Self {
+    impl From<K8SpuGroupStatusResolution> for SpuGroupStatusResolution {
+        fn from(resolution: K8SpuGroupStatusResolution) -> Self {
+            match resolution {
+                K8SpuGroupStatusResolution::Init => Self::Init,
+                K8SpuGroupStatusResolution::Invalid => Self::Invalid,
+                K8SpuGroupStatusResolution::Reserved => Self::Reserved,
+            }
+        }
+    }
+
+    impl From<SpuGroupStatusResolution> for K8SpuGroupStatusResolution {
+        fn from(status: SpuGroupStatusResolution) -> Self {
             match status {
-                FlvSpgStatusResolution::Init => Self::Init,
-                FlvSpgStatusResolution::Invalid => Self::Invalid,
-                FlvSpgStatusResolution::Reserved => Self::Reserved,
+                SpuGroupStatusResolution::Init => Self::Init,
+                SpuGroupStatusResolution::Invalid => Self::Invalid,
+                SpuGroupStatusResolution::Reserved => Self::Reserved,
             }
         }
     }

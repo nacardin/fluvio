@@ -1,6 +1,5 @@
 pub mod topic;
 pub mod spu;
-pub mod spg;
 pub mod partition;
 
 pub mod core {

@@ -255,7 +255,7 @@ pub struct TopicReplicaParam {
     pub partitions: PartitionCount,
     #[cfg_attr(feature = "use_serde", serde(default="default_count"))]
     pub replication_factor: ReplicationFactor,
-    #[serde(skip_serializing_if = "bool::clone")]
+    #[cfg_attr(feature = "use_serde",serde(skip_serializing_if = "bool::clone"))]
     pub ignore_rack_assignment: IgnoreRackAssignment,
 }
 
