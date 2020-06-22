@@ -19,9 +19,10 @@ use kf_protocol::{Decoder, Encoder};
 
 
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "use_serde", derive(serde::Serialize,serde::Deserialize),serde(tag = "type"))]
 pub enum TopicSpec {
     Assigned(PartitionMaps),
-    Computed(TopicReplicaParam),
+    Computed(TopicReplicaParam)
 }
 
 // -----------------------------------
@@ -248,13 +249,24 @@ impl Encoder for TopicSpec {
 
 /// Topic param
 #[derive(Debug, Clone, Default, PartialEq, Encode, Decode)]
+#[cfg_attr(feature = "use_serde", derive(serde::Serialize,serde::Deserialize),serde(rename_all = "camelCase"))]
 pub struct TopicReplicaParam {
+    #[cfg_attr(feature = "use_serde", serde(default="default_count"))]
     pub partitions: PartitionCount,
+    #[cfg_attr(feature = "use_serde", serde(default="default_count"))]
     pub replication_factor: ReplicationFactor,
+    #[serde(skip_serializing_if = "bool::clone")]
     pub ignore_rack_assignment: IgnoreRackAssignment,
 }
 
+fn default_count() -> i32 {
+    1
+}
+
+
 impl TopicReplicaParam {
+
+    
     pub fn new(
         partitions: PartitionCount,
         replication_factor: ReplicationFactor,
@@ -287,6 +299,7 @@ impl std::fmt::Display for TopicReplicaParam {
 
 /// Hack: field instead of new type to get around encode and decode limitations
 #[derive(Debug, Default, Clone, PartialEq, Encode, Decode)]
+#[cfg_attr(feature = "use_serde", derive(serde::Serialize,serde::Deserialize))]
 pub struct PartitionMaps {
     maps: Vec<PartitionMap>,
 }
@@ -499,6 +512,7 @@ impl From<(PartitionCount, ReplicationFactor)> for TopicSpec {
 }
 
 #[derive(Decode, Encode, Default, Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "use_serde", derive(serde::Serialize,serde::Deserialize))]
 pub struct PartitionMap {
     pub id: PartitionId,
     pub replicas: Vec<SpuId>,
