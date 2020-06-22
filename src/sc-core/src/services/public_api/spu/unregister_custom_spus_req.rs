@@ -11,7 +11,7 @@ use kf_protocol::api::{RequestMessage, ResponseMessage};
 use kf_protocol::api::FlvErrorCode;
 use sc_api::FlvStatus;
 use sc_api::spu::*;
-use k8_metadata::spu::SpuSpec as K8SpuSpec;
+use flv_metadata::spu::SpuSpec;
 use k8_metadata_client::MetadataClient;
 
 use crate::stores::spu::*;
@@ -98,7 +98,7 @@ where
 
     // delete custom spec and return result
     let item = item_ctx.as_input();
-    match ctx.k8_client().delete_item::<K8SpuSpec, _>(&item).await {
+    match ctx.k8_client().delete_item::<SpuSpec, _>(&item).await {
         Ok(_) => Ok(FlvStatus::new_ok(spu_name.clone())),
         Err(err) => Ok(FlvStatus::new(
             spu_name.clone(),

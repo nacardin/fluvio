@@ -4,7 +4,7 @@ use std::io::Error;
 use kf_protocol::api::FlvErrorCode;
 use kf_protocol::api::{RequestMessage, ResponseMessage};
 
-use k8_metadata::spg::{SpuGroupSpec};
+use flv_metadata::spg::K8SpuGroupSpec;
 use k8_metadata_client::MetadataClient;
 
 use sc_api::spu::*;
@@ -21,7 +21,7 @@ where
 {
     let mut response = FetchSpuGroupsResponse::default();
 
-    match ctx.retrieve_items::<SpuGroupSpec>().await {
+    match ctx.retrieve_items::<K8SpuGroupSpec>().await {
         Ok(k8_list) => {
             debug!("fetched: {} spgs", k8_list.items.len());
 

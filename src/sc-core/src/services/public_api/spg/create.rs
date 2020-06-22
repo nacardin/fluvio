@@ -45,9 +45,9 @@ async fn process_custom_spu_request<C>(
 where
     C: MetadataClient,
 {
-    use k8_metadata::spg::SpuGroupSpec as K8SpuGroupspec;
+    use flv_metadata::spg::K8SpuGroupSpec;
 
-    match ctx.create::<K8SpuGroupspec>(&name, spg_spec.into()).await {
+    match ctx.create::<K8SpuGroupSpec>(&name, spg_spec.into()).await {
         Ok(_) => FlvStatus::new_ok(name.clone()),
         Err(err) => {
             let error = Some(err.to_string());

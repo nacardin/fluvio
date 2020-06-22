@@ -12,6 +12,6 @@ license = "Apache-2.0"
 log = "0.4.8"
 serde = { version ="1.0.103", features = ['derive'] }
 kf-protocol = { version = "2.0.0" } 
-flv-metadata = { version = "2.0.0",path = "../metadata"}
+flv-metadata = { version = "2.0.0", default-features = false, path = "../metadata"}
 flv-types = { version = "0.2.0", path ="../types" }
 flv-util = { version = "0.2.0"}

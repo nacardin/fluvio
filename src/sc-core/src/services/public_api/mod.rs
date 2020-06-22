@@ -22,10 +22,10 @@ mod context {
     
     use sc_api::*;
     use k8_metadata_client::MetadataClient;
-    use k8_metadata::metadata::InputObjectMeta;
-    use k8_metadata::metadata::InputK8Obj;
-    use k8_metadata::metadata::K8List;
-    use k8_metadata::metadata::Spec as K8Spec;
+    use flv_metadata::k8::metadata::InputK8Obj;
+    use flv_metadata::k8::metadata::K8List;
+    use flv_metadata::k8::metadata::InputObjectMeta;
+    use flv_metadata::k8::metadata::Spec as K8Spec;
 
     use crate::core::SharedContext;
     use crate::metadata::K8WSUpdateService;

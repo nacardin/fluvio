@@ -10,9 +10,9 @@ use log::{error, trace};
 use log::warn;
 use log::debug;
 use flv_util::actions::Actions;
-use k8_metadata::metadata::K8List;
-use k8_metadata::metadata::K8Obj;
-use k8_metadata::metadata::K8Watch;
+use flv_metadata::k8::metadata::K8List;
+use flv_metadata::k8::metadata::K8Obj;
+use flv_metadata::k8::metadata::K8Watch;
 use k8_metadata_client::*;
 
 
@@ -246,12 +246,12 @@ where
 #[cfg(test)]
 pub mod test {
 
-    use k8_metadata::topic::TopicSpec as K8TopicSpec;
-    use k8_metadata::topic::TopicStatus as K8TopicStatus;
-    use k8_metadata::topic::TopicStatusResolution as K8topicStatusResolution;
-    use k8_metadata::metadata::K8List;
-    use k8_metadata::metadata::K8Obj;
-    use k8_metadata::metadata::K8Watch;
+    use flv_metadata::topic::TopicSpec;
+    use flv_metadata::topic::TopicStatus;
+    use flv_metadata::topic::TopicResolution;
+    use flv_metadata::k8::metadata::K8List;
+    use flv_metadata::k8::metadata::K8Obj;
+    use flv_metadata::k8::metadata::K8Watch;
     use k8_metadata_client::as_token_stream_result;
     use k8_metadata_client::DoNothingError;
 
@@ -264,16 +264,16 @@ pub mod test {
     use super::k8_event_stream_to_metadata_actions;
     use super::k8_obj_to_kv_obj;
 
-    type TopicList = K8List<K8TopicSpec>;
-    type K8Topic = K8Obj<K8TopicSpec>;
-    type K8TopicWatch = K8Watch<K8TopicSpec>;
+    type TopicList = K8List<TopicSpec>;
+    type K8Topic = K8Obj<TopicSpec>;
+    type K8TopicWatch = K8Watch<TopicSpec>;
 
     #[test]
     fn test_check_items_against_empty() {
         let mut topics = TopicList::new();
         topics
             .items
-            .push(K8Topic::new("topic1", K8TopicSpec::default()));
+            .push(K8Topic::new("topic1", TopicSpec::default()));
 
         let topic_store = TopicLocalStore::default();
 
@@ -297,11 +297,11 @@ pub mod test {
         let mut topics = TopicList::new();
         topics
             .items
-            .push(K8Topic::new("topic1", K8TopicSpec::default()));
+            .push(K8Topic::new("topic1", TopicSpec::default()));
 
         let topic_store = TopicLocalStore::default();
         let topic_kv =
-            k8_obj_to_kv_obj(K8Topic::new("topic1", K8TopicSpec::default())).expect("work");
+            k8_obj_to_kv_obj(K8Topic::new("topic1", TopicSpec::default())).expect("work");
         topic_store.insert(topic_kv);
 
         let kv_actions = k8_events_to_metadata_actions(topics, &topic_store);
@@ -311,10 +311,10 @@ pub mod test {
 
     #[test]
     fn test_items_generate_modify() {
-        let mut status = K8TopicStatus::default();
-        status.resolution = K8topicStatusResolution::Provisioned;
-        let new_topic = K8Topic::new("topic1", K8TopicSpec::default()).set_status(status);
-        let old_topic = K8Topic::new("topic1", K8TopicSpec::default());
+        let mut status = TopicStatus::default();
+        status.resolution = TopicResolution::Provisioned;
+        let new_topic = K8Topic::new("topic1", TopicSpec::default()).set_status(status);
+        let old_topic = K8Topic::new("topic1", TopicSpec::default());
 
         let mut topics = TopicList::new();
         topics.items.push(new_topic.clone());
@@ -344,7 +344,7 @@ pub mod test {
 
         let topic_store = TopicLocalStore::default();
         let topic_kv =
-            k8_obj_to_kv_obj(K8Topic::new("topic1", K8TopicSpec::default())).expect("work");
+            k8_obj_to_kv_obj(K8Topic::new("topic1", TopicSpec::default())).expect("work");
         topic_store.insert(topic_kv);
 
         let kv_actions = k8_events_to_metadata_actions(topics, &topic_store);
@@ -362,7 +362,7 @@ pub mod test {
     #[test]
     fn test_watch_add_actions() {
         let new_topic =
-            K8Topic::new("topic1", K8TopicSpec::default()).set_status(K8TopicStatus::default());
+            K8Topic::new("topic1", TopicSpec::default()).set_status(TopicStatus::default());
 
         let mut watches = vec![];
         watches.push(K8TopicWatch::ADDED(new_topic.clone()));

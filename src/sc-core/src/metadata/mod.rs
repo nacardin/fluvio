@@ -10,8 +10,8 @@ use std::fmt::Debug;
 use std::io::Error as IoError;
 use std::io::ErrorKind;
 
-use k8_metadata::metadata::Spec as K8Spec;
-use k8_metadata::metadata::K8Obj;
+use flv_metadata::k8::metadata::Spec as K8Spec;
+use flv_metadata::k8::metadata::K8Obj;
 
 use crate::stores::*;
 

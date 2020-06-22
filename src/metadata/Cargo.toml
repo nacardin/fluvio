@@ -9,7 +9,7 @@ license = "Apache-2.0"
 
 [features]
 use_serde = ["serde"]
-k8 = ["serde","k8-obj-metadata","k8-obj-core","k8-obj-app"]
+k8 = ["use_serde","k8-obj-metadata","k8-obj-core","k8-obj-app"]
 
 [dependencies]
 log = "0.4.8"

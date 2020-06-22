@@ -7,10 +7,8 @@ use futures::stream::StreamExt;
 use flv_future_aio::task::spawn;
 use k8_client::ClientError;
 use k8_client::K8Client;
-use k8_metadata::metadata::K8Watch;
-use k8_metadata::metadata::K8Obj;
-use k8_metadata::core::service::ServiceSpec;
-use k8_metadata::core::service::LoadBalancerIngress;
+use flv_metadata::k8::metadata::*;
+use flv_metadata::k8::core::service::*;
 use k8_client::metadata::MetadataClient;
 use flv_metadata::spu::IngressAddr;
 

@@ -1,10 +1,10 @@
-use k8_metadata::metadata::K8Obj;
-use k8_metadata::spg::SpuGroupSpec;
+use flv_metadata::k8::metadata::K8Obj;
+use flv_metadata::spg::K8SpuGroupSpec;
 use flv_types::SpuId;
 
 use flv_sc_core::stores::spu::SpuLocalStore;
 
-pub type SpuGroupObj = K8Obj<SpuGroupSpec>;
+pub type SpuGroupObj = K8Obj<K8SpuGroupSpec>;
 
 /// need for adding SPG extensions
 pub trait SpuValidation {
@@ -24,7 +24,7 @@ impl SpuValidation for SpuGroupObj {
             return None;
         }
 
-        let min_id = self.spec.min_id() as SpuId;
+        let min_id = self.spec.min_id as SpuId;
 
         spu_store.is_conflict(
             &self.metadata.uid,

@@ -12,9 +12,8 @@ use std::sync::Arc;
 
 use flv_util::socket_helpers::ServerAddress;
 use flv_types::SpuId;
-use flv_metadata::spu::{Endpoint, SpuSpec, SpuStatus, IngressPort};
-use k8_metadata::metadata::K8Obj;
-use k8_metadata::spu::SpuSpec as K8SpuSpec;
+use flv_metadata::spu::*;
+use flv_metadata::k8::metadata::K8Obj;
 use internal_api::messages::SpuMsg;
 
 use super::*;
@@ -26,7 +25,7 @@ impl Spec for SpuSpec {
     const LABEL: &'static str = "SPU";
     type Key = String;
     type Status = SpuStatus;
-    type K8Spec = K8SpuSpec;
+    type K8Spec = SpuSpec;
     type Owner = SpuSpec;
 
     fn convert_from_k8(k8_obj: K8Obj<Self::K8Spec>) -> Result<KVObject<Self>, IoError> {

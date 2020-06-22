@@ -24,9 +24,9 @@ use flv_util::actions::Actions;
 use flv_types::defaults::SC_RECONCILIATION_INTERVAL_SEC;
 use flv_future_aio::task::spawn;
 use flv_future_aio::timer::sleep;
-use k8_metadata::metadata::K8List;
-use k8_metadata::metadata::K8Watch;
-use k8_metadata::metadata::Spec as K8Spec;
+use flv_metadata::k8::metadata::K8List;
+use flv_metadata::k8::metadata::K8Watch;
+use flv_metadata::k8::metadata::Spec as K8Spec;
 use k8_metadata_client::MetadataClient;
 use k8_metadata_client::SharedClient;
 

@@ -11,7 +11,7 @@ use kf_protocol::api::{RequestMessage, ResponseMessage};
 use kf_protocol::api::FlvErrorCode;
 use sc_api::FlvStatus;
 use sc_api::topics::*;
-use k8_metadata::topic::TopicSpec as K8TopicSpec;
+use flv_metadata::topic::TopicSpec;
 use k8_metadata_client::MetadataClient;
 
 use super::PublicContext;
@@ -33,7 +33,7 @@ where
     let status = if let Some(topic) = ctx.context().topics().topic(topic_name) {
         if let Some(item_ctx) = &topic.kv_ctx().item_ctx {
             let item = item_ctx.as_input();
-            if let Err(err) = ctx.k8_client().delete_item::<K8TopicSpec, _>(&item).await {
+            if let Err(err) = ctx.k8_client().delete_item::<TopicSpec, _>(&item).await {
                 FlvStatus::new(
                     topic_name.clone(),
                     FlvErrorCode::TopicError,

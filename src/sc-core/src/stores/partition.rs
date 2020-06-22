@@ -12,8 +12,7 @@ use internal_api::messages::Replica;
 use flv_metadata::partition::ReplicaKey;
 use flv_metadata::partition::{PartitionSpec, PartitionStatus};
 use flv_metadata::topic::TopicSpec;
-use k8_metadata::partition::PartitionSpec as K8PartitionSpec;
-use k8_metadata::metadata::K8Obj;
+use flv_metadata::k8::metadata::K8Obj;
 use flv_types::SpuId;
 use sc_api::metadata::*;
 
@@ -26,7 +25,7 @@ impl Spec for PartitionSpec {
     const LABEL: &'static str = "Partition";
     type Key = ReplicaKey;
     type Status = PartitionStatus;
-    type K8Spec = K8PartitionSpec;
+    type K8Spec = PartitionSpec;
     type Owner = TopicSpec;
 
     fn convert_from_k8(k8_obj: K8Obj<Self::K8Spec>) -> Result<KVObject<Self>, IoError> {

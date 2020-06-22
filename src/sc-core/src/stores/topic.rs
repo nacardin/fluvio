@@ -21,13 +21,10 @@ use rand::thread_rng;
 use rand::Rng;
 
 use flv_types::ReplicaMap;
-use k8_metadata::metadata::K8Obj;
-use flv_metadata::topic::{TopicSpec, TopicStatus, PartitionMap, TopicResolution};
-use flv_metadata::topic::TopicReplicaParam;
-use flv_metadata::topic::PartitionMaps;
+use flv_metadata::k8::metadata::K8Obj;
+use flv_metadata::topic::*;
 use flv_metadata::partition::ReplicaKey;
-use k8_metadata::topic::TopicSpec as K8TopicSpec;
-use k8_metadata::topic::TopicStatus as K8TopicStatus;
+
 
 use super::partition::*;
 use super::spu::*;
@@ -37,72 +34,25 @@ impl Spec for TopicSpec {
     const LABEL: &'static str = "Topic";
     type Key = String;
     type Status = TopicStatus;
-    type K8Spec = K8TopicSpec;
+    type K8Spec = TopicSpec;
     type Owner = TopicSpec;
 
     /// convert kubernetes objects into KV vbalue
-    fn convert_from_k8(k8_topic: K8Obj<K8TopicSpec>) -> Result<KVObject<Self>, IoError> {
+    fn convert_from_k8(k8_topic: K8Obj<TopicSpec>) -> Result<KVObject<Self>, IoError> {
         // metadata is mandatory
         let topic_name = &k8_topic.metadata.name;
 
         // spec is mandatory
-        let topic_spec = create_computed_topic_spec_from_k8_spec(&k8_topic.spec);
+        let topic_spec = k8_topic.spec;
 
         // topic status is optional
-        let topic_status = create_topic_status_from_k8_spec(&k8_topic.status);
+        let topic_status = k8_topic.status;
 
         let ctx = KvContext::default().with_ctx(k8_topic.metadata.clone());
         Ok(TopicKV::new(topic_name.to_owned(), topic_spec, topic_status).with_kv_ctx(ctx))
     }
 }
 
-/// There are 2 types of topic configurations:
-///  * Computed
-///     - computed topics take partitions and replication factor
-///  * Assigned
-///     - assigned topics take custom replica assignment
-///     - partitions & replica factor are derived
-///
-/// If all parameters are provided, Assigned topics takes precedence.
-///  * Values provided for partitions and replication factor are overwritten by the
-///    values derived from custom replica assignment.
-fn create_computed_topic_spec_from_k8_spec(k8_topic_spec: &K8TopicSpec) -> TopicSpec {
-    if let Some(k8_replica_assign) = &k8_topic_spec.custom_replica_assignment {
-        // Assigned Topic
-        let mut partition_map: Vec<PartitionMap> = vec![];
-
-        for k8_partition in k8_replica_assign {
-            partition_map.push(PartitionMap {
-                id: k8_partition.id(),
-                replicas: k8_partition.replicas().clone(),
-            });
-        }
-
-        TopicSpec::new_assigned(partition_map)
-    } else {
-        // Computed Topic
-        let partitions = match k8_topic_spec.partitions {
-            Some(partitions) => partitions,
-            None => -1,
-        };
-
-        let replication_factor = match k8_topic_spec.replication_factor {
-            Some(replication_factor) => replication_factor,
-            None => -1,
-        };
-
-        TopicSpec::new_computed(
-            partitions,
-            replication_factor,
-            k8_topic_spec.ignore_rack_assignment,
-        )
-    }
-}
-
-/// converts K8 topic status into metadata topic status
-fn create_topic_status_from_k8_spec(k8_topic_status: &K8TopicStatus) -> TopicStatus {
-    k8_topic_status.clone().into()
-}
 
 impl Status for TopicStatus {}
 

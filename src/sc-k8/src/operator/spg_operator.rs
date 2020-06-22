@@ -9,22 +9,12 @@ use futures::stream::StreamExt;
 
 use flv_future_aio::task::spawn;
 use k8_client::ClientError;
-use k8_metadata::metadata::InputK8Obj;
-use k8_metadata::metadata::InputObjectMeta;
-use k8_metadata::metadata::K8Watch;
-use k8_metadata::core::service::ServiceSpec;
-use k8_metadata::core::service::ExternalTrafficPolicy;
-use k8_metadata::core::service::LoadBalancerType;
-use k8_metadata::core::service::ServicePort;
-use k8_metadata::spg::SpuGroupSpec;
-use k8_metadata::spg::SpuGroupStatus;
-use k8_metadata::spg::SpuEndpointTemplate;
-use k8_metadata::metadata::Spec;
-use k8_metadata::spu::SpuSpec as K8SpuSpec;
-use k8_metadata::spu::SpuType as K8SpuType;
-use k8_metadata::spu::IngressPort as K8IngressPort;
-use k8_metadata::spu::Endpoint as K8Endpoint;
-use k8_metadata::metadata::LabelProvider;
+use flv_metadata::k8::metadata::*;
+use flv_metadata::k8::core::service::*;
+use flv_metadata::spg::K8SpuGroupSpec;
+use flv_metadata::spg::K8SpuGroupStatus;
+use flv_metadata::spg::SpuEndpointTemplate;
+use flv_metadata::spu::*;
 use k8_client::metadata::MetadataClient;
 use k8_client::metadata::ApplyResult;
 use k8_client::SharedK8Client;
@@ -68,7 +58,7 @@ impl SpgOperator {
     async fn inner_run(self) {
         let mut spg_stream = self
             .client
-            .watch_stream_since::<SpuGroupSpec, _>(self.namespace.clone(), None);
+            .watch_stream_since::<K8SpuGroupSpec, _>(self.namespace.clone(), None);
 
         info!("starting spg operator with namespace: {}", self.namespace);
         while let Some(result) = spg_stream.next().await {
@@ -83,7 +73,7 @@ impl SpgOperator {
         debug!("spg operator finished");
     }
 
-    async fn dispatch_events(&self, events: Vec<Result<K8Watch<SpuGroupSpec>, ClientError>>) {
+    async fn dispatch_events(&self, events: Vec<Result<K8Watch<K8SpuGroupSpec>, ClientError>>) {
         for event_r in events {
             match event_r {
                 Ok(watch_event) => {
@@ -98,7 +88,7 @@ impl SpgOperator {
         }
     }
 
-    async fn process_event(&self, event: K8Watch<SpuGroupSpec>) -> Result<(), ClientError> {
+    async fn process_event(&self, event: K8Watch<K8SpuGroupSpec>) -> Result<(), ClientError> {
         trace!("watch event: {:#?}", event);
         match event {
             K8Watch::ADDED(obj) => {
@@ -127,7 +117,7 @@ impl SpgOperator {
                 "spg group: {} is conflict with existing id: {}",
                 spg_name, conflict_id
             );
-            let status = SpuGroupStatus::invalid(format!("conflict with: {}", conflict_id));
+            let status = K8SpuGroupStatus::invalid(format!("conflict with: {}", conflict_id));
 
             let k8_status_change = spu_group.as_status_update(status);
             if let Err(err) = self.client.update_status(&k8_status_change).await {
@@ -136,7 +126,7 @@ impl SpgOperator {
         } else {
             // if we pass this stage, then we reserved id.
             if !spu_group.is_already_valid() {
-                let status_change = spu_group.as_status_update(SpuGroupStatus::reserved());
+                let status_change = spu_group.as_status_update(K8SpuGroupStatus::reserved());
                 if let Err(err) = self.client.update_status(&status_change).await {
                     error!("error: {} updating status: {:#?}", err, status_change)
                 }
@@ -177,7 +167,7 @@ impl SpgOperator {
     async fn apply_stateful_set(
         &self,
         spu_group: &SpuGroupObj,
-        spg_spec: &SpuGroupSpec,
+        spg_spec: &K8SpuGroupSpec,
         spg_name: &str,
         spg_svc_name: String,
     ) -> Result<(), ClientError> {
@@ -203,13 +193,13 @@ impl SpgOperator {
     async fn apply_spus(
         &self,
         spg_obj: &SpuGroupObj,
-        spg_spec: &SpuGroupSpec,
+        spg_spec: &K8SpuGroupSpec,
         spg_name: &str,
     ) -> Result<(), ClientError> {
         let replicas = spg_spec.replicas;
 
         for i in 0..replicas {
-            let spu_id = match self.compute_spu_id(spg_spec.min_id(), i) {
+            let spu_id = match self.compute_spu_id(spg_spec.min_id, i) {
                 Ok(id) => id,
                 Err(err) => {
                     error!("{}", err);
@@ -238,11 +228,11 @@ impl SpgOperator {
     async fn apply_spu(
         &self,
         k8_group: &SpuGroupObj,
-        group_spec: &SpuGroupSpec,
+        group_spec: &K8SpuGroupSpec,
         group_name: &str,
         spu_name: &str,
         _replica_index: u16,
-        spu_id: SpuId,
+        id: SpuId,
     ) {
         let k8_metadata = &k8_group.metadata;
         let k8_namespace = k8_metadata.namespace();
@@ -261,15 +251,15 @@ impl SpgOperator {
 
         let full_group_name = format!("flv-spg-{}", group_name);
         let full_spu_name = format!("flv-spg-{}", spu_name);
-        let spu_spec = K8SpuSpec {
-            spu_id: spu_id,
-            spu_type: Some(K8SpuType::Managed),
-            public_endpoint: K8IngressPort {
+        let spu_spec = SpuSpec {
+            id,
+            spu_type: SpuType::Managed,
+            public_endpoint: IngressPort {
                 port: spu_public_ep.port,
                 encryption: spu_public_ep.encryption,
                 ingress: vec![],
             },
-            private_endpoint: K8Endpoint {
+            private_endpoint: Endpoint {
                 host: format!("{}.{}", full_spu_name, full_group_name),
                 port: spu_private_ep.port,
                 encryption: spu_private_ep.encryption,
@@ -277,10 +267,10 @@ impl SpgOperator {
             rack: None,
         };
 
-        let owner_ref = k8_metadata.make_owner_reference::<SpuGroupSpec>();
-        let input_spu: InputK8Obj<K8SpuSpec> = InputK8Obj {
-            api_version: K8SpuSpec::api_version(),
-            kind: K8SpuSpec::kind(),
+        let owner_ref = k8_metadata.make_owner_reference::<K8SpuGroupSpec>();
+        let input_spu: InputK8Obj<SpuSpec> = InputK8Obj {
+            api_version: SpuSpec::api_version(),
+            kind: SpuSpec::kind(),
             metadata: InputObjectMeta {
                 name: spu_name.to_string(),
                 namespace: k8_namespace.to_owned(),
@@ -303,7 +293,7 @@ impl SpgOperator {
     async fn apply_spu_load_balancers(
         &self,
         spg_obj: &SpuGroupObj,
-        spg_spec: &SpuGroupSpec,
+        spg_spec: &K8SpuGroupSpec,
         spu_name: &str,
     ) -> Result<ApplyResult<ServiceSpec>, ClientError> {
         let metadata = &spg_obj.metadata;
@@ -358,7 +348,7 @@ impl SpgOperator {
     async fn apply_statefulset_service(
         &self,
         spg_obj: &SpuGroupObj,
-        spg_spec: &SpuGroupSpec,
+        spg_spec: &K8SpuGroupSpec,
         spg_name: &str,
     ) -> Result<String, ClientError> {
         let service_name = spg_name.to_owned();

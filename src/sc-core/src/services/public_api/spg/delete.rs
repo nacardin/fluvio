@@ -24,14 +24,14 @@ pub async fn handle_delete_spu_group_request<C>(
 where
     C: MetadataClient,
 {
-    use k8_metadata::spg::SpuGroupSpec as K8SpgSpec;
+    use flv_metadata::spg::K8SpuGroupSpec;
 
     let (header, req) = request.get_header_request();
 
     let name = req.name;
     debug!("delete spg group: {}",name);
 
-    let status = match ctx.delete::<K8SpgSpec>(&name).await {
+    let status = match ctx.delete::<K8SpuGroupSpec>(&name).await {
         Ok(_) => FlvStatus::new_ok(name),
         Err(err) => {
               let error = Some(err.to_string());
