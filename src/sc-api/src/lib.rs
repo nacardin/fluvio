@@ -3,6 +3,7 @@ pub mod topics;
 pub mod spu;
 pub mod metadata;
 pub mod versions;
+pub mod objects;
 mod request;
 mod response;
 

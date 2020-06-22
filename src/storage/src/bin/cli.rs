@@ -51,7 +51,8 @@ async fn print_logs(path: PathBuf) -> Result<(), IoError> {
     let mut batch_stream = DefaultFileBatchStream::new(file);
 
     //  println!("base offset: {}",batch_stream.get_base_offset());
-
+    /*
+    TODO: comment out
     while let Some(file_batch) = batch_stream.next().await {
         // let batch_base_offset = batch.get_base_offset();
         let batch = file_batch.get_batch();
@@ -69,6 +70,7 @@ async fn print_logs(path: PathBuf) -> Result<(), IoError> {
             println!("record offset: {}", record.get_offset_delta());
         }
     }
+    */
 
     Ok(())
 }

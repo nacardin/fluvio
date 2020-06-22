@@ -8,7 +8,7 @@ use std::io::ErrorKind;
 
 use structopt::StructOpt;
 
-use sc_api::spu::FlvCustomSpu;
+use sc_api::spu::CustomSpu;
 use flv_client::profile::ScConfig;
 
 use crate::error::CliError;
@@ -47,7 +47,7 @@ pub struct UnregisterCustomSpuOpt {
 
 impl UnregisterCustomSpuOpt {
     /// Validate cli options. Generate target-server and unregister custom spu config.
-    fn validate(self) -> Result<(ScConfig, FlvCustomSpu), CliError> {
+    fn validate(self) -> Result<(ScConfig, CustomSpu), CliError> {
         let target_server = ScConfig::new_with_profile(
             self.sc,
             self.tls.try_into_file_config()?,
@@ -56,9 +56,9 @@ impl UnregisterCustomSpuOpt {
 
         // custom spu
         let custom_spu = if let Some(name) = self.name {
-            FlvCustomSpu::Name(name)
+            CustomSpu::Name(name)
         } else if let Some(id) = self.id {
-            FlvCustomSpu::Id(id)
+            CustomSpu::Id(id)
         } else {
             return Err(CliError::IoError(IoError::new(
                 ErrorKind::Other,
