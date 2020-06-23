@@ -16,12 +16,6 @@ use crate::tls::TlsConfig;
 use crate::error::CliError;
 use crate::profile::InlineProfile;
 
-#[derive(Debug)]
-pub struct RegisterCustomSpuConfig {
-    pub spec: CustomSpuSpec,
-    pub name: String,
-}
-
 #[derive(Debug, StructOpt)]
 pub struct RegisterCustomSpuOpt {
     /// SPU id
@@ -57,7 +51,7 @@ pub struct RegisterCustomSpuOpt {
 
 impl RegisterCustomSpuOpt {
     /// Validate cli options. Generate target-server and register custom spu config.
-    fn validate(self) -> Result<(ScConfig, RegisterCustomSpuConfig), CliError> {
+    fn validate(self) -> Result<(ScConfig, (String,CustomSpuSpec)), CliError> {
         // profile specific configurations (target server)
         let target_server = ScConfig::new_with_profile(
             self.sc,
@@ -66,15 +60,15 @@ impl RegisterCustomSpuOpt {
         )?;
 
         // register custom spu config
-        let cfg = RegisterCustomSpuConfig {
-            name: self.name.unwrap_or(format!("custom-spu-{}", self.id)),
-            spec: CustomSpuSpec {
+        let cfg = (
+            self.name.unwrap_or(format!("custom-spu-{}", self.id)),
+            CustomSpuSpec {
                 id: self.id,
                 public_endpoint: ServerAddress::try_from(self.public_server)?.into(),
                 private_endpoint: ServerAddress::try_from(self.private_server)?.into(),
                 rack: self.rack.clone(),
-            },
-        };
+            }
+        );
 
         // return server separately from config
         Ok((target_server, cfg))
@@ -85,16 +79,17 @@ impl RegisterCustomSpuOpt {
 //  CLI Processing
 // -----------------------------------
 pub async fn process_register_custom_spu(opt: RegisterCustomSpuOpt) -> Result<(), CliError> {
-    let (target_server, cfg) = opt.validate()?;
+
+
+    let (target_server, (name,spec)) = opt.validate()?;
 
     let mut sc = target_server.connect().await?;
 
-    let admin = sc.admin().await;
+    let mut admin = sc.admin().await;
 
     admin
-        .create(cfg.name, false, cfg.spec)
-        .await
-        .map_err(|err| err.into())?;
+        .create(name, false, spec)
+        .await?;
 
     Ok(())
 }

@@ -7,8 +7,8 @@
 use log::debug;
 use structopt::StructOpt;
 
-use sc_api::spu::FlvCreateSpuGroupRequest;
 use flv_client::profile::ScConfig;
+use sc_api::spg::SpuGroupSpec;
 
 use crate::error::CliError;
 use crate::tls::TlsConfig;
@@ -31,8 +31,8 @@ pub struct CreateManagedSpuGroupOpt {
     pub replicas: u16,
 
     /// Minimum SPU id (default: 1)
-    #[structopt(short = "i", long = "min-id")]
-    pub min_id: Option<i32>,
+    #[structopt(short = "i", long = "min-id", default_value="1")]
+    pub min_id: i32,
 
     /// Rack name
     #[structopt(short = "r", long = "rack", value_name = "string")]
@@ -55,7 +55,7 @@ pub struct CreateManagedSpuGroupOpt {
 
 impl CreateManagedSpuGroupOpt {
     /// Validate cli options. Generate target-server and create spu group config.
-    fn validate(self) -> Result<(ScConfig, FlvCreateSpuGroupRequest), CliError> {
+    fn validate(self) -> Result<(ScConfig, (String,SpuGroupSpec)), CliError> {
         let target_server = ScConfig::new_with_profile(
             self.sc,
             self.tls.try_into_file_config()?,
@@ -66,13 +66,15 @@ impl CreateManagedSpuGroupOpt {
             .storage
             .map(|storage| GroupConfig::with_storage(storage));
 
-        let group = FlvCreateSpuGroupRequest {
-            name: self.name,
-            replicas: self.replicas,
-            min_id: self.min_id,
-            config: grp_config.map(|cf| cf.into()).unwrap_or_default(),
-            rack: self.rack,
-        };
+        let group = (
+            self.name,
+            SpuGroupSpec {
+                replicas: self.replicas,
+                min_id: self.min_id,
+                config: grp_config.map(|cf| cf.into()).unwrap_or_default(),
+                rack: self.rack,
+            }
+        );
         // return server separately from config
 
         Ok((target_server, group))
@@ -85,13 +87,15 @@ impl CreateManagedSpuGroupOpt {
 pub async fn process_create_managed_spu_group(
     opt: CreateManagedSpuGroupOpt,
 ) -> Result<(), CliError> {
-    let (target_server, create_spu_group_cfg) = opt.validate()?;
+    let (target_server, (name,spec)) = opt.validate()?;
 
-    debug!("{:#?}", create_spu_group_cfg);
+    debug!("creating spg: {}, spec: {:#?}", name,spec);
 
     let mut sc = target_server.connect().await?;
 
-    sc.create_group(create_spu_group_cfg)
-        .await
-        .map_err(|err| err.into())
+    let mut admin = sc.admin().await;
+
+    admin.create(name,false,spec).await?;
+
+    Ok(())
 }
