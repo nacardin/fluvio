@@ -1,4 +1,6 @@
 
+use sc_api::objects::*;
+use sc_api::FlvStatus;
 use sc_api::AdminRequest;
 use kf_socket::KfSocketError;
 
@@ -21,12 +23,21 @@ impl ScAdminClient {
         self.0.send_receive(request).await    
     }
 
-    pub fn create<R>(
+    pub async fn create<S>(
         &mut self,
         name: String,
         dry_run: bool,
-        spec: R
-    ) {
+        spec: S
+    ) -> Result<FlvStatus,KfSocketError>
+         where S: Into<AllCreatableSpec> 
+    {
+        let create_request = CreateRequest {
+            name,
+            dry_run,
+            spec: spec.into()
+        };
+
+        self.send_receive(create_request).await
 
     }
 

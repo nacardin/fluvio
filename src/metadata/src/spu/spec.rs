@@ -99,6 +99,48 @@ impl SpuSpec {
     }
 }
 
+
+/// Custom Spu Spec
+/// This is not real spec since when this is stored on metadata store, it will be stored as SPU
+#[derive(Decode, Encode, Debug, Clone, Default, PartialEq)]
+#[cfg_attr(feature = "use_serde", derive(serde::Serialize,serde::Deserialize),serde(rename_all = "camelCase"))]
+pub struct CustomSpuSpec {
+    pub id: SpuId,
+    pub public_endpoint: IngressPort,
+    pub private_endpoint: Endpoint,
+    #[cfg_attr(feature = "use_serde", serde(skip_serializing_if = "Option::is_none"))]
+    pub rack: Option<String>,
+}
+
+impl From<CustomSpuSpec> for SpuSpec {
+    fn from(spec: CustomSpuSpec) -> Self {
+        Self {
+            id: spec.id,
+            public_endpoint: spec.public_endpoint,
+            private_endpoint: spec.private_endpoint,
+            rack: spec.rack,
+            spu_type: SpuType::Custom
+        }
+    }
+}
+
+impl From<SpuSpec> for CustomSpuSpec {
+    fn from(spu: SpuSpec) -> Self {
+        match spu.spu_type {
+            SpuType::Custom => {
+                Self {
+                    id: spu.id,
+                    public_endpoint: spu.public_endpoint,
+                    private_endpoint: spu.private_endpoint,
+                    rack: spu.rack
+                }
+            },
+            SpuType::Managed => panic!("managed spu type can't be converted into custom")
+        }
+    }
+}
+
+
 #[derive(Decode, Encode, Default, Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "use_serde", derive(serde::Serialize,serde::Deserialize),serde(rename_all = "camelCase",default))]
 pub struct IngressPort {

@@ -5,7 +5,6 @@ mod produce;
 mod root_cli;
 mod spu;
 mod topic;
-mod advanced;
 mod output;
 mod profile;
 mod tls;

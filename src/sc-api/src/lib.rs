@@ -1,6 +1,7 @@
 mod apis;
-pub mod topics;
+pub mod topic;
 pub mod spu;
+pub mod spg;
 pub mod metadata;
 pub mod versions;
 pub mod objects;

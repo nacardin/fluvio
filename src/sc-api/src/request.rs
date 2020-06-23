@@ -20,10 +20,8 @@ use kf_protocol::derive::Encode;
 
 
 use super::versions::ApiVersionsRequest;
-use super::spu::*;
-use super::topics::*;
 use super::metadata::*;
-
+use super::objects::*;
 
 use super::ScPublicApiKey;
 
@@ -32,21 +30,9 @@ pub enum ScPublicRequest {
     // Mixed
     ApiVersionsRequest(RequestMessage<ApiVersionsRequest>),
 
-    //Topics
-    CreateTopicRequest(RequestMessage<CreateTopicRequest>),
-    DeleteTopicRequest(RequestMessage<DeleteTopicRequest>),
-    FetchTopicsRequest(RequestMessage<FetchTopicsRequest>),
+    CreateRequest(RequestMessage<CreateRequest>),
+
     TopicCompositionRequest(RequestMessage<TopicCompositionRequest>),
-
-    // Spus
-    RegisterCustomSpuRequest(RequestMessage<RegisterCustomSpuRequest>),
-    UnregisterCustomSpuRequest(RequestMessage<UnregisterCustomSpuRequest>),
-    FetchSpusRequest(RequestMessage<FetchSpusRequest>),
-
-    CreateSpuGroupRequest(RequestMessage<CreateSpuGroupRequest>),
-    DeleteSpuGroupRequest(RequestMessage<DeleteSpuGroupRequest>),
-    FetchSpuGroupsRequest(RequestMessage<FetchSpuGroupsRequest>),
-
     UpdateMetadataRequest(RequestMessage<UpdateMetadataRequest>),
 }
 
@@ -71,35 +57,13 @@ impl KfRequestMessage for ScPublicRequest {
             ScPublicApiKey::ApiVersion => api_decode!(Self, ApiVersionsRequest, src, header),
 
             // Fluvio - Topics
-            ScPublicApiKey::CreateTopic => {
-                api_decode!(Self, CreateTopicRequest, src, header)
-            }
-            ScPublicApiKey::DeleteTopic => {
-                api_decode!(Self, DeleteTopicRequest, src, header)
-            }
-            ScPublicApiKey::FetchTopics => api_decode!(Self, FetchTopicsRequest, src, header),
+            ScPublicApiKey::Create => {
+                api_decode!(Self, CreateRequest, src, header)
+            },
+
             ScPublicApiKey::TopicComposition => {
                 api_decode!(Self, TopicCompositionRequest, src, header)
-            }
-
-            // Fluvio - Custom Spus / Spu Groups
-            ScPublicApiKey::RegisterCustomSpu => {
-                api_decode!(Self, RegisterCustomSpuRequest, src, header)
-            }
-            ScPublicApiKey::UnregisterCustomSpu => {
-                api_decode!(Self, UnregisterCustomSpuRequest, src, header)
-            }
-            ScPublicApiKey::FetchSpus => api_decode!(Self, FetchSpusRequest, src, header),
-
-            ScPublicApiKey::CreateSpuGroup => {
-                api_decode!(Self, CreateSpuGroupRequest, src, header)
-            }
-            ScPublicApiKey::DeleteSpuGroup => {
-                api_decode!(Self, DeleteSpuGroupRequest, src, header)
-            }
-            ScPublicApiKey::FetchSpuGroups => {
-                api_decode!(Self, FetchSpuGroupsRequest, src, header)
-            }
+            },
 
             ScPublicApiKey::UpdateMetadata => {
                 api_decode!(Self, UpdateMetadataRequest, src, header)

@@ -49,8 +49,7 @@ mod topic_partition {
     use std::fs::read_to_string;
     use std::path::Path;
 
-    use kf_protocol::message::topic::CreatableReplicaAssignment;
-    use sc_api::topics::FlvTopicPartitionMap;
+    use sc_api::topic::PartitionMap;
 
     #[derive(Debug)]
     pub enum ReplicaConfig {
@@ -94,23 +93,12 @@ mod topic_partition {
                 .map_err(|err| IoError::new(ErrorKind::InvalidData, format!("{}", err)))
         }
 
-        // Encode Replica Assignment map into Kafka Create Replica Assignment
-        pub fn kf_encode(&self) -> Vec<CreatableReplicaAssignment> {
-            let mut assignments: Vec<CreatableReplicaAssignment> = vec![];
-            for partition in &self.partitions {
-                assignments.push(CreatableReplicaAssignment {
-                    partition_index: partition.id,
-                    broker_ids: partition.replicas.clone(),
-                })
-            }
-            assignments
-        }
-
+        
         // Encode Replica Assignment map into Fluvio format
-        pub fn sc_encode(&self) -> Vec<FlvTopicPartitionMap> {
-            let mut partition_map: Vec<FlvTopicPartitionMap> = vec![];
+        pub fn sc_encode(&self) -> Vec<PartitionMap> {
+            let mut partition_map: Vec<PartitionMap> = vec![];
             for partition in &self.partitions {
-                partition_map.push(FlvTopicPartitionMap {
+                partition_map.push(PartitionMap {
                     id: partition.id,
                     replicas: partition.replicas.clone(),
                 })
