@@ -99,10 +99,10 @@ async fn launch_spu_group(opt: &InstallCommand) {
 async fn launch_spu(spu_index: u16, client: SharedK8Client, option: &InstallCommand) {
     use std::fs::File;
 
-    use sc_api::spu::SpuSpec;
-    use sc_api::spu::IngressPort;
-    use sc_api::spu::Endpoint;
-    use sc_api::spu::IngressAddr;
+    use flv_client::metadata::spu::SpuSpec;
+    use flv_client::metadata::spu::IngressPort;
+    use flv_client::metadata::spu::Endpoint;
+    use flv_client::metadata::spu::IngressAddr;
     use k8_obj_metadata::InputK8Obj;
     use k8_obj_metadata::InputObjectMeta;
     use k8_metadata_client::MetadataClient;

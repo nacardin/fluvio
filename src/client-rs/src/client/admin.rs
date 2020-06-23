@@ -1,4 +1,3 @@
-
 use sc_api::objects::*;
 use sc_api::AdminRequest;
 use kf_socket::KfSocketError;
@@ -9,46 +8,41 @@ use super::*;
 /// adminstration interface
 pub struct ScAdminClient(SerialClient);
 
-
 impl ScAdminClient {
-
     pub(crate) fn new(client: SerialClient) -> Self {
         Self(client)
     }
 
     async fn send_receive<R>(&mut self, request: R) -> Result<R::Response, KfSocketError>
-        where R: AdminRequest + Send + Sync {
-
-        self.0.send_receive(request).await    
+    where
+        R: AdminRequest + Send + Sync,
+    {
+        self.0.send_receive(request).await
     }
 
     pub async fn create<S>(
         &mut self,
         name: String,
         dry_run: bool,
-        spec: S
-    ) -> Result<(),ClientError>
-         where S: Into<AllCreatableSpec> 
+        spec: S,
+    ) -> Result<(), ClientError>
+    where
+        S: Into<AllCreatableSpec>,
     {
         let create_request = CreateRequest {
             name,
             dry_run,
-            spec: spec.into()
+            spec: spec.into(),
         };
 
         self.send_receive(create_request).await?.as_result()?;
 
         Ok(())
-
     }
 
-    pub fn delete<R>(
-        &mut self,
-        name: &str
-    ){
-
+    pub fn delete<R>(&mut self, name: &str) {
+        
     }
-
 
     /*
     /// Connect to replica leader for a topic/partition
@@ -140,6 +134,4 @@ impl ScAdminClient {
         Err(ClientError::PartitionNotFound(topic.to_owned(), partition))
     }
     */
-
-
 }

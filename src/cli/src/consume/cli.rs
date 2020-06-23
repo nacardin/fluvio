@@ -11,8 +11,7 @@ use flv_client::profile::ScConfig;
 use flv_client::MAX_FETCH_BYTES;
 
 use crate::error::CliError;
-use crate::tls::TlsConfig;
-use crate::profile::InlineProfile;
+use crate::target::ClusterTarget;
 
 use super::ConsumeOutputType;
 
@@ -42,12 +41,7 @@ pub struct ConsumeLogOpt {
     #[structopt(short = "b", long = "maxbytes", value_name = "integer")]
     pub max_bytes: Option<i32>,
 
-    /// Address of Streaming Controller
-    #[structopt(short = "c", long = "sc", value_name = "host:port")]
-    pub sc: Option<String>,
-
-
-
+  
     /// Suppress items items that have an unknown output type
     #[structopt(short = "s", long = "suppress-unknown")]
     pub suppress_unknown: bool,
@@ -64,20 +58,13 @@ pub struct ConsumeLogOpt {
     output: ConsumeOutputType,
 
     #[structopt(flatten)]
-    tls: TlsConfig,
-
-    #[structopt(flatten)]
-    profile: InlineProfile,
+    target: ClusterTarget
 }
 
 impl ConsumeLogOpt {
     /// validate the configuration and generate target server and config which can be used
     pub fn validate(self) -> Result<(ScConfig, ConsumeLogConfig), CliError> {
-        let target_server = ScConfig::new_with_profile(
-            self.sc,
-            self.profile.profile,
-            self.tls.try_into_file_config()?,
-        )?;
+        let target_server = self.target.load()?;
         let max_bytes = self.max_bytes.unwrap_or(MAX_FETCH_BYTES as i32);
 
         // consume log specific configurations

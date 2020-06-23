@@ -10,11 +10,11 @@ use structopt::StructOpt;
 
 use flv_util::socket_helpers::ServerAddress;
 use flv_client::profile::ScConfig;
-use sc_api::spu::CustomSpuSpec;
+use flv_client::metadata::spu::CustomSpuSpec;
 
-use crate::tls::TlsConfig;
+
 use crate::error::CliError;
-use crate::profile::InlineProfile;
+use crate::target::ClusterTarget;
 
 #[derive(Debug, StructOpt)]
 pub struct RegisterCustomSpuOpt {
@@ -38,26 +38,15 @@ pub struct RegisterCustomSpuOpt {
     #[structopt(short = "v", long = "private-server", value_name = "host:port")]
     private_server: String,
 
-    /// Address of Streaming Controller
-    #[structopt(short = "c", long = "sc", value_name = "host:port")]
-    sc: Option<String>,
-
     #[structopt(flatten)]
-    tls: TlsConfig,
-
-    #[structopt(flatten)]
-    profile: InlineProfile,
+    target: ClusterTarget
 }
 
 impl RegisterCustomSpuOpt {
     /// Validate cli options. Generate target-server and register custom spu config.
     fn validate(self) -> Result<(ScConfig, (String,CustomSpuSpec)), CliError> {
-        // profile specific configurations (target server)
-        let target_server = ScConfig::new_with_profile(
-            self.sc,
-            self.tls.try_into_file_config()?,
-            self.profile.profile,
-        )?;
+        
+        let target = self.target.load()?;
 
         // register custom spu config
         let cfg = (
@@ -71,7 +60,7 @@ impl RegisterCustomSpuOpt {
         );
 
         // return server separately from config
-        Ok((target_server, cfg))
+        Ok((target, cfg))
     }
 }
 

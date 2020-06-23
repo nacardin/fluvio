@@ -20,6 +20,11 @@ pub struct SpuGroupSpec {
     pub rack: Option<String>,
 }
 
+impl SpuGroupSpec {
+
+    pub const LABEL: &'static str = "SpuGroup";
+}
+
 /// equivalent to spu template
 #[derive(Encode, Decode, Default, Debug)]
 pub struct GroupConfig {

@@ -18,7 +18,6 @@ use kf_protocol::api::RequestMessage;
 use kf_protocol::api::api_decode;
 use kf_protocol::derive::Encode;
 
-
 use super::versions::ApiVersionsRequest;
 use super::metadata::*;
 use super::objects::*;
@@ -31,7 +30,7 @@ pub enum ScPublicRequest {
     ApiVersionsRequest(RequestMessage<ApiVersionsRequest>),
 
     CreateRequest(RequestMessage<CreateRequest>),
-
+    DeleteRequest(RequestMessage<DeleteRequest>),
     TopicCompositionRequest(RequestMessage<TopicCompositionRequest>),
     UpdateMetadataRequest(RequestMessage<UpdateMetadataRequest>),
 }
@@ -53,21 +52,14 @@ impl KfRequestMessage for ScPublicRequest {
     {
         trace!("decoding header: {:#?}", header);
         match header.api_key().try_into()? {
-            // Mixed
             ScPublicApiKey::ApiVersion => api_decode!(Self, ApiVersionsRequest, src, header),
 
-            // Fluvio - Topics
-            ScPublicApiKey::Create => {
-                api_decode!(Self, CreateRequest, src, header)
-            },
-
+            ScPublicApiKey::Create => api_decode!(Self, CreateRequest, src, header),
+            ScPublicApiKey::Delete => api_decode!(Self, DeleteRequest, src, header),
             ScPublicApiKey::TopicComposition => {
                 api_decode!(Self, TopicCompositionRequest, src, header)
-            },
-
-            ScPublicApiKey::UpdateMetadata => {
-                api_decode!(Self, UpdateMetadataRequest, src, header)
-           }
+            }
+            ScPublicApiKey::UpdateMetadata => api_decode!(Self, UpdateMetadataRequest, src, header),
         }
     }
 }

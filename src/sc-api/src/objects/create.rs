@@ -4,7 +4,6 @@ use kf_protocol::derive::{Decode, Encode};
 use kf_protocol::Encoder;
 use kf_protocol::Decoder;
 use kf_protocol::api::Request;
-use flv_metadata::core::Spec;
 
 use crate::FlvStatus;
 use crate::ScPublicApiKey;

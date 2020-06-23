@@ -112,7 +112,9 @@ pub struct CustomSpuSpec {
     pub rack: Option<String>,
 }
 
-
+impl CustomSpuSpec {
+    pub const LABEL: &'static str = "CustomSpu";
+}
 
 
 impl From<CustomSpuSpec> for SpuSpec {

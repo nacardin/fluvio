@@ -8,11 +8,10 @@ use log::debug;
 use structopt::StructOpt;
 
 use flv_client::profile::ScConfig;
-use sc_api::spg::SpuGroupSpec;
+use flv_client::metadata::spg::SpuGroupSpec;
 
 use crate::error::CliError;
-use crate::tls::TlsConfig;
-use crate::profile::InlineProfile;
+use crate::target::ClusterTarget;
 
 use super::helpers::group_config::GroupConfig;
 
@@ -42,25 +41,14 @@ pub struct CreateManagedSpuGroupOpt {
     #[structopt(short = "s", long = "size", value_name = "string")]
     pub storage: Option<String>,
 
-    /// Address of Streaming Controller
-    #[structopt(short = "c", long = "sc", value_name = "host:port")]
-    pub sc: Option<String>,
-
     #[structopt(flatten)]
-    pub tls: TlsConfig,
-
-    #[structopt(flatten)]
-    pub profile: InlineProfile,
+    target: ClusterTarget
 }
 
 impl CreateManagedSpuGroupOpt {
     /// Validate cli options. Generate target-server and create spu group config.
     fn validate(self) -> Result<(ScConfig, (String,SpuGroupSpec)), CliError> {
-        let target_server = ScConfig::new_with_profile(
-            self.sc,
-            self.tls.try_into_file_config()?,
-            self.profile.profile,
-        )?;
+        let target_server = self.target.load()?;
 
         let grp_config = self
             .storage
