@@ -115,7 +115,7 @@ async fn launch_spu(spu_index: u16, client: SharedK8Client, option: &InstallComm
     let private_port = public_port + 1;
 
     let spu_spec = SpuSpec {
-        spu_id,
+        id: spu_id,
         public_endpoint: IngressPort {
             port: public_port,
             ingress: vec![IngressAddr {

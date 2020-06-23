@@ -81,6 +81,8 @@ pub async fn process_unregister_custom_spu(opt: UnregisterCustomSpuOpt) -> Resul
 
     let mut sc = target_server.connect().await?;
 
+    let admin = sc.admin().await;
+    
     sc.unregister_custom_spu(cfg)
         .await
         .map_err(|err| err.into())

@@ -112,6 +112,9 @@ pub struct CustomSpuSpec {
     pub rack: Option<String>,
 }
 
+
+
+
 impl From<CustomSpuSpec> for SpuSpec {
     fn from(spec: CustomSpuSpec) -> Self {
         Self {
@@ -155,6 +158,16 @@ impl fmt::Display for IngressPort {
     }
 }
 
+impl From<ServerAddress> for IngressPort {
+    fn from(addr: ServerAddress) -> Self {
+        Self {
+            port: addr.port,
+            ingress: vec![IngressAddr::from_host(addr.host)],
+            ..Default::default()
+        }
+    }
+}
+
 
 impl IngressPort {
     pub fn from_port_host(port: u16, host: String) -> Self {
@@ -192,7 +205,24 @@ pub struct IngressAddr {
     pub ip: Option<String>,
 }
 
+
 impl IngressAddr {
+
+    pub fn from_host(hostname: String) -> Self {
+        Self {
+            hostname: Some(hostname),
+            ..Default::default()
+        }
+    }
+
+    pub fn from_ip(ip: String) -> Self {
+        Self {
+            ip: Some(ip),
+            ..Default::default()
+        }
+    }
+
+
     pub fn host(&self) -> Option<String> {
         if let Some(name) = &self.hostname {
             Some(name.clone())
@@ -212,6 +242,16 @@ pub struct Endpoint {
     pub port: u16,
     pub host: String,
     pub encryption: EncryptionEnum,
+}
+
+impl From<ServerAddress> for Endpoint {
+    fn from(addr: ServerAddress) -> Self {
+        Self {
+            port: addr.port,
+            host: addr.host,
+            ..Default::default()
+        }
+    }
 }
 
 

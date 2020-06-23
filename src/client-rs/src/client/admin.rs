@@ -1,10 +1,9 @@
 
 use sc_api::objects::*;
-use sc_api::FlvStatus;
 use sc_api::AdminRequest;
 use kf_socket::KfSocketError;
 
-
+use crate::ClientError;
 use super::*;
 
 /// adminstration interface
@@ -28,7 +27,7 @@ impl ScAdminClient {
         name: String,
         dry_run: bool,
         spec: S
-    ) -> Result<FlvStatus,KfSocketError>
+    ) -> Result<(),ClientError>
          where S: Into<AllCreatableSpec> 
     {
         let create_request = CreateRequest {
@@ -37,7 +36,9 @@ impl ScAdminClient {
             spec: spec.into()
         };
 
-        self.send_receive(create_request).await
+        self.send_receive(create_request).await?.as_result()?;
+
+        Ok(())
 
     }
 

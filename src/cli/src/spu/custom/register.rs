@@ -10,6 +10,7 @@ use structopt::StructOpt;
 
 use flv_util::socket_helpers::ServerAddress;
 use flv_client::profile::ScConfig;
+use sc_api::spu::CustomSpuSpec;
 
 use crate::tls::TlsConfig;
 use crate::error::CliError;
@@ -17,11 +18,8 @@ use crate::profile::InlineProfile;
 
 #[derive(Debug)]
 pub struct RegisterCustomSpuConfig {
-    pub id: i32,
+    pub spec: CustomSpuSpec,
     pub name: String,
-    pub public_server: ServerAddress,
-    pub private_server: ServerAddress,
-    pub rack: Option<String>,
 }
 
 #[derive(Debug, StructOpt)]
@@ -69,11 +67,13 @@ impl RegisterCustomSpuOpt {
 
         // register custom spu config
         let cfg = RegisterCustomSpuConfig {
-            id: self.id,
             name: self.name.unwrap_or(format!("custom-spu-{}", self.id)),
-            public_server: TryFrom::try_from(self.public_server)?,
-            private_server: TryFrom::try_from(self.private_server)?,
-            rack: self.rack.clone(),
+            spec: CustomSpuSpec {
+                id: self.id,
+                public_endpoint: ServerAddress::try_from(self.public_server)?.into(),
+                private_endpoint: ServerAddress::try_from(self.private_server)?.into(),
+                rack: self.rack.clone(),
+            },
         };
 
         // return server separately from config
@@ -89,13 +89,12 @@ pub async fn process_register_custom_spu(opt: RegisterCustomSpuOpt) -> Result<()
 
     let mut sc = target_server.connect().await?;
 
-    sc.register_custom_spu(
-        cfg.id,
-        cfg.name,
-        cfg.public_server,
-        cfg.private_server,
-        cfg.rack,
-    )
-    .await
-    .map_err(|err| err.into())
+    let admin = sc.admin().await;
+
+    admin
+        .create(cfg.name, false, cfg.spec)
+        .await
+        .map_err(|err| err.into())?;
+
+    Ok(())
 }

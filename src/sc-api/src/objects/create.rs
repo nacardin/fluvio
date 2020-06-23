@@ -12,8 +12,8 @@ use crate::AdminRequest;
 
 pub use create::AllCreatableSpec;
 
-/// marker for creatable
-pub trait CreatableSpec: Spec {}
+/// marker for creatable object
+pub trait CreatableSpec {}
 
 
 #[derive(Encode, Decode, Default, Debug)]

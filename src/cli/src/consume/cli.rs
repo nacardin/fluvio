@@ -7,7 +7,7 @@
 use structopt::StructOpt;
 
 use kf_protocol::api::Offset;
-use flv_client::profile::ServerTargetConfig;
+use flv_client::profile::ScConfig;
 use flv_client::MAX_FETCH_BYTES;
 
 use crate::error::CliError;
@@ -72,13 +72,11 @@ pub struct ConsumeLogOpt {
 
 impl ConsumeLogOpt {
     /// validate the configuration and generate target server and config which can be used
-    pub fn validate(self) -> Result<(ServerTargetConfig, ConsumeLogConfig), CliError> {
-        let target_server = ServerTargetConfig::possible_target(
+    pub fn validate(self) -> Result<(ScConfig, ConsumeLogConfig), CliError> {
+        let target_server = ScConfig::new_with_profile(
             self.sc,
-            self.spu,
-            self.kf,
-            self.tls.try_into_file_config()?,
             self.profile.profile,
+            self.tls.try_into_file_config()?,
         )?;
         let max_bytes = self.max_bytes.unwrap_or(MAX_FETCH_BYTES as i32);
 

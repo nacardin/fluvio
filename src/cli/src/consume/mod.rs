@@ -16,7 +16,6 @@ mod process {
 
     use log::debug;
 
-    use flv_client::profile::ReplicaLeaderTargetInstance;
     use crate::CliError;
     use crate::Terminal;
 
