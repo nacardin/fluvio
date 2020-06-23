@@ -37,7 +37,6 @@ utils = { path= "../utils"}
 flv-types = { path ="../types", version = "0.2.0" }
 kf-protocol = { version = "2.0.0" } 
 kf-socket = { path = "../kf-socket" }
-sc-api = { path = "../sc-api", version = "2.0.0", package = "flv-api-sc"}
 spu-api = { path = "../spu-api", package = "flv-api-spu"}
 
 

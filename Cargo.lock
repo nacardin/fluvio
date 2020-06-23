@@ -653,7 +653,6 @@ dependencies = [
  "async-trait",
  "bytes 0.5.5",
  "ctrlc",
- "flv-api-sc",
  "flv-api-spu",
  "flv-client",
  "flv-future-aio",

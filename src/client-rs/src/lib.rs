@@ -12,3 +12,22 @@ pub use spu_old::SpuReplicaLeader;
 pub use replica::*;
 
 pub const MAX_FETCH_BYTES: u32 = 1000000;
+
+/// re-export metadata from sc-api
+pub mod metadata {
+
+    pub mod topic {
+        pub use sc_api::topic::*;
+    }
+
+    pub mod spu {
+        pub use sc_api::spu::*;
+    }
+
+    pub mod spg {
+        pub use sc_api::spg::*;
+    }
+
+
+
+}

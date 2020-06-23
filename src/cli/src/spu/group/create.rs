@@ -91,9 +91,9 @@ pub async fn process_create_managed_spu_group(
 
     debug!("creating spg: {}, spec: {:#?}", name,spec);
 
-    let mut sc = target_server.connect().await?;
+    let mut target = target_server.connect().await?;
 
-    let mut admin = sc.admin().await;
+    let mut admin = target.admin().await;
 
     admin.create(name,false,spec).await?;
 
