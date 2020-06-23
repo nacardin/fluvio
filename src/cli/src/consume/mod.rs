@@ -34,13 +34,10 @@ mod process {
 
         debug!("spu  leader consume config: {:#?}", cfg);
 
-        (match target_server.connect(&cfg.topic, cfg.partition).await? {
-            ReplicaLeaderTargetInstance::Kf(leader) => fetch_log_loop(out, leader, cfg).await,
-            ReplicaLeaderTargetInstance::Spu(leader) => {
-                fetch_log_loop(out, leader, cfg).await?;
-                Ok(())
-            }
-        })
-        .map(|_| format!(""))
+        let mut target = target_server.connect().await?;
+        let mut consumer = target_server.consume().await?;
+        fetch_log_loop(out, consumer, cfg).await?;
+       
+        Ok("ok".to_owned())
     }
 }

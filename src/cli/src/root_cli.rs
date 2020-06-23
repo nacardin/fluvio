@@ -154,7 +154,6 @@ pub fn run_cli() -> Result<String, CliError> {
             Root::SPUGroup(spu_group) => process_spu_group(terminal.clone(), spu_group).await,
             Root::CustomSPU(custom_spu) => process_custom_spu(terminal.clone(), custom_spu).await,
             Root::Topic(topic) => process_topic(terminal.clone(), topic).await,
-            Root::Advanced(advanced) => process_advanced(terminal.clone(), advanced).await,
             Root::Profile(profile) => process_profile(terminal.clone(), profile).await,
             Root::Cluster(cluster) => process_cluster(terminal.clone(), cluster).await,
             Root::Version(_) => process_version_cmd(),

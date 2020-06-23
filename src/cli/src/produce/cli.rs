@@ -8,11 +8,11 @@ use std::path::PathBuf;
 
 use structopt::StructOpt;
 
-use flv_client::profile::ServerTargetConfig;
+use flv_client::profile::ScConfig;
 
-use crate::tls::TlsConfig;
+use crate::target::ClusterTarget;
 use crate::error::CliError;
-use crate::profile::InlineProfile;
+
 
 // -----------------------------------
 //  Parsed Config
@@ -75,28 +75,14 @@ pub struct ProduceLogOpt {
     )]
     record_file: Vec<PathBuf>,
 
-    /// Address of Streaming Controller
-    #[structopt(short = "c", long = "sc", value_name = "host:port")]
-    pub sc: Option<String>,
-
-
     #[structopt(flatten)]
-    tls: TlsConfig,
-
-    #[structopt(flatten)]
-    profile: InlineProfile,
+    target: ClusterTarget
 }
 
 impl ProduceLogOpt {
     /// Validate cli options. Generate target-server and produce log configuration.
-    pub fn validate(self) -> Result<(ServerTargetConfig, ProduceLogConfig), CliError> {
-        let target_server = ServerTargetConfig::possible_target(
-            self.sc,
-            self.spu,
-            self.kf,
-            self.tls.try_into_file_config()?,
-            self.profile.profile,
-        )?;
+    pub fn validate(self) -> Result<(ScConfig, ProduceLogConfig), CliError> {
+        let target_server = self.target.load()?;
 
         // generate file record
         let records_from_file = if let Some(record_per_line) = self.record_per_line {
