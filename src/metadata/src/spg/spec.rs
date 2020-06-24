@@ -1,7 +1,8 @@
 
 use kf_protocol::derive::{Decode, Encode};
 
-#[derive(Encode, Decode, Default, Debug)]
+
+#[derive(Encode, Decode, Default, Debug, Clone)]
 pub struct SpuGroupSpec {
 
 
@@ -20,31 +21,29 @@ pub struct SpuGroupSpec {
     pub rack: Option<String>,
 }
 
-impl SpuGroupSpec {
 
-    pub const LABEL: &'static str = "SpuGroup";
-}
+
 
 /// equivalent to spu template
-#[derive(Encode, Decode, Default, Debug)]
+#[derive(Encode, Decode, Default, Debug, Clone )]
 pub struct GroupConfig {
     pub storage: Option<StorageConfig>,
     pub replication: Option<ReplicationConfig>,
     pub env: Vec<EnvVar>,
 }
 
-#[derive(Encode, Decode, Default, Debug)]
+#[derive(Encode, Decode, Default, Debug, Clone )]
 pub struct StorageConfig {
     pub log_dir: Option<String>,
     pub size: Option<String>,
 }
 
-#[derive(Encode, Decode, Default, Debug)]
+#[derive(Encode, Decode, Default, Debug, Clone )]
 pub struct ReplicationConfig {
     pub in_sync_replica_min: Option<u16>,
 }
 
-#[derive(Encode, Decode, Default, Debug)]
+#[derive(Encode, Decode, Default, Debug, Clone )]
 pub struct EnvVar {
     pub name: String,
     pub value: String,

@@ -11,10 +11,6 @@ use crate::AdminRequest;
 
 pub use create::AllCreatableSpec;
 
-/// marker for creatable object
-pub trait CreatableSpec {}
-
-
 #[derive(Encode, Decode, Default, Debug)]
 pub struct CreateRequest
 {

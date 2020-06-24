@@ -23,10 +23,16 @@ mod metadata {
 
     impl Spec for TopicSpec {
         const LABEL: &'static str = "Topic";
-        type Key = String;
+        type IndexKey = String;
         type Status = TopicStatus;
         type Owner = TopicSpec;
     }
+
+    impl Removable for TopicSpec {
+        type DeleteKey = String;
+    }   
+
+    impl Creatable for TopicSpec {}
 
     impl Status for TopicStatus {}
 }

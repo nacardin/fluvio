@@ -11,5 +11,12 @@ mod convert {
         }
     }
 
-    impl CreatableSpec for CustomSpuSpec{}
+    impl DeleteSpec for CustomSpuSpec  {
+
+        fn into_request<K>(key: K) -> DeleteRequest where K: Into<Self::DeleteKey> {
+            DeleteRequest::CustomSpu(key.into())
+        }
+
+    }
+
 }

@@ -6,18 +6,9 @@
 use structopt::StructOpt;
 
 use flv_client::profile::ScConfig;
+use flv_client::metadata::spg::SpuGroupSpec;
 use crate::error::CliError;
-use crate::tls::TlsConfig;
-use crate::profile::InlineProfile;
-
-// -----------------------------------
-//  Parsed Config
-// -----------------------------------
-
-#[derive(Debug)]
-pub struct DeleteManagedSpuGroupConfig {
-    pub name: String,
-}
+use crate::target::ClusterTarget;
 
 // -----------------------------------
 // CLI Options
@@ -29,30 +20,17 @@ pub struct DeleteManagedSpuGroupOpt {
     #[structopt(short = "n", long = "name", value_name = "string")]
     name: String,
 
-    /// Address of Streaming Controller
-    #[structopt(short = "c", long = "sc", value_name = "host:port")]
-    sc: Option<String>,
-
     #[structopt(flatten)]
-    tls: TlsConfig,
-
-    #[structopt(flatten)]
-    profile: InlineProfile,
+    target: ClusterTarget
 }
 
 impl DeleteManagedSpuGroupOpt {
     /// Validate cli options. Generate target-server and delete spu group configuration.
-    fn validate(self) -> Result<(ScConfig, DeleteManagedSpuGroupConfig), CliError> {
-        let target_server = ScConfig::new_with_profile(
-            self.sc,
-            self.tls.try_into_file_config()?,
-            self.profile.profile,
-        )?;
+    fn validate(self) -> Result<(ScConfig, String), CliError> {
 
-        let delete_spu_group_cfg = DeleteManagedSpuGroupConfig { name: self.name };
-
-        // return server separately from config
-        Ok((target_server, delete_spu_group_cfg))
+        let target_server = self.target.load()?;
+ 
+        Ok((target_server, self.name))
     }
 }
 
@@ -64,11 +42,10 @@ impl DeleteManagedSpuGroupOpt {
 pub async fn process_delete_managed_spu_group(
     opt: DeleteManagedSpuGroupOpt,
 ) -> Result<(), CliError> {
-    let (target_server, delete_spu_group_cfg) = opt.validate()?;
+    let (target_server, name) = opt.validate()?;
 
-    let mut sc = target_server.connect().await?;
-
-    sc.delete_group(&delete_spu_group_cfg.name)
-        .await
-        .map_err(|err| err.into())
+    let mut client = target_server.connect().await?;
+    let mut admin = client.admin().await;
+    admin.delete::<SpuGroupSpec,_>(&name).await?;
+    Ok(())
 }

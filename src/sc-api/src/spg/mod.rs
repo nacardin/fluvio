@@ -11,5 +11,12 @@ mod convert {
         }
     }
 
-    impl CreatableSpec for SpuGroupSpec {}
+    impl DeleteSpec for SpuGroupSpec {
+
+        fn into_request<K>(key: K) -> DeleteRequest where K: Into<Self::DeleteKey> {
+            DeleteRequest::SpuGroup(key.into())
+        }
+
+    }
+
 }

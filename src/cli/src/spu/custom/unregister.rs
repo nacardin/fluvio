@@ -8,12 +8,12 @@ use std::io::ErrorKind;
 
 use structopt::StructOpt;
 
-use sc_api::spu::CustomSpu;
+use flv_client::metadata::spu::CustomSpuSpec;
+use flv_client::metadata::spu::CustomSpuKey;
 use flv_client::profile::ScConfig;
 
+use crate::target::ClusterTarget;
 use crate::error::CliError;
-use crate::tls::TlsConfig;
-use crate::profile::InlineProfile;
 
 // -----------------------------------
 // CLI Options
@@ -34,31 +34,20 @@ pub struct UnregisterCustomSpuOpt {
     )]
     name: Option<String>,
 
-    /// Address of Streaming Controller
-    #[structopt(short = "c", long = "sc", value_name = "host:port")]
-    sc: Option<String>,
-
     #[structopt(flatten)]
-    tls: TlsConfig,
-
-    #[structopt(flatten)]
-    profile: InlineProfile,
+    target: ClusterTarget,
 }
 
 impl UnregisterCustomSpuOpt {
     /// Validate cli options. Generate target-server and unregister custom spu config.
-    fn validate(self) -> Result<(ScConfig, CustomSpu), CliError> {
-        let target_server = ScConfig::new_with_profile(
-            self.sc,
-            self.tls.try_into_file_config()?,
-            self.profile.profile,
-        )?;
+    fn validate(self) -> Result<(ScConfig, CustomSpuKey), CliError> {
+        let target_server = self.target.load()?;
 
         // custom spu
         let custom_spu = if let Some(name) = self.name {
-            CustomSpu::Name(name)
+            CustomSpuKey::Name(name)
         } else if let Some(id) = self.id {
-            CustomSpu::Id(id)
+            CustomSpuKey::Id(id)
         } else {
             return Err(CliError::IoError(IoError::new(
                 ErrorKind::Other,
@@ -77,13 +66,11 @@ impl UnregisterCustomSpuOpt {
 
 /// Process unregister custom-spu cli request
 pub async fn process_unregister_custom_spu(opt: UnregisterCustomSpuOpt) -> Result<(), CliError> {
-    let (target_server, cfg) = opt.validate()?;
+    let (target_server, delete_key) = opt.validate()?;
 
-    let mut sc = target_server.connect().await?;
+    let mut client = target_server.connect().await?;
+    let mut admin = client.admin().await;
 
-    let admin = sc.admin().await;
-    
-    sc.unregister_custom_spu(cfg)
-        .await
-        .map_err(|err| err.into())
+    admin.delete::<CustomSpuSpec,_>(delete_key).await?;
+    Ok(())
 }

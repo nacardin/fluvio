@@ -6,7 +6,7 @@ use kf_protocol::derive::*;
 use kf_protocol::bytes::{Buf, BufMut};
 
 
-#[derive(Encode, Decode, Default, Debug)]
+#[derive(Encode, Decode, Default, Debug, Clone )]
 pub struct SpuGroupStatus {
     /// Status resolution
     pub resolution: SpuGroupStatusResolution,
@@ -16,7 +16,7 @@ pub struct SpuGroupStatus {
 }
 
 
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub enum SpuGroupStatusResolution {
     Init,
     Invalid,

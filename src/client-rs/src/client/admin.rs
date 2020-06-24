@@ -1,5 +1,6 @@
 use sc_api::objects::*;
 use sc_api::AdminRequest;
+use sc_api::core::*;
 use kf_socket::KfSocketError;
 
 use crate::ClientError;
@@ -20,6 +21,7 @@ impl ScAdminClient {
         self.0.send_receive(request).await
     }
 
+    /// create new object
     pub async fn create<S>(
         &mut self,
         name: String,
@@ -40,8 +42,16 @@ impl ScAdminClient {
         Ok(())
     }
 
-    pub fn delete<R>(&mut self, name: &str) {
-        
+    /// delete object by key
+    /// key is depend on spec, most are string but some allow multiple types
+    pub async fn delete<S,K>(&mut self, key: K) -> Result<(),ClientError>
+    where
+        S: DeleteSpec,
+        K: Into<S::DeleteKey>
+    {
+        let delete_request = S::into_request(key);
+        self.send_receive(delete_request).await?.as_result()?;
+        Ok(())
     }
 
     /*

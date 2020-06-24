@@ -21,7 +21,7 @@ mod metadata {
 
     impl Spec for PartitionSpec {
         const LABEL: &'static str = "Partition";
-        type Key = ReplicaKey;
+        type IndexKey = ReplicaKey;
         type Status = PartitionStatus;
         type Owner = TopicSpec;
     }

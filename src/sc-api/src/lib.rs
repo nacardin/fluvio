@@ -18,6 +18,10 @@ pub mod errors {
     pub use kf_protocol::api::FlvErrorCode;
 }
 
+pub mod core {
+    pub use flv_metadata::core::*;
+}
+
 /// Error from api call
 #[derive(Debug)]
 pub enum ApiError {

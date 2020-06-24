@@ -13,6 +13,13 @@ mod convert {
         }
     }
 
-    impl CreatableSpec for TopicSpec{}
+
+    impl DeleteSpec for TopicSpec  {
+
+        fn into_request<K>(key: K) -> DeleteRequest where K: Into<Self::DeleteKey> {
+            DeleteRequest::Topic(key.into())
+        }
+
+    }
 
 }

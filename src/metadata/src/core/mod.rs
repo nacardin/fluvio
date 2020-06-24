@@ -11,12 +11,24 @@ pub trait Spec: Encoder + Decoder + Default + Clone {
     const LABEL: &'static str;
     type Status: Status;
     type Owner: Spec;
-    type Key: Ord + Clone + ToString;
+    type IndexKey: Ord + Clone + ToString;
+    
 }
 
 pub trait Status: Encoder + Decoder  + Default + Clone  {
 
 }
+
+/// for deleting objects
+pub trait Removable {
+
+    type DeleteKey: Encoder + Decoder;
+
+    
+}
+
+/// marker trait for creating
+pub trait Creatable {}
 
 /// Represents some metadata object
 pub struct MetadataObj<S,P> where P: MetadataStoreDriver, S:Spec {
