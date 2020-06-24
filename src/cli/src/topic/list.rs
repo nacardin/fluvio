@@ -13,9 +13,8 @@ use flv_client::profile::ScConfig;
 use crate::Terminal;
 use crate::error::CliError;
 use crate::OutputType;
-use crate::tls::TlsConfig;
-use crate::profile::InlineProfile;
 use crate::target::ClusterTarget;
+use flv_client::metadata::topic::TopicSpec;
 
 use super::helpers::list_kf_topics;
 use super::helpers::list_sc_topics;
@@ -42,7 +41,7 @@ pub struct ListTopicsOpt {
         long = "output",
         value_name = "type",
         possible_values = &OutputType::variants(),
-        case_insensitive = true
+        case_insensitive = true,
     )]
     output: Option<OutputType>,
 
@@ -52,18 +51,11 @@ pub struct ListTopicsOpt {
 
 impl ListTopicsOpt {
     /// Validate cli options and generate config
-    fn validate(self) -> Result<(ScConfig, ListTopicsConfig), CliError> {
+    fn validate(self) -> Result<(ScConfig, OutputType), CliError> {
         
         let target_server = self.target.load()?;
 
-
-        // transfer config parameters
-        let list_topics_cfg = ListTopicsConfig {
-            output: self.output.unwrap_or(OutputType::default()),
-        };
-
-        // return server separately from topic result
-        Ok((target_server, list_topics_cfg))
+        Ok((target_server, self.output.unwrap_or_default()))
     }
 }
 
@@ -79,14 +71,14 @@ pub async fn process_list_topics<O>(
 where
     O: Terminal,
 {
-    let (target_server, cfg) = opt.validate()?;
+    let (target_server, output_type) = opt.validate()?;
 
-    debug!("list topics {:#?} server: {:#?}", cfg, target_server);
+    debug!("list topics {:#?} ", output_type);
 
-    (match target_server.connect().await? {
-        ControllerTargetInstance::Kf(client) => list_kf_topics(out, client, cfg.output).await,
-        ControllerTargetInstance::Sc(client) => list_sc_topics(out, client, cfg.output).await,
-    })
-    .map(|_| format!(""))
-    .map_err(|err| err.into())
+    let mut client = target_server.connect().await?;
+    let mut admin = client.admin().await;
+
+    let topics = admin::<TopicSpec>::list().await?;
+    list_topics(out, client, cfg.output).await?;
+    Ok("".to_owned())
 }

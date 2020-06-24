@@ -2,6 +2,10 @@ pub use flv_metadata::spg::*;
 
 mod convert {
 
+    use std::io::Error;
+    use std::io::ErrorKind;
+    use std::convert::TryInto;
+
     use crate::objects::*;
     use super::*;
 
@@ -18,5 +22,26 @@ mod convert {
         }
 
     }
+
+    impl ListSpec for SpuGroupSpec {
+
+        fn into_list_request() -> ListRequest {
+            ListRequest::SpuGroup
+        }
+    }
+
+    impl TryInto<Vec<Metadata<SpuGroupSpec>>> for ListResponse {
+        type Error = Error;
+        
+        fn try_into(self) -> Result<Vec<Metadata<SpuGroupSpec>>, Self::Error> {
+
+            match self {
+                ListResponse::SpuGroup(s) => Ok(s),
+                _ => Err(Error::new(ErrorKind::Other,"not topic"))
+            }
+
+        }
+    }
+
 
 }

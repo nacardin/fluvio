@@ -1,48 +1,59 @@
 //!
-//! # Kafka - List Topic Processing
+//! # Fluvio SC - List Topic Processing
 //!
-//! Communicates with Kafka Controller to retrieve all Topics
+//! Retrieve all Topics and print to screen
 //!
 
-use serde::Serialize;
 use prettytable::Row;
 use prettytable::row;
 use prettytable::cell;
 
+use log::debug;
+
 use flv_client::client::*;
+use flv_client::metadata::topic::TopicMetadata;
 
 use crate::error::CliError;
 use crate::OutputType;
 use crate::TableOutputHandler;
 use crate::Terminal;
+use crate::t_println;
 
-use super::topic_metadata_kf::KfTopicMetadata;
-
-#[derive(Serialize, Debug)]
-struct ListTopics {
-    topics: Vec<KfTopicMetadata>,
-}
+type ListTopics = Vec<TopicMetadata>;
 
 // -----------------------------------
 // Process Request
 // -----------------------------------
 
 // Retrieve and print topics in desired format
-pub async fn list_kf_topics<O>(
+pub async fn list_topics<O>(
     out: std::sync::Arc<O>,
-    mut client: KfClient,
+    mut client: ScClient,
     output_type: OutputType,
 ) -> Result<(), CliError>
 where
     O: Terminal,
 {
-    let topics = client.topic_metadata(None).await?;
-    let wrapper_topics: Vec<KfTopicMetadata> = topics
-        .into_iter()
-        .map(|t| KfTopicMetadata::new(t))
-        .collect();
+    let list_topics = client.topic_metadata(None).await?;
+    debug!("topics retrieved: {:#?}", list_topics);
+    format_response_output(out, list_topics, output_type)
+}
 
-    out.describe_objects(&wrapper_topics, output_type)
+/// Process server based on output type
+fn format_response_output<O>(
+    out: std::sync::Arc<O>,
+    list_topics: ListTopics,
+    output_type: OutputType,
+) -> Result<(), CliError>
+where
+    O: Terminal,
+{
+    if list_topics.len() > 0 {
+        out.render_list(&list_topics, output_type)
+    } else {
+        t_println!(out, "No topics found");
+        Ok(())
+    }
 }
 
 // -----------------------------------
@@ -51,13 +62,21 @@ where
 impl TableOutputHandler for ListTopics {
     /// table header implementation
     fn header(&self) -> Row {
-        row!["NAME", "INTERNAL", "PARTITIONS", "REPLICAS",]
+        row![
+            "NAME",
+            "TYPE",
+            "PARTITIONS",
+            "REPLICAS",
+            "IGNORE-RACK",
+            "STATUS",
+            "REASON"
+        ]
     }
 
     /// return errors in string format
     fn errors(&self) -> Vec<String> {
         let mut errors = vec![];
-        for topic_metadata in &self.topics {
+        for topic_metadata in self.iter() {
             if let Some(error) = &topic_metadata.error {
                 errors.push(format!(
                     "Topic '{}': {}",
@@ -72,13 +91,16 @@ impl TableOutputHandler for ListTopics {
     /// table content implementation
     fn content(&self) -> Vec<Row> {
         let mut rows: Vec<Row> = vec![];
-        for topic_metadata in &self.topics {
+        for topic_metadata in self.iter() {
             if let Some(topic) = &topic_metadata.topic {
                 rows.push(row![
                     l -> topic_metadata.name,
-                    c -> topic.is_internal.to_string(),
-                    c -> topic.partitions.to_string(),
-                    c -> topic.replication_factor.to_string(),
+                    c -> topic.type_label(),
+                    c -> topic.partitions_str(),
+                    c -> topic.replication_factor_str(),
+                    c -> topic.ignore_rack_assign_str(),
+                    c -> topic.status_label(),
+                    l -> topic.reason,
                 ]);
             }
         }

@@ -28,6 +28,10 @@ pub mod metadata {
         pub use sc_api::spg::*;
     }
 
+    pub mod objects {
+        pub use sc_api::objects::*;
+    }
+
 
 
 }

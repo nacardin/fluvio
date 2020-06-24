@@ -6,12 +6,12 @@
 use structopt::StructOpt;
 
 use flv_client::profile::ScConfig;
+use flv_client::metadata::spg::SpuGroupSpec;
 
 use crate::output::OutputType;
 use crate::error::CliError;
 use crate::Terminal;
-use crate::tls::TlsConfig;
-use crate::profile::InlineProfile;
+use crate::target::ClusterTarget;
 
 use super::helpers::list_output::spu_group_response_to_output;
 
@@ -37,28 +37,16 @@ pub struct ListManagedSpuGroupsOpt {
     output: Option<OutputType>,
 
     #[structopt(flatten)]
-    tls: TlsConfig,
-
-    #[structopt(flatten)]
-    profile: InlineProfile,
+    target: ClusterTarget
 }
 
 impl ListManagedSpuGroupsOpt {
     /// Validate cli options and generate config
-    fn validate(self) -> Result<(ScConfig, ListSpuGroupsConfig), CliError> {
-        let target_server = ScConfig::new_with_profile(
-            self.sc,
-            self.tls.try_into_file_config()?,
-            self.profile.profile,
-        )?;
+    fn validate(self) -> Result<(ScConfig, OutputType), CliError> {
+        let target_server = self.target.load()?;
 
-        // transfer config parameters
-        let list_spu_group_cfg = ListSpuGroupsConfig {
-            output: self.output.unwrap_or(OutputType::default()),
-        };
-
-        // return server separately from topic result
-        Ok((target_server, list_spu_group_cfg))
+        
+        Ok((target_server, self.output.unwrap_or_default()))
     }
 }
 
@@ -67,11 +55,12 @@ pub async fn process_list_managed_spu_groups<O: Terminal>(
     out: std::sync::Arc<O>,
     opt: ListManagedSpuGroupsOpt,
 ) -> Result<(), CliError> {
-    let (target_server, list_spu_group_cfg) = opt.validate()?;
+    let (target_server, output) = opt.validate()?;
 
-    let mut sc = target_server.connect().await?;
+    let mut client = target_server.connect().await?;
+    let mut admin = client.admin().await;
 
-    let lists = sc.list_group().await?;
+    let lists = admin.list::<SpuGroupSpec>().await?;
 
-    spu_group_response_to_output(out, lists, list_spu_group_cfg.output)
+    spu_group_response_to_output(out, lists,&output)
 }

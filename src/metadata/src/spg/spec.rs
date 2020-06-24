@@ -5,7 +5,6 @@ use kf_protocol::derive::{Decode, Encode};
 #[derive(Encode, Decode, Default, Debug, Clone)]
 pub struct SpuGroupSpec {
 
-
     /// The number of replicas for the spu group
     pub replicas: u16,
 
@@ -14,34 +13,41 @@ pub struct SpuGroupSpec {
     pub min_id: i32,
 
     /// Configuration elements to be applied to each SPUs in the group
-    pub config: GroupConfig,
+    pub config: SpuConfig,
 
-    /// The rack to be used for all SPUs in the group. Racks are used by
-    /// replication assignment algorithm
-    pub rack: Option<String>,
 }
 
 
-
-
-/// equivalent to spu template
-#[derive(Encode, Decode, Default, Debug, Clone )]
-pub struct GroupConfig {
-    pub storage: Option<StorageConfig>,
+#[derive(Encode, Decode, Default, Debug, Clone)]
+pub struct SpuConfig {
+    pub rack: Option<String>,
     pub replication: Option<ReplicationConfig>,
+    pub storage: Option<StorageConfig>,
     pub env: Vec<EnvVar>,
 }
 
-#[derive(Encode, Decode, Default, Debug, Clone )]
+#[derive(Encode, Decode, Default, Debug, Clone)]
+pub struct ReplicationConfig {
+    pub in_sync_replica_min: Option<u16>,
+}
+
+#[derive(Encode, Decode, Debug, Default, Clone)]
 pub struct StorageConfig {
     pub log_dir: Option<String>,
     pub size: Option<String>,
 }
 
-#[derive(Encode, Decode, Default, Debug, Clone )]
-pub struct ReplicationConfig {
-    pub in_sync_replica_min: Option<u16>,
+impl StorageConfig {
+    pub fn log_dir(&self) -> String {
+        self.log_dir.clone().unwrap_or("/tmp/fluvio".to_owned())
+    }
+
+    pub fn size(&self) -> String {
+        self.size.clone().unwrap_or("1Gi".to_owned())
+    }
 }
+
+
 
 #[derive(Encode, Decode, Default, Debug, Clone )]
 pub struct EnvVar {

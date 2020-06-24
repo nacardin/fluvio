@@ -11,9 +11,9 @@ use prettytable::format::Alignment;
 use serde::Serialize;
 use log::debug;
 
-use sc_api::spu::FlvFetchSpuGroupsResponse;
-use k8_metadata::spg::SpuGroupSpec;
-use k8_metadata::spg::SpuGroupStatus;
+use flv_client::metadata::objects::Metadata;
+use flv_client::metadata::spg::SpuGroupSpec;
+use flv_client::metadata::spg::SpuGroupStatus;
 
 use crate::error::CliError;
 use crate::output::OutputType;
@@ -21,45 +21,8 @@ use crate::TableOutputHandler;
 use crate::Terminal;
 use crate::t_println;
 
-#[derive(Serialize, Debug)]
-pub struct SpuGroupRow {
-    pub name: String,
-    pub spec: SpuGroupSpec,
-    pub status: SpuGroupStatus,
-}
 
-impl SpuGroupRow {
-    fn name(&self) -> String {
-        self.name.clone()
-    }
-
-    fn replicas(&self) -> String {
-        self.spec.replicas.to_string()
-    }
-
-    fn min_id(&self) -> String {
-        self.spec.min_id().to_string()
-    }
-
-    fn rack(&self) -> String {
-        self.spec
-            .template
-            .spec
-            .rack
-            .clone()
-            .unwrap_or("".to_string())
-    }
-
-    fn size(&self) -> String {
-        self.spec.template.spec.storage.clone().unwrap().size()
-    }
-
-    fn status(&self) -> String {
-        self.status.resolution.to_string()
-    }
-}
-
-type ListSpuGroups = Vec<SpuGroupRow>;
+type ListSpuGroups = Vec<Metadata<<SpuGroupSpec>>>;
 
 // -----------------------------------
 // Format Output
@@ -68,20 +31,11 @@ type ListSpuGroups = Vec<SpuGroupRow>;
 /// Format SPU Group based on output type
 pub fn spu_group_response_to_output<O: Terminal>(
     out: std::sync::Arc<O>,
-    spu_groups: FlvFetchSpuGroupsResponse,
+    list_spu_groups: ListSpuGroups,
     output_type: OutputType,
 ) -> Result<(), CliError> {
     let groups = spu_groups.spu_groups;
 
-    // TODO: display error output
-
-    let list_spu_groups: Vec<SpuGroupRow> = groups
-        .into_iter()
-        .map(|g| {
-            let (name, spec, status) = g.into();
-            SpuGroupRow { name, spec, status }
-        })
-        .collect();
 
     debug!("groups: {:#?}", list_spu_groups);
 

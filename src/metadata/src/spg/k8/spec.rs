@@ -124,9 +124,8 @@ impl K8StorageConfig {
 mod convert {
 
     use k8_obj_metadata::*;
-    use crate::spg::SpuGroupSpec;
-    use crate::spg::GroupConfig;
-    use crate::spg::StorageConfig;
+    use crate::spg::*;
+
 
 
     use super::*;
@@ -138,35 +137,27 @@ mod convert {
                 replicas: spec.replicas,
                 min_id: spec.min_id,
                 template: TemplateSpec {
-                    spec: SpuTemplate {
-                        rack: spec.rack,
-                        storage: spec.config.storage.map(|s| s.into()),
-                        ..Default::default()
-                    },
+                    spec: spec.config.into(),
                     ..Default::default()
                 },
             }
         }
     }
 
-    impl From<K8SpuGroupSpec> for SpuGroupSpec {
-        fn from(spec: K8SpuGroupSpec) -> SpuGroupSpec {
-
-            let min_id = spec.min_id;
-            let (replicas, template) = (spec.replicas, spec.template.spec);
-            let (rack, storage) = (template.rack, template.storage.unwrap_or_default());
+    impl From<SpuConfig> for SpuTemplate {
+        fn from(config: SpuConfig) -> Self {
             Self {
-                replicas,
-                min_id,
-                rack,
-                config: GroupConfig {
-                    storage: Some(storage.into()),
-                    ..Default::default()
-                }
-               
+                rack: config.rack.into(),
+                storage: config.storage.map(|s| s.into()),
+                replication: config.replication.map(|s| s.into()),
+                env: config.env.into_iter().map(|e| e.into()).collect(),
+                ..Default::default()
             }
         }
     }
+
+
+
 
    impl From<StorageConfig> for K8StorageConfig {
        fn from(storage: StorageConfig) -> Self {
@@ -185,6 +176,22 @@ mod convert {
                 size: config.size
             }
 
+        }
+    }
+
+    impl From<ReplicationConfig> for K8ReplicationConfig {
+        fn from(config: ReplicationConfig) -> Self {
+            Self {
+                in_sync_replica_min: config.in_sync_replica_min
+            }
+        }
+    }
+
+    impl From<K8ReplicationConfig> for ReplicationConfig {
+        fn from(config: K8ReplicationConfig) -> Self {
+            Self {
+                in_sync_replica_min: config.in_sync_replica_min
+            }
         }
     }
 

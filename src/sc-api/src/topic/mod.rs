@@ -40,7 +40,7 @@ mod convert {
 
             match self {
                 ListResponse::Topic(s) => Ok(s),
-                _ => Err(Error::new(ErrorKind::Other,"not topic"))
+                _ => Err(Error::new(ErrorKind::Other,"not spg"))
             }
 
         }
