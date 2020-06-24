@@ -8,13 +8,14 @@ use structopt::StructOpt;
 
 use log::debug;
 
-use flv_client::profile::ControllerTargetConfig;
-use flv_client::profile::ControllerTargetInstance;
+
+use flv_client::profile::ScConfig;
 use crate::Terminal;
 use crate::error::CliError;
 use crate::OutputType;
 use crate::tls::TlsConfig;
 use crate::profile::InlineProfile;
+use crate::target::ClusterTarget;
 
 use super::helpers::list_kf_topics;
 use super::helpers::list_sc_topics;
@@ -34,10 +35,7 @@ pub struct ListTopicsConfig {
 
 #[derive(Debug, StructOpt)]
 pub struct ListTopicsOpt {
-    /// Address of Streaming Controller
-    #[structopt(short = "c", long = "sc", value_name = "host:port")]
-    sc: Option<String>,
-
+   
     /// Output
     #[structopt(
         short = "o",
@@ -49,24 +47,15 @@ pub struct ListTopicsOpt {
     output: Option<OutputType>,
 
     #[structopt(flatten)]
-    tls: TlsConfig,
-
-    #[structopt(flatten)]
-    profile: InlineProfile,
+    target: ClusterTarget,
 }
 
 impl ListTopicsOpt {
     /// Validate cli options and generate config
-    fn validate(self) -> Result<(ControllerTargetConfig, ListTopicsConfig), CliError> {
-        let target_server = ControllerTargetConfig::possible_target(
-            self.sc,
-            #[cfg(kf)]
-            self.kf.kf,
-            #[cfg(not(foo))]
-            None,
-            self.tls.try_into_file_config()?,
-            self.profile.profile,
-        )?;
+    fn validate(self) -> Result<(ScConfig, ListTopicsConfig), CliError> {
+        
+        let target_server = self.target.load()?;
+
 
         // transfer config parameters
         let list_topics_cfg = ListTopicsConfig {

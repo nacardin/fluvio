@@ -12,8 +12,24 @@ use crate::ScPublicApiKey;
 use crate::AdminRequest;
 
 
-#[derive(Encode, Decode, Default, Debug)]
-pub struct ListRequest {}
+pub trait ListSpec: Spec {
+
+    fn into_list_request() -> ListRequest;
+}
+
+#[derive(Encode, Decode,  Debug)]
+pub enum ListRequest {
+    Topic,
+    Spu,
+    SpuGroup,
+    CustomSpu
+}
+
+impl Default for ListRequest {
+    fn default() -> Self {
+        Self::Spu
+    }
+}
 
 
 impl Request for ListRequest {
@@ -38,6 +54,8 @@ impl Default for ListResponse {
         Self::Topic(vec![])
     }
 }
+
+
 
 #[derive(Encode, Decode, Default, Debug)]
 pub struct Metadata<S> 

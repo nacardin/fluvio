@@ -3,6 +3,10 @@ pub use flv_metadata::topic::*;
 
 mod convert {
 
+    use std::convert::TryInto;
+    use std::io::Error;
+    use std::io::ErrorKind;
+
     use crate::objects::*;
     use super::*;
 
@@ -20,6 +24,26 @@ mod convert {
             DeleteRequest::Topic(key.into())
         }
 
+    }
+
+    impl ListSpec for TopicSpec {
+
+        fn into_list_request() -> ListRequest {
+            ListRequest::Topic
+        }
+    }
+
+    impl TryInto<Vec<Metadata<TopicSpec>>> for ListResponse {
+        type Error = Error;
+        
+        fn try_into(self) -> Result<Vec<Metadata<TopicSpec>>, Self::Error> {
+
+            match self {
+                ListResponse::Topic(s) => Ok(s),
+                _ => Err(Error::new(ErrorKind::Other,"not topic"))
+            }
+
+        }
     }
 
 }

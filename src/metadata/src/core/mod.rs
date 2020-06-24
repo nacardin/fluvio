@@ -1,3 +1,4 @@
+use std::fmt::Debug;
 
 use kf_protocol::Encoder;
 use kf_protocol::Decoder;
@@ -7,7 +8,7 @@ pub trait MetadataStoreDriver {
     type Metadata;
 }
 
-pub trait Spec: Encoder + Decoder   {
+pub trait Spec: Encoder + Decoder + Debug {
     const LABEL: &'static str;
     type Status: Status;
     type Owner: Spec;
@@ -15,7 +16,7 @@ pub trait Spec: Encoder + Decoder   {
     
 }
 
-pub trait Status: Encoder + Decoder   {
+pub trait Status: Encoder + Decoder + Debug   {
 
 }
 

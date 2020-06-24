@@ -1,6 +1,7 @@
+use std::convert::TryInto;
+
 use sc_api::objects::*;
 use sc_api::AdminRequest;
-use sc_api::core::*;
 use kf_socket::KfSocketError;
 
 use crate::ClientError;
@@ -45,17 +46,29 @@ impl ScAdminClient {
     /// delete object by key
     /// key is depend on spec, most are string but some allow multiple types
     pub async fn delete<S,K>(&mut self, key: K) -> Result<(),ClientError>
-    where
-        S: DeleteSpec,
-        K: Into<S::DeleteKey>
+        where
+            S: DeleteSpec,
+            K: Into<S::DeleteKey>
     {
         let delete_request = S::into_request(key);
         self.send_receive(delete_request).await?.as_result()?;
         Ok(())
     }
 
-    pub async fn list<S>(&mut self)  {
-        
+    pub async fn list<S>(&mut self)  -> Result<Vec<Metadata<S>>,ClientError>
+        where
+            S: ListSpec,
+            ListResponse: TryInto<Vec<Metadata<S>>>
+    {
+        use std::io::Error;
+        use std::io::ErrorKind;
+
+        let list_request = S::into_list_request();
+
+        let response = self.send_receive(list_request).await?;
+
+        response.try_into()
+            .map_err(|_| Error::new(ErrorKind::Other,"can't convert").into())
     }
 
     /*
