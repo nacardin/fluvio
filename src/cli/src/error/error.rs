@@ -2,13 +2,11 @@ use std::fmt;
 use std::io::Error as IoError;
 
 use flv_client::ClientError;
-use kf_socket::KfSocketError;
 
 #[derive(Debug)]
 pub enum CliError {
     InvalidArg(String),
     IoError(IoError),
-    KfSocketError(KfSocketError),
     ClientError(ClientError),
     Other(String),
 }
@@ -19,11 +17,7 @@ impl From<IoError> for CliError {
     }
 }
 
-impl From<KfSocketError> for CliError {
-    fn from(error: KfSocketError) -> Self {
-        Self::KfSocketError(error)
-    }
-}
+
 
 impl From<ClientError> for CliError {
     fn from(error: ClientError) -> Self {
@@ -36,7 +30,6 @@ impl fmt::Display for CliError {
         match self {
             Self::InvalidArg(msg) => write!(f, "{}", msg),
             Self::IoError(err) => write!(f, "{}", err),
-            Self::KfSocketError(err) => write!(f, "{}", err),
             Self::ClientError(err) => write!(f, "{}", err),
             Self::Other(msg) => write!(f, "{}", msg),
         }

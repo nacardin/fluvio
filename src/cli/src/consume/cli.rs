@@ -6,7 +6,7 @@
 
 use structopt::StructOpt;
 
-use kf_protocol::api::Offset;
+use flv_client::kf::api::Offset;
 use flv_client::profile::ScConfig;
 use flv_client::MAX_FETCH_BYTES;
 

@@ -150,7 +150,6 @@ mod convert {
                 rack: config.rack.into(),
                 storage: config.storage.map(|s| s.into()),
                 replication: config.replication.map(|s| s.into()),
-                env: config.env.into_iter().map(|e| e.into()).collect(),
                 ..Default::default()
             }
         }

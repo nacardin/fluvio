@@ -31,7 +31,14 @@ pub mod metadata {
     pub mod objects {
         pub use sc_api::objects::*;
     }
+}
 
+pub mod kf {
+    pub mod api {
+        pub use kf_protocol::api::*;
+    }
 
-
+    pub mod message {
+        pub use kf_protocol::message::*;
+    }
 }

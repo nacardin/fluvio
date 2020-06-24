@@ -20,7 +20,6 @@ mod produce {
     use flv_types::{print_cli_err, print_cli_ok};
     use flv_client::ReplicaLeader;
 
-
     use crate::CliError;
     use crate::Terminal;
     use crate::t_println;

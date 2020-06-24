@@ -8,12 +8,11 @@ use prettytable::row;
 use prettytable::Cell;
 use prettytable::cell;
 use prettytable::format::Alignment;
-use serde::Serialize;
 use log::debug;
 
 use flv_client::metadata::objects::Metadata;
 use flv_client::metadata::spg::SpuGroupSpec;
-use flv_client::metadata::spg::SpuGroupStatus;
+
 
 use crate::error::CliError;
 use crate::output::OutputType;
@@ -22,7 +21,7 @@ use crate::Terminal;
 use crate::t_println;
 
 
-type ListSpuGroups = Vec<Metadata<<SpuGroupSpec>>>;
+type ListSpuGroups = Vec<Metadata<SpuGroupSpec>>;
 
 // -----------------------------------
 // Format Output
@@ -34,9 +33,7 @@ pub fn spu_group_response_to_output<O: Terminal>(
     list_spu_groups: ListSpuGroups,
     output_type: OutputType,
 ) -> Result<(), CliError> {
-    let groups = spu_groups.spu_groups;
-
-
+   
     debug!("groups: {:#?}", list_spu_groups);
 
     if list_spu_groups.len() > 0 {
