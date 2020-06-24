@@ -9,6 +9,8 @@ mod output;
 mod profile;
 mod tls;
 mod cluster;
+mod group;
+mod custom;
 
 pub use self::error::CliError;
 pub use self::root_cli::run_cli;

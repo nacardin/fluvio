@@ -137,7 +137,7 @@ mod convert {
                 replicas: spec.replicas,
                 min_id: spec.min_id,
                 template: TemplateSpec {
-                    spec: spec.config.into(),
+                    spec: spec.spu_config.into(),
                     ..Default::default()
                 },
             }

@@ -8,12 +8,12 @@ use log::debug;
 use structopt::StructOpt;
 
 use flv_client::profile::ScConfig;
-use flv_client::metadata::spg::SpuGroupSpec;
+use flv_client::metadata::spg::*;
+
 
 use crate::error::CliError;
 use crate::target::ClusterTarget;
 
-use super::helpers::group_config::GroupConfig;
 
 // -----------------------------------
 // CLI Options
@@ -22,24 +22,24 @@ use super::helpers::group_config::GroupConfig;
 #[derive(Debug, StructOpt, Default)]
 pub struct CreateManagedSpuGroupOpt {
     /// Managed SPU group name
-    #[structopt(short = "n", long = "name", value_name = "string")]
+    #[structopt(short,long, value_name = "string")]
     pub name: String,
 
     /// SPU replicas
-    #[structopt(short = "l", long = "replicas")]
+    #[structopt(short,long,value_name = "integer", default_value="1")]
     pub replicas: u16,
 
     /// Minimum SPU id (default: 1)
-    #[structopt(short = "i", long = "min-id", default_value="1")]
+    #[structopt(long, default_value="1")]
     pub min_id: i32,
 
     /// Rack name
-    #[structopt(short = "r", long = "rack", value_name = "string")]
+    #[structopt(long, value_name = "string")]
     pub rack: Option<String>,
 
     /// storage size
-    #[structopt(short = "s", long = "size", value_name = "string")]
-    pub storage: Option<String>,
+    #[structopt(long, value_name = "string")]
+    pub storage_size: Option<String>,
 
     #[structopt(flatten)]
     target: ClusterTarget
@@ -50,17 +50,23 @@ impl CreateManagedSpuGroupOpt {
     fn validate(self) -> Result<(ScConfig, (String,SpuGroupSpec)), CliError> {
         let target_server = self.target.load()?;
 
-        let grp_config = self
-            .storage
-            .map(|storage| GroupConfig::with_storage(storage));
+        let storage = self.storage_size
+            .map(|storage_size| StorageConfig {
+                size: Some(storage_size),
+                ..Default::default()
+            });
 
+        let spu_config= SpuConfig {
+            storage,
+            rack: self.rack,
+            ..Default::default()
+        };
         let group = (
             self.name,
             SpuGroupSpec {
                 replicas: self.replicas,
                 min_id: self.min_id,
-                config: grp_config.map(|cf| cf.into()).unwrap_or_default(),
-                rack: self.rack,
+                spu_config
             }
         );
         // return server separately from config

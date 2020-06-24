@@ -3,6 +3,7 @@ use kf_protocol::derive::{Decode, Encode};
 
 
 #[derive(Encode, Decode, Default, Debug, Clone)]
+#[cfg_attr(feature = "use_serde", derive(serde::Serialize,serde::Deserialize),serde(rename_all = "camelCase"))]
 pub struct SpuGroupSpec {
 
     /// The number of replicas for the spu group
@@ -13,12 +14,13 @@ pub struct SpuGroupSpec {
     pub min_id: i32,
 
     /// Configuration elements to be applied to each SPUs in the group
-    pub config: SpuConfig,
+    pub spu_config: SpuConfig,
 
 }
 
 
 #[derive(Encode, Decode, Default, Debug, Clone)]
+#[cfg_attr(feature = "use_serde", derive(serde::Serialize,serde::Deserialize),serde(rename_all = "camelCase"))]
 pub struct SpuConfig {
     pub rack: Option<String>,
     pub replication: Option<ReplicationConfig>,
@@ -27,11 +29,13 @@ pub struct SpuConfig {
 }
 
 #[derive(Encode, Decode, Default, Debug, Clone)]
+#[cfg_attr(feature = "use_serde", derive(serde::Serialize,serde::Deserialize),serde(rename_all = "camelCase"))]
 pub struct ReplicationConfig {
     pub in_sync_replica_min: Option<u16>,
 }
 
 #[derive(Encode, Decode, Debug, Default, Clone)]
+#[cfg_attr(feature = "use_serde", derive(serde::Serialize,serde::Deserialize),serde(rename_all = "camelCase"))]
 pub struct StorageConfig {
     pub log_dir: Option<String>,
     pub size: Option<String>,
@@ -50,6 +54,7 @@ impl StorageConfig {
 
 
 #[derive(Encode, Decode, Default, Debug, Clone )]
+#[cfg_attr(feature = "use_serde", derive(serde::Serialize,serde::Deserialize),serde(rename_all = "camelCase"))]
 pub struct EnvVar {
     pub name: String,
     pub value: String,
