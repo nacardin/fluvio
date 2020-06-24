@@ -17,7 +17,7 @@ pub enum ScPublicApiKey {
 
     Create = 1001,
     Delete = 1002,
-   // Fetch = 1003,
+    List = 1003,
 
     TopicComposition = 2000,
     UpdateMetadata = 2001,

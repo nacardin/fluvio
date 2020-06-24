@@ -7,7 +7,7 @@ pub trait MetadataStoreDriver {
     type Metadata;
 }
 
-pub trait Spec: Encoder + Decoder + Default + Clone {
+pub trait Spec: Encoder + Decoder   {
     const LABEL: &'static str;
     type Status: Status;
     type Owner: Spec;
@@ -15,7 +15,7 @@ pub trait Spec: Encoder + Decoder + Default + Clone {
     
 }
 
-pub trait Status: Encoder + Decoder  + Default + Clone  {
+pub trait Status: Encoder + Decoder   {
 
 }
 

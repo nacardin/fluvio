@@ -54,6 +54,10 @@ impl ScAdminClient {
         Ok(())
     }
 
+    pub async fn list<S>(&mut self)  {
+        
+    }
+
     /*
     /// Connect to replica leader for a topic/partition
     async fn find_replica_for_topic_partition(

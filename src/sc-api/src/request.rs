@@ -31,6 +31,7 @@ pub enum ScPublicRequest {
 
     CreateRequest(RequestMessage<CreateRequest>),
     DeleteRequest(RequestMessage<DeleteRequest>),
+    ListRequest(RequestMessage<ListRequest>),
     TopicCompositionRequest(RequestMessage<TopicCompositionRequest>),
     UpdateMetadataRequest(RequestMessage<UpdateMetadataRequest>),
 }
@@ -56,6 +57,7 @@ impl KfRequestMessage for ScPublicRequest {
 
             ScPublicApiKey::Create => api_decode!(Self, CreateRequest, src, header),
             ScPublicApiKey::Delete => api_decode!(Self, DeleteRequest, src, header),
+            ScPublicApiKey::List => api_decode!(Self, ListRequest, src,header),
             ScPublicApiKey::TopicComposition => {
                 api_decode!(Self, TopicCompositionRequest, src, header)
             }
