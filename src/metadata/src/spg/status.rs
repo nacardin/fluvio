@@ -1,4 +1,5 @@
 use std::io::{Error, ErrorKind};
+use std::fmt;
 
 use kf_protocol::{Decoder, Encoder};
 use kf_protocol::Version;
@@ -7,6 +8,7 @@ use kf_protocol::bytes::{Buf, BufMut};
 
 
 #[derive(Encode, Decode, Default, Debug, Clone )]
+#[cfg_attr(feature = "use_serde", derive(serde::Serialize,serde::Deserialize),serde(rename_all = "camelCase"))]
 pub struct SpuGroupStatus {
     /// Status resolution
     pub resolution: SpuGroupStatusResolution,
@@ -15,7 +17,13 @@ pub struct SpuGroupStatus {
     pub reason: Option<String>,
 }
 
+impl fmt::Display for SpuGroupStatus {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:#?}", self.resolution)
+    }
+}
 
+#[cfg_attr(feature = "use_serde", derive(serde::Serialize,serde::Deserialize))]
 #[derive(Debug,Clone)]
 pub enum SpuGroupStatusResolution {
     Init,
@@ -31,6 +39,9 @@ impl Default for SpuGroupStatusResolution {
         Self::Init
     }
 }
+
+
+
 
 impl Encoder for SpuGroupStatusResolution {
    

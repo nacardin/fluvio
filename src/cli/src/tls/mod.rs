@@ -7,7 +7,7 @@ use structopt::StructOpt;
 use flv_client::profile::TlsConfig as TlsProfileConfig;
 use flv_client::profile::TlsClientConfig;
 
-/// same in the SC
+/// Optional Tls Configuration to Client
 #[derive(Debug, StructOpt, Default)]
 pub struct TlsConfig {
     /// enable tls

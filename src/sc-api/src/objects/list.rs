@@ -58,6 +58,7 @@ impl Default for ListResponse {
 
 
 #[derive(Encode, Decode, Default, Debug)]
+#[cfg_attr(feature = "use_serde", derive(serde::Serialize,serde::Deserialize),serde(rename_all = "camelCase"))]
 pub struct Metadata<S> 
     where S: Spec + Debug, 
         S::Status: Debug

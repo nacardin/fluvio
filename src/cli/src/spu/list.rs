@@ -11,7 +11,6 @@ use flv_client::profile::ScConfig;
 use crate::error::CliError;
 use crate::OutputType;
 use crate::Terminal;
-use crate::spu::helpers::format_spu_response_output;
 use crate::tls::TlsConfig;
 use crate::profile::InlineProfile;
 
@@ -78,6 +77,6 @@ where
     let spus = sc.list_spu(false).await?;
 
     // format and dump to screen
-    format_spu_response_output(out, spus, list_spu_cfg.output)?;
+    output::format_spu_response_output(out, spus, list_spu_cfg.output)?;
     Ok(())
 }

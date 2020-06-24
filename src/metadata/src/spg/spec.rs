@@ -28,6 +28,17 @@ pub struct SpuConfig {
     pub env: Vec<EnvVar>,
 }
 
+impl SpuConfig {
+
+    pub fn real_storage_config(&self) -> RealStorageConfig {
+        if let Some(config) = &self.storage {
+            config.real_config()
+        } else {
+            StorageConfig::default().real_config()
+        }
+    }
+}
+
 #[derive(Encode, Decode, Default, Debug, Clone)]
 #[cfg_attr(feature = "use_serde", derive(serde::Serialize,serde::Deserialize),serde(rename_all = "camelCase"))]
 pub struct ReplicationConfig {
@@ -42,15 +53,21 @@ pub struct StorageConfig {
 }
 
 impl StorageConfig {
-    pub fn log_dir(&self) -> String {
-        self.log_dir.clone().unwrap_or("/tmp/fluvio".to_owned())
-    }
-
-    pub fn size(&self) -> String {
-        self.size.clone().unwrap_or("1Gi".to_owned())
+    /// fill in the values if not defined
+    /// that should be used
+    pub fn real_config(&self) -> RealStorageConfig {
+        RealStorageConfig {
+            log_dir: self.log_dir.clone().unwrap_or("/tmp/fluvio".to_owned()),
+            size: self.size.clone().unwrap_or("1Gi".to_owned())
+        }
     }
 }
 
+/// real storage configuration
+pub struct RealStorageConfig {
+    pub log_dir: String,
+    pub size: String,
+}
 
 
 #[derive(Encode, Decode, Default, Debug, Clone )]

@@ -6,7 +6,7 @@
 use structopt::StructOpt;
 
 use flv_client::profile::ScConfig;
-use flv_client::metadata::spg::SpuGroupSpec;
+use flv_metadata::spg::SpuGroupSpec;
 
 use crate::output::OutputType;
 use crate::error::CliError;
@@ -61,7 +61,7 @@ pub async fn process_list_managed_spu_groups<O: Terminal>(
 
     let lists = admin.list::<SpuGroupSpec>().await?;
 
-    output::spu_group_response_to_output(out, lists,&output)
+    output::spu_group_response_to_output(out, lists,output)
 }
 
 
@@ -80,7 +80,7 @@ mod output {
     use log::debug;
 
     use flv_client::metadata::objects::Metadata;
-    use flv_client::metadata::spg::SpuGroupSpec;
+    use flv_metadata::spg::SpuGroupSpec;
 
 
     use crate::error::CliError;
@@ -131,13 +131,15 @@ mod output {
         fn content(&self) -> Vec<Row> {
             self.iter()
                 .map(|r| {
+
+                    let storage_config = r.spec.spu_config.real_storage_config();
                     Row::new(vec![
-                        Cell::new_align(&r.name(), Alignment::RIGHT),
-                        Cell::new_align(&r.replicas(), Alignment::CENTER),
-                        Cell::new_align(&r.min_id(), Alignment::RIGHT),
-                        Cell::new_align(&r.rack(), Alignment::RIGHT),
-                        Cell::new_align(&r.size(), Alignment::RIGHT),
-                        Cell::new_align(&r.status(), Alignment::RIGHT),
+                        Cell::new_align(&r.name, Alignment::RIGHT),
+                        Cell::new_align(&r.spec.replicas.to_string(), Alignment::CENTER),
+                        Cell::new_align(&r.spec.min_id.to_string(), Alignment::RIGHT),
+                        Cell::new_align(&r.spec.spu_config.rack.unwrap_or_default(), Alignment::RIGHT),
+                        Cell::new_align(&storage_config.size, Alignment::RIGHT),
+                        Cell::new_align(&r.status.to_string(), Alignment::RIGHT),
                     ])
                 })
                 .collect()

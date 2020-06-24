@@ -10,7 +10,7 @@ use flv_client::profile::ScConfig;
 use crate::error::CliError;
 use crate::Terminal;
 use crate::OutputType;
-use crate::spu::helpers::format_spu_response_output;
+use crate::spu::format_spu_response_output;
 use crate::tls::TlsConfig;
 use crate::profile::InlineProfile;
 

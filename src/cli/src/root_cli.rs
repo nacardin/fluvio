@@ -14,18 +14,14 @@ use crate::CliError;
 use super::consume::process_consume_log;
 use super::produce::process_produce_record;
 use super::topic::process_topic;
-use super::spu::all::process_spu;
-use super::spu::custom::process_custom_spu;
-use super::spu::group::process_spu_group;
+use super::spu::*;
+use super::custom::*;
+use super::group::*;
 use super::profile::process_profile;
 use super::cluster::process_cluster;
-
 use super::consume::ConsumeLogOpt;
 use super::produce::ProduceLogOpt;
 use super::topic::TopicOpt;
-use super::spu::all::SpuOpt;
-use super::spu::custom::CustomSpuOpt;
-use super::spu::group::SpuGroupOpt;
 use super::profile::ProfileCommand;
 use super::cluster::ClusterCommands;
 

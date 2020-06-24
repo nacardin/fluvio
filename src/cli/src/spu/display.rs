@@ -1,3 +1,5 @@
+
+
 //!
 //! # Fluvio SC - output processing
 //!
@@ -7,7 +9,8 @@ use prettytable::Row;
 use prettytable::row;
 use prettytable::cell;
 
-use flv_client::metadata::spu::SpuMetadata;
+use flv_client::metadata::objects::Metadata;
+use flv_client::metadata::spu::SpuSpec;
 
 use crate::error::CliError;
 use crate::OutputType;
@@ -15,7 +18,7 @@ use crate::Terminal;
 use crate::TableOutputHandler;
 use crate::t_println;
 
-type ListSpus = Vec<SpuMetadata>;
+type ListSpus = Vec<Metadata<SpuSpec>>;
 
 /// Process server based on output type
 pub fn format_spu_response_output<O>(
