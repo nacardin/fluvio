@@ -13,7 +13,6 @@ use crate::error::CliError;
 use crate::Terminal;
 use crate::target::ClusterTarget;
 
-
 #[derive(Debug)]
 pub struct ListSpuGroupsConfig {
     pub output: OutputType,
@@ -36,7 +35,7 @@ pub struct ListManagedSpuGroupsOpt {
     output: Option<OutputType>,
 
     #[structopt(flatten)]
-    target: ClusterTarget
+    target: ClusterTarget,
 }
 
 impl ListManagedSpuGroupsOpt {
@@ -44,7 +43,6 @@ impl ListManagedSpuGroupsOpt {
     fn validate(self) -> Result<(ScConfig, OutputType), CliError> {
         let target_server = self.target.load()?;
 
-        
         Ok((target_server, self.output.unwrap_or_default()))
     }
 }
@@ -61,9 +59,8 @@ pub async fn process_list_managed_spu_groups<O: Terminal>(
 
     let lists = admin.list::<SpuGroupSpec>().await?;
 
-    output::spu_group_response_to_output(out, lists,output)
+    output::spu_group_response_to_output(out, lists, output)
 }
-
 
 mod output {
 
@@ -82,13 +79,11 @@ mod output {
     use flv_client::metadata::objects::Metadata;
     use flv_metadata::spg::SpuGroupSpec;
 
-
     use crate::error::CliError;
     use crate::output::OutputType;
     use crate::TableOutputHandler;
     use crate::Terminal;
     use crate::t_println;
-
 
     type ListSpuGroups = Vec<Metadata<SpuGroupSpec>>;
 
@@ -102,7 +97,6 @@ mod output {
         list_spu_groups: ListSpuGroups,
         output_type: OutputType,
     ) -> Result<(), CliError> {
-    
         debug!("groups: {:#?}", list_spu_groups);
 
         if list_spu_groups.len() > 0 {
@@ -131,13 +125,15 @@ mod output {
         fn content(&self) -> Vec<Row> {
             self.iter()
                 .map(|r| {
-
                     let storage_config = r.spec.spu_config.real_storage_config();
                     Row::new(vec![
                         Cell::new_align(&r.name, Alignment::RIGHT),
                         Cell::new_align(&r.spec.replicas.to_string(), Alignment::CENTER),
                         Cell::new_align(&r.spec.min_id.to_string(), Alignment::RIGHT),
-                        Cell::new_align(&r.spec.spu_config.rack.unwrap_or_default(), Alignment::RIGHT),
+                        Cell::new_align(
+                            &r.spec.spu_config.rack.unwrap_or_default(),
+                            Alignment::RIGHT,
+                        ),
                         Cell::new_align(&storage_config.size, Alignment::RIGHT),
                         Cell::new_align(&r.status.to_string(), Alignment::RIGHT),
                     ])
@@ -145,7 +141,4 @@ mod output {
                 .collect()
         }
     }
-
-
-
 }

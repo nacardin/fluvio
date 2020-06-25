@@ -2,6 +2,10 @@ pub use flv_metadata::spu::*;
 
 mod convert {
     
+    use std::io::Error;
+    use std::io::ErrorKind;
+    use std::convert::TryInto;
+
     use crate::objects::*;
     use super::*;
     
@@ -18,5 +22,27 @@ mod convert {
         }
 
     }
+
+    impl ListSpec for SpuSpec {
+
+        fn into_list_request() -> ListRequest {
+            ListRequest::Spu
+        }
+    }
+
+    impl TryInto<Vec<Metadata<SpuSpec>>> for ListResponse {
+        type Error = Error;
+        
+        fn try_into(self) -> Result<Vec<Metadata<SpuSpec>>, Self::Error> {
+
+            match self {
+                ListResponse::Spu(s) => Ok(s),
+                _ => Err(Error::new(ErrorKind::Other,"not spu"))
+            }
+
+        }
+    }
+
+
 
 }

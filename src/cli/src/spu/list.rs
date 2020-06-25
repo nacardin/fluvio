@@ -7,12 +7,13 @@
 use structopt::StructOpt;
 
 use flv_client::profile::ScConfig;
+use flv_metadata::spu::SpuSpec;
 
 use crate::error::CliError;
 use crate::OutputType;
 use crate::Terminal;
-use crate::tls::TlsConfig;
-use crate::profile::InlineProfile;
+use crate::target::ClusterTarget;
+use super::format_spu_response_output;
 
 #[derive(Debug)]
 pub struct ListSpusConfig {
@@ -21,9 +22,6 @@ pub struct ListSpusConfig {
 
 #[derive(Debug, StructOpt)]
 pub struct ListSpusOpt {
-    /// Address of Streaming Controller
-    #[structopt(short = "c", long = "sc", value_name = "host:port")]
-    sc: Option<String>,
 
     /// Output
     #[structopt(
@@ -36,28 +34,17 @@ pub struct ListSpusOpt {
     output: Option<OutputType>,
 
     #[structopt(flatten)]
-    tls: TlsConfig,
-
-    #[structopt(flatten)]
-    profile: InlineProfile,
+    target: ClusterTarget
 }
 
 impl ListSpusOpt {
     /// Validate cli options and generate config
-    fn validate(self) -> Result<(ScConfig, ListSpusConfig), CliError> {
-        let target_server = ScConfig::new_with_profile(
-            self.sc,
-            self.tls.try_into_file_config()?,
-            self.profile.profile,
-        )?;
+    fn validate(self) -> Result<(ScConfig, OutputType), CliError> {
 
-        // transfer config parameters
-        let list_spu_cfg = ListSpusConfig {
-            output: self.output.unwrap_or(OutputType::default()),
-        };
+        let target_server = self.target.load()?;
 
         // return server separately from topic result
-        Ok((target_server, list_spu_cfg))
+        Ok((target_server, self.output.unwrap_or_default()))
     }
 }
 
@@ -70,13 +57,14 @@ pub async fn process_list_spus<O>(out: std::sync::Arc<O>, opt: ListSpusOpt) -> R
 where
     O: Terminal,
 {
-    let (target_server, list_spu_cfg) = opt.validate()?;
+    let (target_server, output) = opt.validate()?;
 
-    let mut sc = target_server.connect().await?;
+    let mut client = target_server.connect().await?;
+    let mut admin = client.admin().await;
 
-    let spus = sc.list_spu(false).await?;
+    let spus = admin.list::<SpuSpec>().await?;
 
     // format and dump to screen
-    output::format_spu_response_output(out, spus, list_spu_cfg.output)?;
+    format_spu_response_output(out, spus,output)?;
     Ok(())
 }

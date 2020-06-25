@@ -74,14 +74,7 @@ impl SpuSpec {
         self
     }
 
-    /// Return type label in String format
-    pub fn type_label(&self) -> String {
-        match self.spu_type {
-            SpuType::Managed => "managed".to_owned(),
-            SpuType::Custom => "custom".to_owned(),
-        }
-    }
-
+    
     /// Return custom type: true for custom, false otherwise
     pub fn is_custom(&self) -> bool {
         match self.spu_type {
@@ -332,6 +325,24 @@ impl Default for SpuType {
         SpuType::Managed
     }
 }
+
+/// Return type label in String format
+impl SpuType {
+
+    pub fn type_label(&self) -> String {
+        match  self {
+        Self::Managed => "managed".to_owned(),
+        Self::Custom => "custom".to_owned(),
+        }
+    }
+}
+
+impl fmt::Display for SpuType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:#?}", self.type_label())
+    }
+}
+
 
 
 

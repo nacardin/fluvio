@@ -46,35 +46,26 @@ impl TableOutputHandler for ListSpus {
 
     /// return errors in string format
     fn errors(&self) -> Vec<String> {
-        let mut errors = vec![];
-        for spu_metadata in self.iter() {
-            if let Some(error) = &spu_metadata.error {
-                errors.push(format!(
-                    "Spu '{}': {}",
-                    spu_metadata.name,
-                    error.to_sentence()
-                ));
-            }
-        }
-        errors
+        vec![]
     }
 
-    /// table content implementation
+    /// table content implementatio
     fn content(&self) -> Vec<Row> {
-        let mut rows: Vec<Row> = vec![];
-        for spu_metadata in self.iter() {
-            if let Some(spu) = &spu_metadata.spu {
-                rows.push(row![
+
+        self.iter()
+            .map(|metadata| {
+                let spu = metadata.spec;
+            
+                row![   
                     r -> spu.id,
-                    l -> spu.name,
-                    l -> spu.status_label(),
-                    l -> spu.type_label(),
+                    l -> metadata.name,
+                    l -> metadata.status.to_string(),
+                    l -> spu.spu_type.to_string(),
                     c -> (&spu.rack).as_ref().unwrap_or(&"-".to_string()),
-                    l -> spu.public_server,
-                    l -> spu.private_server,
-                ]);
-            }
-        }
-        rows
+                    l -> spu.public_endpoint.to_string(),
+                    l -> spu.private_endpoint.to_string()
+                ]
+            })
+            .collect()
     }
 }
