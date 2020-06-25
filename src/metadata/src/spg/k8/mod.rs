@@ -9,17 +9,13 @@ mod status;
 pub use self::spec::*;
 pub use self::status::*;
 
-use k8_obj_metadata::Crd;
-use k8_obj_metadata::CrdNames;
-use k8_obj_metadata::GROUP;
-use k8_obj_metadata::V1;
+mod ext {
+    use crate::core::K8ExtendedSpec;
+    use crate::spg::SpuGroupSpec;
 
-const SPG_API: Crd = Crd {
-    group: GROUP,
-    version: V1,
-    names: CrdNames {
-        kind: "SpuGroup",
-        plural: "spugroups",
-        singular: "spugroup",
-    },
-};
+    use super::K8SpuGroupSpec;
+
+    impl K8ExtendedSpec for SpuGroupSpec {
+        type K8Spec = K8SpuGroupSpec;
+    }
+}

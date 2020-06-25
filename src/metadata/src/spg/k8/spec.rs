@@ -17,8 +17,29 @@ use crate::spu::EncryptionEnum;
 use flv_types::defaults::SPU_PUBLIC_PORT;
 use flv_types::defaults::SPU_PRIVATE_PORT;
 
-use super::SPG_API;
+use crd::SPG_API;
 use super::K8SpuGroupStatus;
+
+mod crd {
+   
+
+    use k8_obj_metadata::Crd;
+    use k8_obj_metadata::CrdNames;
+    use k8_obj_metadata::GROUP;
+    use k8_obj_metadata::V1;
+
+
+    pub const SPG_API: Crd = Crd {
+        group: GROUP,
+        version: V1,
+        names: CrdNames {
+            kind: "SpuGroup",
+            plural: "spugroups",
+            singular: "spugroup",
+        },
+    };
+    
+}
 
 impl Spec for K8SpuGroupSpec {
     type Status = K8SpuGroupStatus;

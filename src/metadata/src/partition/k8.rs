@@ -25,3 +25,9 @@ impl Spec for PartitionSpec {
 
 
 impl Status for PartitionStatus {}
+
+use crate::core::K8ExtendedSpec;
+
+impl K8ExtendedSpec for PartitionSpec {
+    type K8Spec = Self;
+}

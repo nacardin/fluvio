@@ -83,7 +83,7 @@ impl SpuKV {
     }
 
     pub fn type_label(&self) -> String {
-        self.spec.type_label()
+        self.spec.spu_type.to_string()
     }
 
     pub fn is_custom(&self) -> bool {

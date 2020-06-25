@@ -38,3 +38,22 @@ pub struct MetadataObj<S,P> where P: MetadataStoreDriver, S:Spec {
     pub spec: S,
     pub status: S::Status
 }
+
+
+#[cfg(feature = "k8")]
+pub use k8::*;
+
+#[cfg(feature = "k8")]
+mod k8 {
+
+    use k8_obj_metadata::Spec as K8Spec;
+    use super::*;
+
+    pub trait K8ExtendedSpec: Spec + Clone {
+
+        type K8Spec: K8Spec;
+
+        
+    }
+
+}

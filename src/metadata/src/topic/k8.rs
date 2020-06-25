@@ -25,3 +25,13 @@ impl Spec for TopicSpec {
 
 
 impl Status for TopicStatus {}
+
+
+    
+use crate::core::K8ExtendedSpec;
+
+impl K8ExtendedSpec for TopicSpec {
+    type K8Spec = Self;
+}
+
+
