@@ -1,5 +1,3 @@
-
-
 //!
 //! # Fluvio SC - output processing
 //!
@@ -49,14 +47,12 @@ impl TableOutputHandler for ListSpus {
         vec![]
     }
 
-    /// table content implementatio
     fn content(&self) -> Vec<Row> {
-
         self.iter()
             .map(|metadata| {
                 let spu = metadata.spec;
-            
-                row![   
+
+                row![
                     r -> spu.id,
                     l -> metadata.name,
                     l -> metadata.status.to_string(),

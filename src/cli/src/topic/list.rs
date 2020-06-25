@@ -8,7 +8,6 @@ use structopt::StructOpt;
 
 use log::debug;
 
-
 use flv_client::profile::ScConfig;
 use flv_client::metadata::topic::TopicSpec;
 
@@ -16,7 +15,6 @@ use crate::Terminal;
 use crate::error::CliError;
 use crate::OutputType;
 use crate::target::ClusterTarget;
-
 
 #[derive(Debug)]
 pub struct ListTopicsConfig {
@@ -29,7 +27,6 @@ pub struct ListTopicsConfig {
 
 #[derive(Debug, StructOpt)]
 pub struct ListTopicsOpt {
-   
     /// Output
     #[structopt(
         short = "o",
@@ -47,7 +44,6 @@ pub struct ListTopicsOpt {
 impl ListTopicsOpt {
     /// Validate cli options and generate config
     fn validate(self) -> Result<(ScConfig, OutputType), CliError> {
-        
         let target_server = self.target.load()?;
 
         Ok((target_server, self.output.unwrap_or_default()))
@@ -78,15 +74,12 @@ where
     Ok("".to_owned())
 }
 
-
 mod display {
 
-
     use prettytable::*;
-    
+
     use flv_client::metadata::objects::Metadata;
     use flv_client::metadata::topic::TopicSpec;
-
 
     use crate::error::CliError;
     use crate::OutputType;
@@ -95,8 +88,6 @@ mod display {
     use crate::t_println;
 
     type ListTopics = Vec<Metadata<TopicSpec>>;
-
-
 
     /// Process server based on output type
     pub fn format_response_output<O>(
@@ -139,10 +130,8 @@ mod display {
 
         /// table content implementation
         fn content(&self) -> Vec<Row> {
-
             self.iter()
                 .map(|metadata| {
-
                     let topic = metadata.spec;
                     row![
                         l -> metadata.name,
@@ -155,9 +144,6 @@ mod display {
                     ]
                 })
                 .collect()
-            
-            
         }
     }
-
 }
