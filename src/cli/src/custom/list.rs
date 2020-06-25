@@ -23,7 +23,6 @@ pub struct ListCustomSpusConfig {
 
 #[derive(Debug, StructOpt)]
 pub struct ListCustomSpusOpt {
-
     /// Output
     #[structopt(
         short = "O",
@@ -62,17 +61,16 @@ where
 
     let custom_spus = admin.list::<CustomSpuSpec>().await?;
 
-    let spus: Vec<Metadata<SpuSpec>> = custom_spus.into_iter()
-        .map(|custom_spu| {
-            Metadata {
-                name: custom_spu.name,
-                spec: custom_spu.spec.into(),
-                status: custom_spu.status
-            }
-        }).collect();
-
+    let spus: Vec<Metadata<SpuSpec>> = custom_spus
+        .into_iter()
+        .map(|custom_spu| Metadata {
+            name: custom_spu.name,
+            spec: custom_spu.spec.into(),
+            status: custom_spu.status,
+        })
+        .collect();
 
     // format and dump to screen
-    format_spu_response_output(out, spus,output_type)?;
+    format_spu_response_output(out, spus, output_type)?;
     Ok(())
 }
