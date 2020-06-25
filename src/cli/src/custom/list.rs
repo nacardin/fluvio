@@ -15,6 +15,7 @@ use crate::Terminal;
 use crate::OutputType;
 use crate::spu::format_spu_response_output;
 use crate::target::ClusterTarget;
+use crate::common::OutputFormat;
 
 #[derive(Debug)]
 pub struct ListCustomSpusConfig {
@@ -23,15 +24,8 @@ pub struct ListCustomSpusConfig {
 
 #[derive(Debug, StructOpt)]
 pub struct ListCustomSpusOpt {
-    /// Output
-    #[structopt(
-        short = "O",
-        long = "output",
-        value_name = "type",
-        possible_values = &OutputType::variants(),
-        case_insensitive = true
-    )]
-    output: Option<OutputType>,
+    #[structopt(flatten)]
+    output: OutputFormat,
 
     #[structopt(flatten)]
     target: ClusterTarget,
@@ -42,7 +36,7 @@ impl ListCustomSpusOpt {
     fn validate(self) -> Result<(ScConfig, OutputType), CliError> {
         let target_server = self.target.load()?;
 
-        Ok((target_server, self.output.unwrap_or_default()))
+        Ok((target_server, self.output.as_output()))
     }
 }
 

@@ -11,19 +11,13 @@ use flv_metadata::spg::SpuGroupSpec;
 use crate::output::OutputType;
 use crate::error::CliError;
 use crate::Terminal;
+use crate::common::OutputFormat;
 use crate::target::ClusterTarget;
 
 #[derive(Debug, StructOpt)]
 pub struct ListManagedSpuGroupsOpt {
-    /// Output
-    #[structopt(
-        short = "O",
-        long = "output",
-        value_name = "type",
-        possible_values = &OutputType::variants(),
-        case_insensitive = true
-    )]
-    output: Option<OutputType>,
+    #[structopt(flatten)]
+    output: OutputFormat,
 
     #[structopt(flatten)]
     target: ClusterTarget,
@@ -34,7 +28,7 @@ impl ListManagedSpuGroupsOpt {
     fn validate(self) -> Result<(ScConfig, OutputType), CliError> {
         let target_server = self.target.load()?;
 
-        Ok((target_server, self.output.unwrap_or_default()))
+        Ok((target_server, self.output.as_output()))
     }
 }
 

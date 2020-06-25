@@ -14,6 +14,7 @@ use crate::OutputType;
 use crate::Terminal;
 use crate::target::ClusterTarget;
 use super::format_spu_response_output;
+use crate::common::OutputFormat;
 
 #[derive(Debug)]
 pub struct ListSpusConfig {
@@ -22,29 +23,20 @@ pub struct ListSpusConfig {
 
 #[derive(Debug, StructOpt)]
 pub struct ListSpusOpt {
-
-    /// Output
-    #[structopt(
-        short = "O",
-        long = "output",
-        value_name = "type",
-        possible_values = &OutputType::variants(),
-        case_insensitive = true
-    )]
-    output: Option<OutputType>,
+    #[structopt(flatten)]
+    output: OutputFormat,
 
     #[structopt(flatten)]
-    target: ClusterTarget
+    target: ClusterTarget,
 }
 
 impl ListSpusOpt {
     /// Validate cli options and generate config
     fn validate(self) -> Result<(ScConfig, OutputType), CliError> {
-
         let target_server = self.target.load()?;
 
         // return server separately from topic result
-        Ok((target_server, self.output.unwrap_or_default()))
+        Ok((target_server, self.output.as_output()))
     }
 }
 
@@ -65,6 +57,6 @@ where
     let spus = admin.list::<SpuSpec>(vec![]).await?;
 
     // format and dump to screen
-    format_spu_response_output(out, spus,output)?;
+    format_spu_response_output(out, spus, output)?;
     Ok(())
 }
