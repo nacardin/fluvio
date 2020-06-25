@@ -81,41 +81,49 @@ impl TopicSpec {
         }
     }
 
-    // -----------------------------------
-    // Labels & Strings
-    // -----------------------------------
-    pub fn type_label(is_computed: &bool) -> &'static str {
-        match is_computed {
-            true => "computed",
-            false => "assigned",
+    
+    pub fn type_label(&self) -> &'static str {
+        match self {
+            Self::Computed(_) => "computed",
+            Self::Assigned(_) => "assigned"
         }
+        
     }
 
-    pub fn partitions_str(partition_cnt: &Option<PartitionCount>) -> String {
-        match partition_cnt {
-            Some(partitions) => partitions.to_string(),
-            None => "-".to_string(),
+    pub fn partitions_display(&self) -> String {
+        match self {
+            Self::Computed(param) => param.partitions.to_string(),
+            Self::Assigned(_) => "".to_owned()
         }
+       
     }
 
-    pub fn replication_factor_str(replication_cnt: &Option<ReplicationFactor>) -> String {
-        match replication_cnt {
-            Some(replication) => replication.to_string(),
-            None => "-".to_string(),
+    pub fn replication_factor_display(&self) -> String {
+        match self {
+            Self::Computed(param) => param.replication_factor.to_string(),
+            Self::Assigned(_) => "".to_owned()
         }
+  
     }
 
-    pub fn ignore_rack_assign_str(ignore_rack_assign: &bool) -> &'static str {
-        match ignore_rack_assign {
-            true => "yes",
-            false => "-",
+    pub fn ignore_rack_assign_display(&self) -> &'static str {
+        match self {
+            Self::Computed(param) => {
+                if param.ignore_rack_assignment {
+                    "yes"
+                } else {
+                    ""
+                }
+            },
+            Self::Assigned(_) => ""
         }
+
     }
 
     pub fn partition_map_str(&self) -> Option<String> {
         match self {
-            TopicSpec::Computed(_) => None,
-            TopicSpec::Assigned(partition_map) => partition_map.partition_map_string(),
+            Self::Computed(_) => None,
+            Self::Assigned(partition_map) => partition_map.partition_map_string(),
         }
     }
 

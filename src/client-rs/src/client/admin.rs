@@ -71,21 +71,7 @@ impl ScAdminClient {
             .map_err(|_| Error::new(ErrorKind::Other,"can't convert").into())
     }
 
-    /// find details of the topic
-    async fn topic_metadata(
-        &mut self,
-        topics: Option<Vec<String>>,
-    ) -> Result<Vec<Self::TopicMetadata>, ClientError> {
-        let request = FlvFetchTopicsRequest { names: topics };
-
-        let response = self.0.send_receive(request).await?;
-        let topics: Vec<Self::TopicMetadata> = response
-            .topics
-            .into_iter()
-            .map(|t| TopicMetadata::new(t))
-            .collect();
-        Ok(topics)
-    }
+    
 
     /*
     /// Connect to replica leader for a topic/partition

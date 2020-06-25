@@ -2,67 +2,74 @@ mod register;
 mod list;
 mod unregister;
 
-use structopt::StructOpt;
+pub use cli::*;
 
-use register::RegisterCustomSpuOpt;
-use register::process_register_custom_spu;
+mod cli {
 
-use unregister::UnregisterCustomSpuOpt;
-use unregister::process_unregister_custom_spu;
+    use structopt::StructOpt;
 
-use list::ListCustomSpusOpt;
-use list::process_list_custom_spus;
+    use register::RegisterCustomSpuOpt;
+    use register::process_register_custom_spu;
 
-use crate::error::CliError;
-use crate::Terminal;
+    use unregister::UnregisterCustomSpuOpt;
+    use unregister::process_unregister_custom_spu;
 
-#[derive(Debug, StructOpt)]
-pub enum CustomSpuOpt {
-    #[structopt(
-        name = "register",
-        template = "{about}
+    use list::ListCustomSpusOpt;
+    use list::process_list_custom_spus;
 
-{usage}
+    use crate::error::CliError;
+    use crate::Terminal;
 
-{all-args}
-",
-        about = "Create custom SPU"
-    )]
-    Create(RegisterCustomSpuOpt),
+    use super::*;
 
-    #[structopt(
-        name = "unregister",
-        template = "{about}
+    #[derive(Debug, StructOpt)]
+    pub enum CustomSpuOpt {
+        #[structopt(
+            name = "register",
+            template = "{about}
 
-{usage}
+    {usage}
 
-{all-args}
-",
-        about = "Delete custom SPU"
-    )]
-    Delete(UnregisterCustomSpuOpt),
+    {all-args}
+    ",
+            about = "Create custom SPU"
+        )]
+        Create(RegisterCustomSpuOpt),
 
-    #[structopt(
-        name = "list",
-        template = "{about}
+        #[structopt(
+            name = "unregister",
+            template = "{about}
 
-{usage}
+    {usage}
 
-{all-args}
-",
-        about = "List custom SPUs"
-    )]
-    List(ListCustomSpusOpt),
-}
+    {all-args}
+    ",
+            about = "Delete custom SPU"
+        )]
+        Delete(UnregisterCustomSpuOpt),
 
-pub(crate) async fn process_custom_spu<O: Terminal>(
-    out: std::sync::Arc<O>,
-    custom_spu_opt: CustomSpuOpt,
-) -> Result<String, CliError> {
-    (match custom_spu_opt {
-        CustomSpuOpt::Create(custom_spu_opt) => process_register_custom_spu(custom_spu_opt).await,
-        CustomSpuOpt::Delete(custom_spu_opt) => process_unregister_custom_spu(custom_spu_opt).await,
-        CustomSpuOpt::List(custom_spu_opt) => process_list_custom_spus(out, custom_spu_opt).await,
-    })
-    .map(|_| format!(""))
+        #[structopt(
+            name = "list",
+            template = "{about}
+
+    {usage}
+
+    {all-args}
+    ",
+            about = "List custom SPUs"
+        )]
+        List(ListCustomSpusOpt),
+    }
+
+    pub(crate) async fn process_custom_spu<O: Terminal>(
+        out: std::sync::Arc<O>,
+        custom_spu_opt: CustomSpuOpt,
+    ) -> Result<String, CliError> {
+        (match custom_spu_opt {
+            CustomSpuOpt::Create(custom_spu_opt) => process_register_custom_spu(custom_spu_opt).await,
+            CustomSpuOpt::Delete(custom_spu_opt) => process_unregister_custom_spu(custom_spu_opt).await,
+            CustomSpuOpt::List(custom_spu_opt) => process_list_custom_spus(out, custom_spu_opt).await,
+        })
+        .map(|_| format!(""))
+    }
 }
