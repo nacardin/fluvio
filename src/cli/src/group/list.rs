@@ -13,17 +13,8 @@ use crate::error::CliError;
 use crate::Terminal;
 use crate::target::ClusterTarget;
 
-#[derive(Debug)]
-pub struct ListSpuGroupsConfig {
-    pub output: OutputType,
-}
-
 #[derive(Debug, StructOpt)]
 pub struct ListManagedSpuGroupsOpt {
-    /// Address of Streaming Controller
-    #[structopt(short = "c", long = "sc", value_name = "host:port")]
-    sc: Option<String>,
-
     /// Output
     #[structopt(
         short = "O",

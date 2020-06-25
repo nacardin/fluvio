@@ -44,5 +44,25 @@ mod convert {
     }
 
 
+    impl ListSpec for CustomSpuSpec {
+
+        fn into_list_request() -> ListRequest {
+            ListRequest::CustomSpu
+        }
+    }
+
+    impl TryInto<Vec<Metadata<CustomSpuSpec>>> for ListResponse {
+        type Error = Error;
+        
+        fn try_into(self) -> Result<Vec<Metadata<CustomSpuSpec>>, Self::Error> {
+
+            match self {
+                ListResponse::CustomSpu(s) => Ok(s),
+                _ => Err(Error::new(ErrorKind::Other,"not custom spu"))
+            }
+
+        }
+    }
+
 
 }

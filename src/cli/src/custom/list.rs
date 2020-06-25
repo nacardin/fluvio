@@ -6,13 +6,15 @@
 use structopt::StructOpt;
 
 use flv_client::profile::ScConfig;
+use flv_client::metadata::spu::CustomSpuSpec;
+use flv_client::metadata::spu::SpuSpec;
+use flv_client::metadata::objects::Metadata;
 
 use crate::error::CliError;
 use crate::Terminal;
 use crate::OutputType;
 use crate::spu::format_spu_response_output;
-use crate::tls::TlsConfig;
-use crate::profile::InlineProfile;
+use crate::target::ClusterTarget;
 
 #[derive(Debug)]
 pub struct ListCustomSpusConfig {
@@ -21,9 +23,6 @@ pub struct ListCustomSpusConfig {
 
 #[derive(Debug, StructOpt)]
 pub struct ListCustomSpusOpt {
-    /// Address of Streaming Controller
-    #[structopt(short = "c", long = "sc", value_name = "host:port")]
-    sc: Option<String>,
 
     /// Output
     #[structopt(
@@ -36,28 +35,15 @@ pub struct ListCustomSpusOpt {
     output: Option<OutputType>,
 
     #[structopt(flatten)]
-    tls: TlsConfig,
-
-    #[structopt(flatten)]
-    profile: InlineProfile,
+    target: ClusterTarget,
 }
 
 impl ListCustomSpusOpt {
     /// Validate cli options and generate config
-    fn validate(self) -> Result<(ScConfig, ListCustomSpusConfig), CliError> {
-        let target_server = ScConfig::new_with_profile(
-            self.sc,
-            self.tls.try_into_file_config()?,
-            self.profile.profile,
-        )?;
+    fn validate(self) -> Result<(ScConfig, OutputType), CliError> {
+        let target_server = self.target.load()?;
 
-        // transfer config parameters
-        let list_custom_spu_cfg = ListCustomSpusConfig {
-            output: self.output.unwrap_or(OutputType::default()),
-        };
-
-        // return server separately from topic result
-        Ok((target_server, list_custom_spu_cfg))
+        Ok((target_server, self.output.unwrap_or_default()))
     }
 }
 
@@ -69,13 +55,24 @@ pub async fn process_list_custom_spus<O>(
 where
     O: Terminal,
 {
-    let (target_server, list_custom_spu_cfg) = opt.validate()?;
+    let (target_server, output_type) = opt.validate()?;
 
-    let mut sc = target_server.connect().await?;
+    let mut client = target_server.connect().await?;
+    let mut admin = client.admin().await;
 
-    let spus = sc.list_spu(true).await?;
+    let custom_spus = admin.list::<CustomSpuSpec>().await?;
+
+    let spus: Vec<Metadata<SpuSpec>> = custom_spus.into_iter()
+        .map(|custom_spu| {
+            Metadata {
+                name: custom_spu.name,
+                spec: custom_spu.spec.into(),
+                status: custom_spu.status
+            }
+        }).collect();
+
 
     // format and dump to screen
-    format_spu_response_output(out, spus, list_custom_spu_cfg.output)?;
+    format_spu_response_output(out, spus,output_type)?;
     Ok(())
 }
