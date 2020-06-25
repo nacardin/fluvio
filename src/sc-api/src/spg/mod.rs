@@ -25,9 +25,13 @@ mod convert {
 
     impl ListSpec for SpuGroupSpec {
 
-        fn into_list_request() -> ListRequest {
-            ListRequest::SpuGroup
+        type Filter = NameFilter;
+
+        fn into_list_request(filters: Vec<Self::Filter>) -> ListRequest {
+            ListRequest::SpuGroup(filters)
         }
+
+        
     }
 
     impl TryInto<Vec<Metadata<SpuGroupSpec>>> for ListResponse {

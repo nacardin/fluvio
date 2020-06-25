@@ -25,9 +25,12 @@ mod convert {
 
     impl ListSpec for SpuSpec {
 
-        fn into_list_request() -> ListRequest {
-            ListRequest::Spu
+        type Filter = NameFilter;
+
+        fn into_list_request(filters: Vec<Self::Filter>) -> ListRequest {
+            ListRequest::Spu(filters)
         }
+
     }
 
     impl TryInto<Vec<Metadata<SpuSpec>>> for ListResponse {
@@ -46,8 +49,10 @@ mod convert {
 
     impl ListSpec for CustomSpuSpec {
 
-        fn into_list_request() -> ListRequest {
-            ListRequest::CustomSpu
+        type Filter = NameFilter;
+
+        fn into_list_request(filters: Vec<Self::Filter>) -> ListRequest {
+            ListRequest::CustomSpu(filters)
         }
     }
 

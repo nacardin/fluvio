@@ -59,7 +59,7 @@ where
     let mut client = target_server.connect().await?;
     let mut admin = client.admin().await;
 
-    let custom_spus = admin.list::<CustomSpuSpec>().await?;
+    let custom_spus = admin.list::<CustomSpuSpec>(vec![]).await?;
 
     let spus: Vec<Metadata<SpuSpec>> = custom_spus
         .into_iter()

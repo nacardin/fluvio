@@ -11,23 +11,34 @@ use flv_metadata::spg::SpuGroupSpec;
 use crate::ScPublicApiKey;
 use crate::AdminRequest;
 
+/// marker trait
+pub trait ListFilter {}
+
+/// filter by name
+pub type NameFilter = String;
+
+impl ListFilter for NameFilter{}
 
 pub trait ListSpec: Spec {
 
-    fn into_list_request() -> ListRequest;
+    /// filter type
+    type Filter: ListFilter;
+    
+    /// convert to list request with filters
+    fn into_list_request(filters: Vec<Self::Filter>) -> ListRequest;
 }
 
-#[derive(Encode, Decode,  Debug)]
+#[derive(Debug)]
 pub enum ListRequest {
-    Topic,
-    Spu,
-    SpuGroup,
-    CustomSpu
+    Topic(Vec<NameFilter>),
+    Spu(Vec<NameFilter>),
+    SpuGroup(Vec<NameFilter>),
+    CustomSpu(Vec<NameFilter>)
 }
 
 impl Default for ListRequest {
     fn default() -> Self {
-        Self::Spu
+        Self::Spu(vec![])
     }
 }
 
@@ -68,6 +79,7 @@ pub struct Metadata<S>
     pub status: S::Status
 }
 
+// later this can be written using procedure macro
 mod encoding {
 
     use std::io::Error;
@@ -82,6 +94,103 @@ mod encoding {
     
 
     use super::*;
+
+    impl ListRequest {
+        /// type represent as string
+        fn type_string(&self) -> &'static str {
+            match self {
+                Self::Topic(_) => TopicSpec::LABEL,
+                Self::Spu(_) => SpuSpec::LABEL,
+                Self::SpuGroup(_) => SpuGroupSpec::LABEL,
+                Self::CustomSpu(_) => CustomSpuSpec::LABEL
+            }
+        }
+    }
+
+
+    impl Encoder for ListRequest {
+    
+        fn write_size(&self, version: Version) -> usize {
+            let type_size = self.type_string().to_owned().write_size(version);
+        
+            type_size
+                + match self {
+                    Self::Topic(s) => s.write_size(version),
+                    Self::CustomSpu(s) => s.write_size(version),
+                    Self::SpuGroup(s) => s.write_size(version),
+                    Self::Spu(s) => s.write_size(version)
+                }
+        }
+
+        // encode match
+        fn encode<T>(&self, dest: &mut T, version: Version) -> Result<(), Error>
+        where
+            T: BufMut,
+        {
+
+            self.type_string().to_owned().encode(dest,version)?;
+
+            match self {
+                Self::Topic(s) => s.encode(dest, version)?,
+                Self::CustomSpu(s) => s.encode(dest, version)?,
+                Self::SpuGroup(s) => s.encode(dest, version)?,
+                Self::Spu(s) => s.encode(dest, version)?
+            }
+
+            Ok(())
+        }
+    }
+
+    impl Decoder for ListRequest {
+        fn decode<T>(&mut self, src: &mut T, version: Version) -> Result<(), Error>
+        where
+            T: Buf,
+        {
+            let mut typ = "".to_owned();
+            typ.decode(src, version)?;
+            trace!("decoded type: {}", typ);
+
+            match typ.as_ref() {
+                TopicSpec::LABEL => {
+                    let mut response:  Vec<NameFilter> = vec![];
+                    response.decode(src, version)?;
+                    *self = Self::Topic(response);
+                    Ok(())
+                },
+
+                CustomSpuSpec::LABEL => {
+                    let mut response: Vec<NameFilter>  = vec![];
+                    response.decode(src, version)?;
+                    *self = Self::CustomSpu(response);
+                    Ok(())
+                },
+
+                SpuGroupSpec::LABEL => {
+                    let mut response: Vec<NameFilter>  = vec![];
+                    response.decode(src, version)?;
+                    *self = Self::SpuGroup(response);
+                    Ok(())
+                },
+
+                SpuSpec::LABEL => {
+                    let mut response: Vec<NameFilter> = vec![];
+                    response.decode(src, version)?;
+                    *self = Self::SpuGroup(response);
+                    Ok(())
+                }
+
+                // Unexpected type
+                _ => Err(Error::new(
+                    ErrorKind::InvalidData,
+                    format!("invalid request type {}", typ),
+                )),
+            }
+        }
+    }
+    
+
+
+
 
     impl ListResponse {
         /// type represent as string

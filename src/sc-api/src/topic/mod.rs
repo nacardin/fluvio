@@ -1,4 +1,5 @@
 
+
 pub use flv_metadata::topic::*;
 
 mod convert {
@@ -28,9 +29,13 @@ mod convert {
 
     impl ListSpec for TopicSpec {
 
-        fn into_list_request() -> ListRequest {
-            ListRequest::Topic
+        type Filter = NameFilter;
+
+        fn into_list_request(filters: Vec<Self::Filter>) -> ListRequest {
+            ListRequest::Topic(filters)
         }
+        
+
     }
 
     impl TryInto<Vec<Metadata<TopicSpec>>> for ListResponse {
