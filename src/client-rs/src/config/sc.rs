@@ -17,7 +17,7 @@ use crate::ClientError;
 use super::config::ConfigFile;
 use super::tls::TlsConfig;
 
-/// Logical look for Sc
+/// Logical configuration for Sc
 pub struct ScConfig {
     addr: String,
     tls: Option<TlsConfig>,

@@ -1,10 +1,9 @@
 //!
-//! # Fluvio -- Topic/Partition Parameters
+//! # Parameters used by users
 //!
-//! Intermediate structure to collect metadata information
 //!
-use kf_protocol::api::Offset;
 
+use kf_protocol::api::*;
 /// Fetch Logs parameters
 #[derive(Debug)]
 pub struct FetchLogsParam {
@@ -39,3 +38,16 @@ pub struct PartitionParam {
     pub epoch: i32,
 }
 
+
+pub enum FetchOffset {
+    Earliest(Option<i64>),
+    /// earliest + offset
+    Latest(Option<i64>),
+    /// latest - offset
+    Offset(i64),
+}
+
+pub struct FetchLogOption {
+    pub max_bytes: i32,
+    pub isolation: Isolation,
+}

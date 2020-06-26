@@ -9,9 +9,9 @@ use crate::ClientError;
 
 
 /// adminstration interface
-pub struct ScAdminClient(SerialClient);
+pub struct AdminClient(SerialClient);
 
-impl ScAdminClient {
+impl AdminClient {
     pub(crate) fn new(client: SerialClient) -> Self {
         Self(client)
     }
