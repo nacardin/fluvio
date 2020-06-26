@@ -7,7 +7,7 @@
 use log::debug;
 use structopt::StructOpt;
 
-use flv_client::config::ScConfig;
+use flv_client::ClusterConfig;
 use flv_client::metadata::topic::TopicSpec;
 
 use crate::target::ClusterTarget;
@@ -36,7 +36,7 @@ pub struct DescribeTopicsOpt {
 
 impl DescribeTopicsOpt {
     /// Validate cli options and generate config
-    fn validate(self) -> Result<(ScConfig, (String, OutputType)), CliError> {
+    fn validate(self) -> Result<(ClusterConfig, (String, OutputType)), CliError> {
         let target_server = self.target.load()?;
 
         // transfer config parameters

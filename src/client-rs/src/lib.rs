@@ -8,10 +8,10 @@ pub mod config;
 pub mod params;
 
 pub use error::ClientError;
+pub use config::ClusterConfig;
 
 
 
-pub const MAX_FETCH_BYTES: u32 = 1000000;
 
 /// re-export metadata from sc-api
 pub mod metadata {

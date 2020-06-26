@@ -36,9 +36,9 @@ mod target {
 
     use structopt::StructOpt;
 
-    use flv_client::config::ScConfig;
-    use flv_client::ClientError;
+    use flv_client::ClusterConfig;
     use crate::tls::TlsConfig;
+    use crate::CliError;
     use crate::profile::InlineProfile;
 
     /// server configuration
@@ -57,12 +57,32 @@ mod target {
 
     impl ClusterTarget {
         /// try to create sc config
-        pub fn load(&self) -> Result<ScConfig, ClientError> {
-            ScConfig::new_with_profile(
-                self.cluster,
-                self.tls.try_into_file_config()?,
-                self.profile.profile,
-            )
+        pub fn load(&self) -> Result<ClusterConfig, CliError> {
+
+            // check case when inline profile is used
+            if let Some(profile) = self.profile.profile {
+                if self.cluster.is_some() {
+                    Err(CliError::InvalidArg("cluster addr is not valid when profile is used"))
+                } else if self.tls.is_some() {
+                    Err(CliError::InvalidArg("tls is not valid when profile is is used"))
+                } else {
+                    ClusterConfig::lookup_profile(profile)
+                }
+               
+            } else {
+                // check if cluster address is used
+                if let Some(cluster) = self.cluster {
+                    Ok(ClusterConfig::new(cluster,self.tls))
+                } else {
+                    // check if tls is used
+                    if self.tls.is_some() {
+                        Err(CliError::InvalidArg("tls is only valid if cluster addr is used"))
+                    } else {
+                        ClusterConfig::lookup_profile(None)
+                    }
+                }
+            }
+            
         }
     }
 }

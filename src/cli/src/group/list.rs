@@ -5,7 +5,7 @@
 
 use structopt::StructOpt;
 
-use flv_client::config::ScConfig;
+use flv_client::ClusterConfig;
 use flv_metadata::spg::SpuGroupSpec;
 
 use crate::output::OutputType;
@@ -25,7 +25,7 @@ pub struct ListManagedSpuGroupsOpt {
 
 impl ListManagedSpuGroupsOpt {
     /// Validate cli options and generate config
-    fn validate(self) -> Result<(ScConfig, OutputType), CliError> {
+    fn validate(self) -> Result<(ClusterConfig, OutputType), CliError> {
         let target_server = self.target.load()?;
 
         Ok((target_server, self.output.as_output()))

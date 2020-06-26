@@ -9,7 +9,7 @@ use std::convert::TryFrom;
 use structopt::StructOpt;
 
 use flv_util::socket_helpers::ServerAddress;
-use flv_client::config::ScConfig;
+use flv_client::ClusterConfig;
 use flv_client::metadata::spu::CustomSpuSpec;
 
 use crate::error::CliError;
@@ -43,7 +43,7 @@ pub struct RegisterCustomSpuOpt {
 
 impl RegisterCustomSpuOpt {
     /// Validate cli options. Generate target-server and register custom spu config.
-    fn validate(self) -> Result<(ScConfig, (String, CustomSpuSpec)), CliError> {
+    fn validate(self) -> Result<(ClusterConfig, (String, CustomSpuSpec)), CliError> {
         let target = self.target.load()?;
 
         // register custom spu config

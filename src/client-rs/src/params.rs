@@ -4,6 +4,9 @@
 //!
 
 use kf_protocol::api::*;
+
+pub const MAX_FETCH_BYTES: u32 = 1000000;
+
 /// Fetch Logs parameters
 #[derive(Debug)]
 pub struct FetchLogsParam {

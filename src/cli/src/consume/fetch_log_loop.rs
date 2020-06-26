@@ -10,9 +10,9 @@ use std::io::ErrorKind;
 use log::debug;
 use futures::stream::StreamExt;
 
-use flv_client::ReplicaLeader;
-use flv_client::FetchLogOption;
-use flv_client::FetchOffset;
+
+use flv_client::params::*;
+
 
 use crate::error::CliError;
 use crate::Terminal;

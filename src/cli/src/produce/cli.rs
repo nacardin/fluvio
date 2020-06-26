@@ -8,7 +8,7 @@ use std::path::PathBuf;
 
 use structopt::StructOpt;
 
-use flv_client::config::ScConfig;
+use flv_client::ClusterConfig;
 
 use crate::target::ClusterTarget;
 use crate::error::CliError;
@@ -80,7 +80,7 @@ pub struct ProduceLogOpt {
 
 impl ProduceLogOpt {
     /// Validate cli options. Generate target-server and produce log configuration.
-    pub fn validate(self) -> Result<(ScConfig, ProduceLogConfig), CliError> {
+    pub fn validate(self) -> Result<(ClusterConfig, ProduceLogConfig), CliError> {
         let target_server = self.target.load()?;
 
         // generate file record

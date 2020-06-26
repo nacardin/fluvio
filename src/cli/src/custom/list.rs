@@ -5,7 +5,7 @@
 //!
 use structopt::StructOpt;
 
-use flv_client::config::ScConfig;
+use flv_client::ClusterConfig;
 use flv_client::metadata::spu::CustomSpuSpec;
 use flv_client::metadata::spu::SpuSpec;
 use flv_client::metadata::objects::Metadata;
@@ -33,7 +33,7 @@ pub struct ListCustomSpusOpt {
 
 impl ListCustomSpusOpt {
     /// Validate cli options and generate config
-    fn validate(self) -> Result<(ScConfig, OutputType), CliError> {
+    fn validate(self) -> Result<(ClusterConfig, OutputType), CliError> {
         let target_server = self.target.load()?;
 
         Ok((target_server, self.output.as_output()))

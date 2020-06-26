@@ -7,7 +7,7 @@
 use log::debug;
 use structopt::StructOpt;
 
-use flv_client::config::ScConfig;
+use flv_client::config::ClusterConfig;
 use flv_client::metadata::topic::TopicSpec;
 use crate::error::CliError;
 use crate::target::ClusterTarget;
@@ -24,7 +24,7 @@ pub struct DeleteTopicOpt {
 
 impl DeleteTopicOpt {
     /// Validate cli options. Generate target-server and delete-topic configuration.
-    fn validate(self) -> Result<(ScConfig, String), CliError> {
+    fn validate(self) -> Result<(ClusterConfig, String), CliError> {
         let target_server = self.target.load()?;
 
         // return server separately from config

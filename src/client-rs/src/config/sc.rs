@@ -17,43 +17,42 @@ use crate::ClientError;
 use super::config::ConfigFile;
 use super::tls::TlsConfig;
 
-/// Logical configuration for Sc
-pub struct ScConfig {
+/// configuration to cluster
+pub struct ClusterConfig {
     addr: String,
     tls: Option<TlsConfig>,
 }
 
-impl ScConfig {
-    /// create new Sc with optional address and tls, assume default profile
-    pub fn new(addr_option: Option<String>, tls: Option<TlsConfig>) -> Result<Self, ClientError> {
-        Self::new_with_profile(addr_option, tls, None)
+impl ClusterConfig {
+
+    /// create cluster configuration if addr and tls are known
+    pub fn new<S: Into<String>>(addr: S, tls: Option<TlsConfig>) -> Self  {
+        Self {
+            addr: addr.into(),
+            tls
+        }
     }
 
-    // create new Sc with optional address and tls and can specify optional preferred profile
-    pub fn new_with_profile(
-        addr_option: Option<String>,
-        tls: Option<TlsConfig>,
+    /// look up cluster configuration from profile
+    pub fn lookup_profile(
         profile: Option<String>,
     ) -> Result<Self, ClientError> {
-        if let Some(addr) = addr_option {
-            debug!("using custom target addr: {}", addr);
-            Ok(Self { addr, tls })
+       
+        // load with default path
+        let config_file = ConfigFile::load(None)?;
+        if let Some(cluster) = config_file
+            .config()
+            .current_cluster_or_with_profile(profile.as_ref().map(|p| p.as_ref()))
+        {
+            debug!("looking up using profile: cluster addr {}", cluster.addr);
+            Ok(Self {
+                addr: cluster.addr().to_owned(),
+                tls: cluster.tls.clone(),
+            })
         } else {
-            // look up using profile
-            let config_file = ConfigFile::load(None)?;
-            if let Some(cluster) = config_file
-                .config()
-                .current_cluster_or_with_profile(profile.as_ref().map(|p| p.as_ref()))
-            {
-                debug!("looking up using profile: cluster addr {}", cluster.addr);
-                Ok(Self {
-                    addr: cluster.addr().to_owned(),
-                    tls: cluster.tls.clone(),
-                })
-            } else {
-                Err(IoError::new(ErrorKind::Other, "no matched cluster found").into())
-            }
+            Err(IoError::new(ErrorKind::Other, "no matched cluster found").into())
         }
+        
     }
 
     pub async fn connect(self) -> Result<ScClient, ClientError> {

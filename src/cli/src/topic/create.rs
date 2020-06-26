@@ -11,7 +11,7 @@ use std::path::PathBuf;
 use log::debug;
 use structopt::StructOpt;
 
-use flv_client::config::ScConfig;
+use flv_client::ClusterConfig;
 use flv_client::metadata::topic::TopicSpec;
 
 use crate::error::CliError;
@@ -76,7 +76,7 @@ pub struct CreateTopicOpt {
 
 impl CreateTopicOpt {
     /// Validate cli options. Generate target-server and create-topic configuration.
-    fn validate(self) -> Result<(ScConfig, (String, TopicSpec)), CliError> {
+    fn validate(self) -> Result<(ClusterConfig, (String, TopicSpec)), CliError> {
         use flv_client::metadata::topic::PartitionMaps;
         use flv_client::metadata::topic::TopicReplicaParam;
         use load::PartitionLoad;

@@ -7,7 +7,7 @@
 use log::debug;
 use structopt::StructOpt;
 
-use flv_client::config::ScConfig;
+use flv_client::ClusterConfig;
 use flv_client::metadata::spg::*;
 
 use crate::error::CliError;
@@ -45,7 +45,7 @@ pub struct CreateManagedSpuGroupOpt {
 
 impl CreateManagedSpuGroupOpt {
     /// Validate cli options. Generate target-server and create spu group config.
-    fn validate(self) -> Result<(ScConfig, (String, SpuGroupSpec)), CliError> {
+    fn validate(self) -> Result<(ClusterConfig, (String, SpuGroupSpec)), CliError> {
         let target_server = self.target.load()?;
 
         let storage = self.storage_size.map(|storage_size| StorageConfig {

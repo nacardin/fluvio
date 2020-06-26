@@ -10,7 +10,7 @@ use structopt::StructOpt;
 
 use flv_client::metadata::spu::CustomSpuSpec;
 use flv_client::metadata::spu::CustomSpuKey;
-use flv_client::config::ScConfig;
+use flv_client::ClusterConfig;
 
 use crate::target::ClusterTarget;
 use crate::error::CliError;
@@ -40,7 +40,7 @@ pub struct UnregisterCustomSpuOpt {
 
 impl UnregisterCustomSpuOpt {
     /// Validate cli options. Generate target-server and unregister custom spu config.
-    fn validate(self) -> Result<(ScConfig, CustomSpuKey), CliError> {
+    fn validate(self) -> Result<(ClusterConfig, CustomSpuKey), CliError> {
         let target_server = self.target.load()?;
 
         // custom spu

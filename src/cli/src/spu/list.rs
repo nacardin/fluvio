@@ -6,7 +6,7 @@
 
 use structopt::StructOpt;
 
-use flv_client::config::ScConfig;
+use flv_client::ClusterConfig;
 use flv_metadata::spu::SpuSpec;
 
 use crate::error::CliError;
@@ -32,10 +32,9 @@ pub struct ListSpusOpt {
 
 impl ListSpusOpt {
     /// Validate cli options and generate config
-    fn validate(self) -> Result<(ScConfig, OutputType), CliError> {
+    fn validate(self) -> Result<(ClusterConfig, OutputType), CliError> {
         let target_server = self.target.load()?;
 
-        // return server separately from topic result
         Ok((target_server, self.output.as_output()))
     }
 }
