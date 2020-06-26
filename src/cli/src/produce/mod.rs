@@ -10,17 +10,13 @@ use crate::target::ClusterTarget;
 use crate::CliError;
 use crate::Terminal;
 
-// -----------------------------------
-//  Parsed Config
-// -----------------------------------
 
 /// Produce log configuration parameters
 #[derive(Debug)]
 pub struct ProduceLogConfig {
     pub topic: String,
     pub partition: i32,
-    pub continuous: bool,
-    pub records_form_file: Option<FileRecord>,
+    pub continuous: bool
 }
 
 #[derive(Debug)]
@@ -77,11 +73,12 @@ pub struct ProduceLogOpt {
 
 impl ProduceLogOpt {
     /// Validate cli options. Generate target-server and produce log configuration.
-    pub fn validate(self) -> Result<(ClusterConfig, ProduceLogConfig), CliError> {
+    pub fn validate(self) -> Result<(ClusterConfig, (ProduceLogConfig,Option<FileRecord>)), CliError> {
         let target_server = self.target.load()?;
 
-        // generate file record
-        let records_from_file = if let Some(record_per_line) = self.record_per_line {
+        
+
+        let file_records = if let Some(record_per_line) = self.record_per_line {
             Some(FileRecord::Lines(record_per_line.clone()))
         } else if self.record_file.len() > 0 {
             Some(FileRecord::Files(self.record_file.clone()))
@@ -89,16 +86,14 @@ impl ProduceLogOpt {
             None
         };
 
-        // produce log specific configurations
         let produce_log_cfg = ProduceLogConfig {
             topic: self.topic,
             partition: self.partition,
-            records_form_file: records_from_file,
             continuous: self.continuous,
         };
 
-        // return server separately from config
-        Ok((target_server, produce_log_cfg))
+      
+        Ok((target_server, ((produce_log_cfg,file_records))))
     }
 }
 
@@ -110,17 +105,17 @@ pub async fn process_produce_record<O>(
 where
     O: Terminal,
 {
-    let (target_server, cfg) = opt.validate()?;
+    let (target_server, (cfg,file_records)) = opt.validate()?;
 
     let target = target_server.connect()?;
-
     let producer = target.produce().await;
 
-    let file_records = file_to_records(&cfg.records_form_file).await?;
+    if let Some(records) = file_records {
+        produce::produce_file_records(producer, out, opt, records).await?;
+    } else {
+        produce::produce_from_stdin(producer, out, opt).await?;
+    }
 
-    l
-
-    render_produce_record(out, cfg, file_records).await?;
     Ok("".to_owned())
 }
 
@@ -147,35 +142,38 @@ mod produce {
 
 
    
+    pub async fn produce_file_records<O: Terminal>(
+        producer: Producer,
+        out: std::sync::Arc<O>,
+        opt: ProduceLogConfig,
+        file: FileRecord
+    ) -> Result<(), CliError> {
+        let tuples = file_to_records(file).await?;
+        for r_tuple in tuples {
+            t_println!(out, "{}", r_tuple.0);
+            process_record(&mut producer, r_tuple.1).await;
+        }
+    }
     
     /// Dispatch records based on the content of the record tuples variable
-    async fn render_produce_record<O: Terminal, L: ReplicaLeader>(
+    pub async fn produce_from_stdin<O: Terminal>(
+        producer: Producer,
         out: std::sync::Arc<O>,
-        mut leader: L,
         opt: ProduceLogConfig,
-        record_tuples: RecordTuples,
     ) -> Result<(), CliError> {
-        // in both cases, exit loop on error
-        if record_tuples.len() > 0 {
-            // records from files
-            for r_tuple in record_tuples {
-                t_println!(out, "{}", r_tuple.0);
-                process_record(&mut leader, r_tuple.1).await;
-            }
-        } else {
-            let stdin = stdin();
-            let mut lines = BufReader::new(stdin).lines();
-            while let Some(line) = lines.next().await {
-                let text = line?;
-                debug!("read lines {} bytes", text);
-                let record = text.as_bytes().to_vec();
-                process_record(&mut leader, record).await;
-                if !opt.continuous {
-                    return Ok(());
-                }
+        
+        let stdin = stdin();
+        let mut lines = BufReader::new(stdin).lines();
+        while let Some(line) = lines.next().await {
+            let text = line?;
+            debug!("read lines {} bytes", text);
+            let record = text.as_bytes().to_vec();
+            process_record(&mut producer, record).await;
+            if !opt.continuous {
+                return Ok(());
             }
         }
-
+        
         debug!("done sending records");
 
         Ok(())
@@ -183,7 +181,7 @@ mod produce {
 
     /// Process record and print success or error
     /// TODO: Add version handling for SPU
-    async fn process_record<L: ReplicaLeader>(spu: &mut L, record: Vec<u8>) {
+    async fn process_record(spu: &mut Producer, record: Vec<u8>) {
         match spu.send_record(record).await {
             Ok(()) => {
                 debug!("record send success");
@@ -198,8 +196,9 @@ mod produce {
 
     /// Retrieve one or more files and converts them into a list of (name, record) touples
     async fn file_to_records(
-        file_record_options: &Option<FileRecord>,
+        file_record_options: FileRecord,
     ) -> Result<RecordTuples, CliError> {
+
         let mut records: RecordTuples = vec![];
 
         match file_record_options {
