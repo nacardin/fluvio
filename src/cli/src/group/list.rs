@@ -110,13 +110,14 @@ mod output {
         fn content(&self) -> Vec<Row> {
             self.iter()
                 .map(|r| {
-                    let storage_config = r.spec.spu_config.real_storage_config();
+                    let spec = &r.spec;
+                    let storage_config = spec.spu_config.real_storage_config();
                     Row::new(vec![
                         Cell::new_align(&r.name, Alignment::RIGHT),
-                        Cell::new_align(&r.spec.replicas.to_string(), Alignment::CENTER),
+                        Cell::new_align(&spec.replicas.to_string(), Alignment::CENTER),
                         Cell::new_align(&r.spec.min_id.to_string(), Alignment::RIGHT),
                         Cell::new_align(
-                            &r.spec.spu_config.rack.unwrap_or_default(),
+                            &spec.spu_config.rack.clone().unwrap_or_default(),
                             Alignment::RIGHT,
                         ),
                         Cell::new_align(&storage_config.size, Alignment::RIGHT),

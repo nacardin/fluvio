@@ -2,8 +2,8 @@
 
 use kf_socket::AllMultiplexerSocket;
 use crate::admin::AdminClient;
-use crate::producer::Producer;
-use crate::consumer::Consumer;
+use crate::Producer;
+use crate::Consumer;
 use crate::ClientError;
 
 use super::*;
@@ -27,33 +27,37 @@ impl ScClient {
         }
     }
 
+    async fn create_serial_client(&mut self) -> SerialClient {
+        SerialClient::new(
+            self.socket.create_serial_socket().await,
+            self.config.clone(),
+            self.versions.clone()
+        )
+    }
+
     /// create new admin client
     pub async fn admin(&mut self) -> AdminClient {
-        AdminClient::new(SerialClient::new(
-    self.socket.create_serial_socket().await,
-    self.config.clone(),
-    self.versions.clone()
-        ))
+        AdminClient::new(self.create_serial_client().await)
     }
 
 
-    async fn producer(
+    pub async fn producer(
         &mut self,
         topic: &str,
         partition: i32,
     ) -> Result<Producer, ClientError> {
 
-        panic!("not yet implemented");
+       Ok(Producer::new(self.create_serial_client().await,topic,partition))
 
     }
 
-    async fn consumer(
+    pub async fn consumer(
         &mut self,
         topic: &str,
         partition: i32,
     ) -> Result<Consumer, ClientError> {
 
-        panic!("not yet implemented");
+        Ok(Consumer::new(self.create_serial_client().await, topic, partition))
 
     }
 }

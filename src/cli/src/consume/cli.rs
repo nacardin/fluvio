@@ -63,7 +63,7 @@ pub struct ConsumeLogOpt {
 
 impl ConsumeLogOpt {
     /// validate the configuration and generate target server and config which can be used
-    pub fn validate(self) -> Result<(ScConfig, ConsumeLogConfig), CliError> {
+    pub fn validate(self) -> Result<(ClusterConfig, ConsumeLogConfig), CliError> {
         let target_server = self.target.load()?;
         let max_bytes = self.max_bytes.unwrap_or(MAX_FETCH_BYTES as i32);
 

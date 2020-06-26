@@ -11,10 +11,29 @@ use crate::ClientError;
 
 /// interface to producer
 pub struct Producer {
+    topic: String,
+    partition: i32,
     serial: SerialClient
 }
 
 impl Producer {
+
+    pub fn new(serial: SerialClient, topic: &str,partition: i32) -> Self {
+        Self {
+            serial,
+            topic: topic.to_owned(),
+            partition
+        }
+    }
+
+    pub fn topic(&self) -> &str {
+        &self.topic
+    }
+
+    pub fn partition(&self) -> i32 {
+        self.partition
+    }
+
 
     pub async fn send_record(&mut self, record: Vec<u8>) -> Result<(), ClientError> {
         todo!()

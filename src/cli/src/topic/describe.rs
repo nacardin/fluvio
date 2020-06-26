@@ -175,7 +175,7 @@ mod display {
                 "Status".to_owned(),
                 Some(status.resolution.resolution_label().to_string()),
             ));
-            key_values.push(("Reason".to_owned(), Some(status.reason)));
+            key_values.push(("Reason".to_owned(), Some(status.reason.clone())));
 
             key_values.push(("-----------------".to_owned(), None));
 

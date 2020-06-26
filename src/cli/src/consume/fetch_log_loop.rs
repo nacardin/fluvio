@@ -12,7 +12,7 @@ use futures::stream::StreamExt;
 
 
 use flv_client::params::*;
-
+use flv_client::Consumer;
 
 use crate::error::CliError;
 use crate::Terminal;
@@ -25,16 +25,18 @@ use super::process_fetch_topic_response;
 // -----------------------------------
 
 /// Fetch log continuously
-pub async fn fetch_log_loop<O, L>(
+pub async fn fetch_log_loop<O>(
     out: std::sync::Arc<O>,
-    mut leader: L,
-    opt: ConsumeLogConfig,
+    mut consumer: Consumer,
+    mut opt: ConsumeLogConfig,
 ) -> Result<(), CliError>
 where
-    L: ReplicaLeader,
     O: Terminal,
 {
-    let topic = leader.topic().to_owned();
+    
+    // force to be non continous
+    opt.disable_continuous = true;
+
     debug!("starting fetch loop: {:#?}", opt);
 
     // attach sender to Ctrl-C event handler
@@ -70,7 +72,7 @@ where
     };
 
     if opt.disable_continuous {
-        let response = leader.fetch_logs_once(initial_offset, fetch_option).await?;
+        let response = consumer.fetch_logs_once(initial_offset, fetch_option).await?;
 
         debug!(
             "got a single response: LSO: {} batches: {}",
@@ -78,8 +80,9 @@ where
             response.records.batches.len(),
         );
 
-        process_fetch_topic_response(out.clone(), &topic, response, &opt).await?;
+        process_fetch_topic_response(out.clone(),consumer.topic(),response, &opt).await?;
     } else {
+        /*
         let mut log_stream = leader.fetch_logs(initial_offset, fetch_option);
 
         while let Some(response) = log_stream.next().await {
@@ -96,6 +99,7 @@ where
                 break;
             }
         }
+        */
 
         debug!("fetch loop exited");
     }

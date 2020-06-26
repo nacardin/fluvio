@@ -35,7 +35,7 @@ mod process {
         debug!("spu  leader consume config: {:#?}", cfg);
 
         let mut target = target_server.connect().await?;
-        let mut consumer = target_server.consume().await?;
+        let mut consumer = target.consumer(&cfg.topic,cfg.partition).await?;
         fetch_log_loop(out, consumer, cfg).await?;
        
         Ok("ok".to_owned())

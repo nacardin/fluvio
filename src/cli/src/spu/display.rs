@@ -50,7 +50,7 @@ impl TableOutputHandler for ListSpus {
     fn content(&self) -> Vec<Row> {
         self.iter()
             .map(|metadata| {
-                let spu = metadata.spec;
+                let spu = &metadata.spec;
 
                 row![
                     r -> spu.id,

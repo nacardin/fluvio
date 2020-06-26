@@ -76,8 +76,7 @@ impl ProduceLogOpt {
     pub fn validate(self) -> Result<(ClusterConfig, (ProduceLogConfig,Option<FileRecord>)), CliError> {
         let target_server = self.target.load()?;
 
-        
-
+    
         let file_records = if let Some(record_per_line) = self.record_per_line {
             Some(FileRecord::Lines(record_per_line.clone()))
         } else if self.record_file.len() > 0 {
@@ -107,13 +106,13 @@ where
 {
     let (target_server, (cfg,file_records)) = opt.validate()?;
 
-    let target = target_server.connect()?;
-    let producer = target.produce().await;
+    let mut target = target_server.connect().await?;
+    let producer = target.producer(&cfg.topic,cfg.partition).await?;
 
     if let Some(records) = file_records {
-        produce::produce_file_records(producer, out, opt, records).await?;
+        produce::produce_file_records(producer, out, cfg, records).await?;
     } else {
-        produce::produce_from_stdin(producer, out, opt).await?;
+        produce::produce_from_stdin(producer, out, cfg).await?;
     }
 
     Ok("".to_owned())
@@ -143,7 +142,7 @@ mod produce {
 
    
     pub async fn produce_file_records<O: Terminal>(
-        producer: Producer,
+        mut producer: Producer,
         out: std::sync::Arc<O>,
         opt: ProduceLogConfig,
         file: FileRecord
@@ -153,11 +152,12 @@ mod produce {
             t_println!(out, "{}", r_tuple.0);
             process_record(&mut producer, r_tuple.1).await;
         }
+        Ok(())
     }
     
     /// Dispatch records based on the content of the record tuples variable
     pub async fn produce_from_stdin<O: Terminal>(
-        producer: Producer,
+        mut producer: Producer,
         out: std::sync::Arc<O>,
         opt: ProduceLogConfig,
     ) -> Result<(), CliError> {
@@ -201,37 +201,34 @@ mod produce {
 
         let mut records: RecordTuples = vec![];
 
+        
         match file_record_options {
-            Some(file_record) => {
-                match file_record {
-                    // lines as records
-                    FileRecord::Lines(lines2rec_path) => {
-                        let f = File::open(lines2rec_path).await?;
-                        let mut lines = BufReader::new(f).lines();
-                        // reach each line and convert to byte array
-                        for line in lines.next().await {
-                            if let Ok(text) = line {
-                                records.push((text.clone(), text.as_bytes().to_vec()));
-                            }
-                        }
-                    }
-
-                    // files as records
-                    FileRecord::Files(files_to_rec_path) => {
-                        for file_path in files_to_rec_path {
-                            let file_name = file_path.to_str().unwrap_or("?");
-                            let mut f = File::open(file_path).await?;
-                            let mut buffer = Vec::new();
-
-                            // read the whole file in a byte array
-                            f.read_to_end(&mut buffer).await?;
-                            records.push((file_name.to_owned(), buffer));
-                        }
+            // lines as records
+            FileRecord::Lines(lines2rec_path) => {
+                let f = File::open(lines2rec_path).await?;
+                let mut lines = BufReader::new(f).lines();
+                // reach each line and convert to byte array
+                for line in lines.next().await {
+                    if let Ok(text) = line {
+                        records.push((text.clone(), text.as_bytes().to_vec()));
                     }
                 }
             }
-            None => {}
+
+            // files as records
+            FileRecord::Files(files_to_rec_path) => {
+                for file_path in files_to_rec_path {
+                    let file_name = file_path.to_str().unwrap_or("?");
+                    let mut f = File::open(&file_path).await?;
+                    let mut buffer = Vec::new();
+
+                    // read the whole file in a byte array
+                    f.read_to_end(&mut buffer).await?;
+                    records.push((file_name.to_owned(), buffer));
+                }
+            }
         }
+            
 
         Ok(records)
     }

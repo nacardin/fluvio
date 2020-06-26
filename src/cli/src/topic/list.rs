@@ -132,7 +132,7 @@ mod display {
         fn content(&self) -> Vec<Row> {
             self.iter()
                 .map(|metadata| {
-                    let topic = metadata.spec;
+                    let topic = &metadata.spec;
                     row![
                         l -> metadata.name,
                         c -> topic.type_label(),

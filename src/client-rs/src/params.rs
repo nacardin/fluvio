@@ -50,6 +50,7 @@ pub enum FetchOffset {
     Offset(i64),
 }
 
+#[derive(Default)]
 pub struct FetchLogOption {
     pub max_bytes: i32,
     pub isolation: Isolation,

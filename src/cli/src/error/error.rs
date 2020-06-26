@@ -11,6 +11,12 @@ pub enum CliError {
     Other(String),
 }
 
+impl CliError {
+    pub fn invalid_arg<M: Into<String>>(reason: M) -> Self {
+        Self::InvalidArg(reason.into())
+    }
+}
+
 impl From<IoError> for CliError {
     fn from(error: IoError) -> Self {
         Self::IoError(error)

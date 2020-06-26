@@ -40,7 +40,7 @@ pub struct CreateManagedSpuGroupOpt {
     pub storage_size: Option<String>,
 
     #[structopt(flatten)]
-    target: ClusterTarget,
+    pub target: ClusterTarget,
 }
 
 impl CreateManagedSpuGroupOpt {
