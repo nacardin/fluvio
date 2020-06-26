@@ -1,5 +1,5 @@
 mod client;
-mod sc;
+mod cluster;
 
 pub use client::*;
-pub use sc::*;
+pub use cluster::*;

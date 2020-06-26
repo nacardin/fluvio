@@ -9,7 +9,8 @@ pub mod params;
 
 pub use error::ClientError;
 pub use config::ClusterConfig;
-
+pub use producer::Producer;
+pub use consumer::Consumer;
 
 
 

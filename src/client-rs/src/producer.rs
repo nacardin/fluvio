@@ -10,11 +10,11 @@ use crate::ClientError;
 
 
 /// interface to producer
-pub struct ProducerClient {
+pub struct Producer {
     serial: SerialClient
 }
 
-impl ProducerClient {
+impl Producer {
 
     pub async fn send_record(&mut self, record: Vec<u8>) -> Result<(), ClientError> {
         todo!()
@@ -23,7 +23,7 @@ impl ProducerClient {
 }
 
 
-impl AsyncWrite for ProducerClient{
+impl AsyncWrite for Producer{
 
     fn poll_write(self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &[u8])
             -> Poll<Result<usize,IoError>> {

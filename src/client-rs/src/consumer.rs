@@ -6,11 +6,11 @@ use crate::client::*;
 use crate::ClientError;
 use crate::params::*;
 
-pub struct ConsumerClient {
+pub struct Consumer {
     serial: SerialClient
 }
 
-impl ConsumerClient  {
+impl Consumer  {
 
     async fn fetch_logs_once(
         &mut self,

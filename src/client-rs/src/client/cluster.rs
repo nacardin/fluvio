@@ -2,8 +2,8 @@
 
 use kf_socket::AllMultiplexerSocket;
 use crate::admin::AdminClient;
-use crate::producer::ProducerClient;
-use crate::consumer::ConsumerClient;
+use crate::producer::Producer;
+use crate::consumer::Consumer;
 use crate::ClientError;
 
 use super::*;
@@ -41,7 +41,7 @@ impl ScClient {
         &mut self,
         topic: &str,
         partition: i32,
-    ) -> Result<ProducerClient, ClientError> {
+    ) -> Result<Producer, ClientError> {
 
         panic!("not yet implemented");
 
@@ -51,7 +51,7 @@ impl ScClient {
         &mut self,
         topic: &str,
         partition: i32,
-    ) -> Result<ConsumerClient, ClientError> {
+    ) -> Result<Consumer, ClientError> {
 
         panic!("not yet implemented");
 

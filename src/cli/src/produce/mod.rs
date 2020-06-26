@@ -1,11 +1,129 @@
-mod cli;
 
-pub use cli::ProduceLogOpt;
-use cli::FileRecord;
-use cli::ProduceLogConfig;
-pub use produce::process_produce_record;
 
-pub type RecordTuples = Vec<(String, Vec<u8>)>;
+use std::path::PathBuf;
+
+use structopt::StructOpt;
+
+use flv_client::ClusterConfig;
+
+use crate::target::ClusterTarget;
+use crate::CliError;
+use crate::Terminal;
+
+// -----------------------------------
+//  Parsed Config
+// -----------------------------------
+
+/// Produce log configuration parameters
+#[derive(Debug)]
+pub struct ProduceLogConfig {
+    pub topic: String,
+    pub partition: i32,
+    pub continuous: bool,
+    pub records_form_file: Option<FileRecord>,
+}
+
+#[derive(Debug)]
+pub enum FileRecord {
+    Lines(PathBuf),
+    Files(Vec<PathBuf>),
+}
+
+// -----------------------------------
+// CLI Options
+// -----------------------------------
+
+#[derive(Debug, StructOpt)]
+pub struct ProduceLogOpt {
+    /// Topic name
+    #[structopt(value_name = "topic")]
+    pub topic: String,
+
+    /// Partition id
+    #[structopt(
+        short = "p",
+        long = "partition",
+        value_name = "integer",
+        default_value = "0"
+    )]
+    pub partition: i32,
+
+    /// Send messages in an infinite loop
+    #[structopt(short = "C", long = "continuous")]
+    pub continuous: bool,
+
+    /// Each line is a Record
+    #[structopt(
+        short = "l",
+        long = "record-per-line",
+        value_name = "filename",
+        parse(from_os_str)
+    )]
+    record_per_line: Option<PathBuf>,
+
+    /// Entire file is a Record (multiple)
+    #[structopt(
+        short = "r",
+        long = "record-file",
+        value_name = "filename",
+        parse(from_os_str),
+        conflicts_with = "record_per_line"
+    )]
+    record_file: Vec<PathBuf>,
+
+    #[structopt(flatten)]
+    target: ClusterTarget,
+}
+
+impl ProduceLogOpt {
+    /// Validate cli options. Generate target-server and produce log configuration.
+    pub fn validate(self) -> Result<(ClusterConfig, ProduceLogConfig), CliError> {
+        let target_server = self.target.load()?;
+
+        // generate file record
+        let records_from_file = if let Some(record_per_line) = self.record_per_line {
+            Some(FileRecord::Lines(record_per_line.clone()))
+        } else if self.record_file.len() > 0 {
+            Some(FileRecord::Files(self.record_file.clone()))
+        } else {
+            None
+        };
+
+        // produce log specific configurations
+        let produce_log_cfg = ProduceLogConfig {
+            topic: self.topic,
+            partition: self.partition,
+            records_form_file: records_from_file,
+            continuous: self.continuous,
+        };
+
+        // return server separately from config
+        Ok((target_server, produce_log_cfg))
+    }
+}
+
+/// Process produce record cli request
+pub async fn process_produce_record<O>(
+    out: std::sync::Arc<O>,
+    opt: ProduceLogOpt,
+) -> Result<String, CliError>
+where
+    O: Terminal,
+{
+    let (target_server, cfg) = opt.validate()?;
+
+    let target = target_server.connect()?;
+
+    let producer = target.produce().await;
+
+    let file_records = file_to_records(&cfg.records_form_file).await?;
+
+    l
+
+    render_produce_record(out, cfg, file_records).await?;
+    Ok("".to_owned())
+}
+
 
 mod produce {
 
@@ -18,44 +136,18 @@ mod produce {
     use flv_future_aio::io::BufReader;
     use flv_future_aio::io::AsyncBufReadExt;
     use flv_types::{print_cli_err, print_cli_ok};
+    use flv_client::Producer;
 
-
-    use crate::CliError;
-    use crate::Terminal;
+ 
     use crate::t_println;
 
-    use super::RecordTuples;
-    use super::ProduceLogOpt;
-    use super::FileRecord;
-    use super::ProduceLogConfig;
+    use super::*;
 
-    // -----------------------------------
-    //  Fluvio SPU - Process Request
-    // -----------------------------------
+    pub type RecordTuples = Vec<(String, Vec<u8>)>;
 
-    // -----------------------------------
-    //  CLI Processing
-    // -----------------------------------
 
-    /// Process produce record cli request
-    pub async fn process_produce_record<O>(
-        out: std::sync::Arc<O>,
-        opt: ProduceLogOpt,
-    ) -> Result<String, CliError>
-    where
-        O: Terminal,
-    {
-        let (target_server, cfg) = opt.validate()?;
-        let file_records = file_to_records(&cfg.records_form_file).await?;
-
-        let target = target_server.connect()?;
-
-        let producer = target.produce().await;
-
-        render_produce_record(out, cfg, file_records).await?;
-        Ok("".to_owned())
-    }
-
+   
+    
     /// Dispatch records based on the content of the record tuples variable
     async fn render_produce_record<O: Terminal, L: ReplicaLeader>(
         out: std::sync::Arc<O>,
