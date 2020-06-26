@@ -4,8 +4,8 @@ use std::io::ErrorKind;
 use log::debug;
 use structopt::StructOpt;
 
-use flv_client::profile::TlsConfig as TlsProfileConfig;
-use flv_client::profile::TlsClientConfig;
+use flv_client::config::TlsConfig as TlsProfileConfig;
+use flv_client::config::TlsClientConfig;
 
 /// Optional Tls Configuration to Client
 #[derive(Debug, StructOpt, Default)]

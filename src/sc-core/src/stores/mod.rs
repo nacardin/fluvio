@@ -46,7 +46,7 @@ mod metadata {
                     let local_spec = k8_obj.spec.into();
                     let local_status = k8_obj.status.into();
 
-                    // grab KV ctx and create AuthToken
+                   
                     let ctx = KvContext::default().with_ctx(k8_obj.metadata);
                     let loca_kv = KVObject::new(key, local_spec, local_status).with_kv_ctx(ctx);
 

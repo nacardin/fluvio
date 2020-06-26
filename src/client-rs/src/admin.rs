@@ -56,15 +56,16 @@ impl ScAdminClient {
         Ok(())
     }
 
-    pub async fn list<S>(&mut self,filters: Vec<S::Filter>)  -> Result<Vec<Metadata<S>>,ClientError>
+    pub async fn list<S,F>(&mut self,filters: F)  -> Result<Vec<Metadata<S>>,ClientError>
         where
             S: ListSpec,
+            F: Into<Vec<S::Filter>>,
             ListResponse: TryInto<Vec<Metadata<S>>>
     {
         use std::io::Error;
         use std::io::ErrorKind;
 
-        let list_request = S::into_list_request(filters);
+        let list_request = S::into_list_request(filters.into());
 
         let response = self.send_receive(list_request).await?;
 
