@@ -10,7 +10,7 @@ use structopt::StructOpt;
 
 use flv_client::metadata::spu::CustomSpuSpec;
 use flv_client::metadata::spu::CustomSpuKey;
-use flv_client::profile::ScConfig;
+use flv_client::config::ScConfig;
 
 use crate::target::ClusterTarget;
 use crate::error::CliError;
@@ -71,6 +71,6 @@ pub async fn process_unregister_custom_spu(opt: UnregisterCustomSpuOpt) -> Resul
     let mut client = target_server.connect().await?;
     let mut admin = client.admin().await;
 
-    admin.delete::<CustomSpuSpec,_>(delete_key).await?;
+    admin.delete::<CustomSpuSpec, _>(delete_key).await?;
     Ok(())
 }

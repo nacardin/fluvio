@@ -7,11 +7,10 @@
 use log::debug;
 use structopt::StructOpt;
 
-use flv_client::profile::ScConfig;
+use flv_client::config::ScConfig;
 use flv_client::metadata::topic::TopicSpec;
 use crate::error::CliError;
 use crate::target::ClusterTarget;
-
 
 #[derive(Debug, StructOpt)]
 pub struct DeleteTopicOpt {
@@ -20,15 +19,14 @@ pub struct DeleteTopicOpt {
     topic: String,
 
     #[structopt(flatten)]
-    target: ClusterTarget
+    target: ClusterTarget,
 }
 
 impl DeleteTopicOpt {
     /// Validate cli options. Generate target-server and delete-topic configuration.
     fn validate(self) -> Result<(ScConfig, String), CliError> {
-
         let target_server = self.target.load()?;
-       
+
         // return server separately from config
         Ok((target_server, self.topic))
     }
@@ -46,6 +44,6 @@ pub async fn process_delete_topic(opt: DeleteTopicOpt) -> Result<String, CliErro
 
     let mut client = target_server.connect().await?;
     let mut admin = client.admin().await;
-    admin.delete::<TopicSpec,_>(&name).await?;
+    admin.delete::<TopicSpec, _>(&name).await?;
     Ok(format!("topic \"{}\" deleted", name))
 }

@@ -8,11 +8,10 @@ use std::path::PathBuf;
 
 use structopt::StructOpt;
 
-use flv_client::profile::ScConfig;
+use flv_client::config::ScConfig;
 
 use crate::target::ClusterTarget;
 use crate::error::CliError;
-
 
 // -----------------------------------
 //  Parsed Config
@@ -76,7 +75,7 @@ pub struct ProduceLogOpt {
     record_file: Vec<PathBuf>,
 
     #[structopt(flatten)]
-    target: ClusterTarget
+    target: ClusterTarget,
 }
 
 impl ProduceLogOpt {

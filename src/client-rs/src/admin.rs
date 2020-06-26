@@ -2,10 +2,11 @@ use std::convert::TryInto;
 
 use sc_api::objects::*;
 use sc_api::AdminRequest;
-use kf_socket::KfSocketError;
+use kf_socket::*;
 
+use crate::client::*;
 use crate::ClientError;
-use super::*;
+
 
 /// adminstration interface
 pub struct ScAdminClient(SerialClient);

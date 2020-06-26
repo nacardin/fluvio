@@ -8,7 +8,7 @@ use structopt::StructOpt;
 
 use log::debug;
 
-use flv_client::profile::ScConfig;
+use flv_client::config::ScConfig;
 use flv_client::metadata::topic::TopicSpec;
 
 use crate::Terminal;

@@ -5,7 +5,7 @@
 //!
 use structopt::StructOpt;
 
-use flv_client::profile::ScConfig;
+use flv_client::config::ScConfig;
 use flv_client::metadata::spu::CustomSpuSpec;
 use flv_client::metadata::spu::SpuSpec;
 use flv_client::metadata::objects::Metadata;

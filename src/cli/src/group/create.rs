@@ -7,13 +7,11 @@
 use log::debug;
 use structopt::StructOpt;
 
-use flv_client::profile::ScConfig;
+use flv_client::config::ScConfig;
 use flv_client::metadata::spg::*;
-
 
 use crate::error::CliError;
 use crate::target::ClusterTarget;
-
 
 // -----------------------------------
 // CLI Options
@@ -22,15 +20,15 @@ use crate::target::ClusterTarget;
 #[derive(Debug, StructOpt, Default)]
 pub struct CreateManagedSpuGroupOpt {
     /// Managed SPU group name
-    #[structopt(short,long, value_name = "string")]
+    #[structopt(short, long, value_name = "string")]
     pub name: String,
 
     /// SPU replicas
-    #[structopt(short,long,value_name = "integer", default_value="1")]
+    #[structopt(short, long, value_name = "integer", default_value = "1")]
     pub replicas: u16,
 
     /// Minimum SPU id (default: 1)
-    #[structopt(long, default_value="1")]
+    #[structopt(long, default_value = "1")]
     pub min_id: i32,
 
     /// Rack name
@@ -42,21 +40,20 @@ pub struct CreateManagedSpuGroupOpt {
     pub storage_size: Option<String>,
 
     #[structopt(flatten)]
-    target: ClusterTarget
+    target: ClusterTarget,
 }
 
 impl CreateManagedSpuGroupOpt {
     /// Validate cli options. Generate target-server and create spu group config.
-    fn validate(self) -> Result<(ScConfig, (String,SpuGroupSpec)), CliError> {
+    fn validate(self) -> Result<(ScConfig, (String, SpuGroupSpec)), CliError> {
         let target_server = self.target.load()?;
 
-        let storage = self.storage_size
-            .map(|storage_size| StorageConfig {
-                size: Some(storage_size),
-                ..Default::default()
-            });
+        let storage = self.storage_size.map(|storage_size| StorageConfig {
+            size: Some(storage_size),
+            ..Default::default()
+        });
 
-        let spu_config= SpuConfig {
+        let spu_config = SpuConfig {
             storage,
             rack: self.rack,
             ..Default::default()
@@ -66,8 +63,8 @@ impl CreateManagedSpuGroupOpt {
             SpuGroupSpec {
                 replicas: self.replicas,
                 min_id: self.min_id,
-                spu_config
-            }
+                spu_config,
+            },
         );
         // return server separately from config
 
@@ -81,15 +78,15 @@ impl CreateManagedSpuGroupOpt {
 pub async fn process_create_managed_spu_group(
     opt: CreateManagedSpuGroupOpt,
 ) -> Result<(), CliError> {
-    let (target_server, (name,spec)) = opt.validate()?;
+    let (target_server, (name, spec)) = opt.validate()?;
 
-    debug!("creating spg: {}, spec: {:#?}", name,spec);
+    debug!("creating spg: {}, spec: {:#?}", name, spec);
 
     let mut target = target_server.connect().await?;
 
     let mut admin = target.admin().await;
 
-    admin.create(name,false,spec).await?;
+    admin.create(name, false, spec).await?;
 
     Ok(())
 }

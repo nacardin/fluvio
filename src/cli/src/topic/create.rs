@@ -11,7 +11,7 @@ use std::path::PathBuf;
 use log::debug;
 use structopt::StructOpt;
 
-use flv_client::profile::ScConfig;
+use flv_client::config::ScConfig;
 use flv_client::metadata::topic::TopicSpec;
 
 use crate::error::CliError;
@@ -72,15 +72,11 @@ pub struct CreateTopicOpt {
 
     #[structopt(flatten)]
     target: ClusterTarget,
-
 }
 
 impl CreateTopicOpt {
-    
-
     /// Validate cli options. Generate target-server and create-topic configuration.
     fn validate(self) -> Result<(ScConfig, (String, TopicSpec)), CliError> {
-
         use flv_client::metadata::topic::PartitionMaps;
         use flv_client::metadata::topic::TopicReplicaParam;
         use load::PartitionLoad;
@@ -89,14 +85,16 @@ impl CreateTopicOpt {
 
         let topic = if let Some(replica_assign_file) = &self.replica_assignment {
             TopicSpec::Assigned(
-                PartitionMaps::file_decode(replica_assign_file)
-                    .map_err(|err| 
-                        IoError::new(
-                            ErrorKind::InvalidInput,
-                            format!(
+                PartitionMaps::file_decode(replica_assign_file).map_err(|err| {
+                    IoError::new(
+                        ErrorKind::InvalidInput,
+                        format!(
                             "cannot parse replica assignment file {:?}: {}",
-                            replica_assign_file, err)))?)
-
+                            replica_assign_file, err
+                        ),
+                    )
+                })?,
+            )
         } else {
             TopicSpec::Computed(TopicReplicaParam {
                 partitions: self.partitions,
@@ -106,7 +104,7 @@ impl CreateTopicOpt {
         };
 
         // return server separately from config
-        Ok((target_server, (self.topic,topic)))
+        Ok((target_server, (self.topic, topic)))
     }
 }
 
@@ -116,21 +114,19 @@ impl CreateTopicOpt {
 
 /// Process create topic cli request
 pub async fn process_create_topic(opt: CreateTopicOpt) -> Result<String, CliError> {
-
     let dry_run = opt.dry_run;
 
-    let (target_server, (name,topic_spec)) = opt.validate()?;
+    let (target_server, (name, topic_spec)) = opt.validate()?;
 
-    debug!("creating topic: {} spec: {:#?}",name,topic_spec);
+    debug!("creating topic: {} spec: {:#?}", name, topic_spec);
 
     let mut target = target_server.connect().await?;
     let mut admin = target.admin().await;
 
-    admin.create(name.clone(),dry_run,topic_spec).await?;
-    
+    admin.create(name.clone(), dry_run, topic_spec).await?;
+
     Ok(format!("topic \"{}\" created", name))
 }
-
 
 /// module to load partitions maps from file
 mod load {

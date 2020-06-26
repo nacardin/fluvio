@@ -36,7 +36,7 @@ mod target {
 
     use structopt::StructOpt;
 
-    use flv_client::profile::ScConfig;
+    use flv_client::config::ScConfig;
     use flv_client::ClientError;
     use crate::tls::TlsConfig;
     use crate::profile::InlineProfile;

@@ -7,7 +7,7 @@
 use structopt::StructOpt;
 
 use flv_client::kf::api::Offset;
-use flv_client::profile::ScConfig;
+use flv_client::config::ScConfig;
 use flv_client::MAX_FETCH_BYTES;
 
 use crate::error::CliError;

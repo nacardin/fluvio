@@ -5,7 +5,7 @@
 //!
 use structopt::StructOpt;
 
-use flv_client::profile::ScConfig;
+use flv_client::config::ScConfig;
 use flv_client::metadata::spg::SpuGroupSpec;
 use crate::error::CliError;
 use crate::target::ClusterTarget;
@@ -21,15 +21,14 @@ pub struct DeleteManagedSpuGroupOpt {
     name: String,
 
     #[structopt(flatten)]
-    target: ClusterTarget
+    target: ClusterTarget,
 }
 
 impl DeleteManagedSpuGroupOpt {
     /// Validate cli options. Generate target-server and delete spu group configuration.
     fn validate(self) -> Result<(ScConfig, String), CliError> {
-
         let target_server = self.target.load()?;
- 
+
         Ok((target_server, self.name))
     }
 }
@@ -46,6 +45,6 @@ pub async fn process_delete_managed_spu_group(
 
     let mut client = target_server.connect().await?;
     let mut admin = client.admin().await;
-    admin.delete::<SpuGroupSpec,_>(&name).await?;
+    admin.delete::<SpuGroupSpec, _>(&name).await?;
     Ok(())
 }

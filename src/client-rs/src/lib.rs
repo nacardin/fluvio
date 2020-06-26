@@ -3,8 +3,11 @@ mod spu_old;
 mod replica;
 //mod sc;
 pub mod client;
+pub mod admin;
+pub mod consumer;
+pub mod producer;
+pub mod config;
 
-pub mod profile;
 pub mod query_params;
 
 pub use error::ClientError;

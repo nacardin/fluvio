@@ -9,9 +9,8 @@ use std::convert::TryFrom;
 use structopt::StructOpt;
 
 use flv_util::socket_helpers::ServerAddress;
-use flv_client::profile::ScConfig;
+use flv_client::config::ScConfig;
 use flv_client::metadata::spu::CustomSpuSpec;
-
 
 use crate::error::CliError;
 use crate::target::ClusterTarget;
@@ -39,13 +38,12 @@ pub struct RegisterCustomSpuOpt {
     private_server: String,
 
     #[structopt(flatten)]
-    target: ClusterTarget
+    target: ClusterTarget,
 }
 
 impl RegisterCustomSpuOpt {
     /// Validate cli options. Generate target-server and register custom spu config.
-    fn validate(self) -> Result<(ScConfig, (String,CustomSpuSpec)), CliError> {
-        
+    fn validate(self) -> Result<(ScConfig, (String, CustomSpuSpec)), CliError> {
         let target = self.target.load()?;
 
         // register custom spu config
@@ -56,7 +54,7 @@ impl RegisterCustomSpuOpt {
                 public_endpoint: ServerAddress::try_from(self.public_server)?.into(),
                 private_endpoint: ServerAddress::try_from(self.private_server)?.into(),
                 rack: self.rack.clone(),
-            }
+            },
         );
 
         // return server separately from config
@@ -68,17 +66,13 @@ impl RegisterCustomSpuOpt {
 //  CLI Processing
 // -----------------------------------
 pub async fn process_register_custom_spu(opt: RegisterCustomSpuOpt) -> Result<(), CliError> {
-
-
-    let (target_server, (name,spec)) = opt.validate()?;
+    let (target_server, (name, spec)) = opt.validate()?;
 
     let mut sc = target_server.connect().await?;
 
     let mut admin = sc.admin().await;
 
-    admin
-        .create(name, false, spec)
-        .await?;
+    admin.create(name, false, spec).await?;
 
     Ok(())
 }

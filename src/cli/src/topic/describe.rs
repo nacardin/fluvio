@@ -7,7 +7,7 @@
 use log::debug;
 use structopt::StructOpt;
 
-use flv_client::profile::ScConfig;
+use flv_client::config::ScConfig;
 use flv_client::metadata::topic::TopicSpec;
 
 use crate::target::ClusterTarget;
@@ -68,12 +68,11 @@ where
 
     let topics = admin.list::<TopicSpec>(vec![topic]).await?;
 
-    display::describe_topics(topics, output_type,out);
+    display::describe_topics(topics, output_type, out);
     Ok("".to_owned())
 }
 
 mod display {
-
 
     use prettytable::Row;
     use prettytable::row;
@@ -172,9 +171,12 @@ mod display {
                 }
             }
 
-            key_values.push(("Status".to_owned(), Some(status.resolution.resolution_label().to_string())));
+            key_values.push((
+                "Status".to_owned(),
+                Some(status.resolution.resolution_label().to_string()),
+            ));
             key_values.push(("Reason".to_owned(), Some(status.reason)));
-           
+
             key_values.push(("-----------------".to_owned(), None));
 
             key_values
