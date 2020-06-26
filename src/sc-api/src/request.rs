@@ -22,10 +22,10 @@ use super::versions::ApiVersionsRequest;
 use super::metadata::*;
 use super::objects::*;
 
-use super::ScPublicApiKey;
+use super::AdminPublicApiKey;
 
 #[derive(Debug, Encode)]
-pub enum ScPublicRequest {
+pub enum AdminPublicRequest {
     // Mixed
     ApiVersionsRequest(RequestMessage<ApiVersionsRequest>),
 
@@ -36,14 +36,14 @@ pub enum ScPublicRequest {
     UpdateMetadataRequest(RequestMessage<UpdateMetadataRequest>),
 }
 
-impl Default for ScPublicRequest {
+impl Default for AdminPublicRequest {
     fn default() -> Self {
         Self::ApiVersionsRequest(RequestMessage::<ApiVersionsRequest>::default())
     }
 }
 
-impl KfRequestMessage for ScPublicRequest {
-    type ApiKey = ScPublicApiKey;
+impl KfRequestMessage for AdminPublicRequest {
+    type ApiKey = AdminPublicApiKey;
 
     fn decode_with_header<T>(src: &mut T, header: RequestHeader) -> Result<Self, IoError>
     where
@@ -53,15 +53,15 @@ impl KfRequestMessage for ScPublicRequest {
     {
         trace!("decoding header: {:#?}", header);
         match header.api_key().try_into()? {
-            ScPublicApiKey::ApiVersion => api_decode!(Self, ApiVersionsRequest, src, header),
+            AdminPublicApiKey::ApiVersion => api_decode!(Self, ApiVersionsRequest, src, header),
 
-            ScPublicApiKey::Create => api_decode!(Self, CreateRequest, src, header),
-            ScPublicApiKey::Delete => api_decode!(Self, DeleteRequest, src, header),
-            ScPublicApiKey::List => api_decode!(Self, ListRequest, src,header),
-            ScPublicApiKey::TopicComposition => {
+            AdminPublicApiKey::Create => api_decode!(Self, CreateRequest, src, header),
+            AdminPublicApiKey::Delete => api_decode!(Self, DeleteRequest, src, header),
+            AdminPublicApiKey::List => api_decode!(Self, ListRequest, src,header),
+            AdminPublicApiKey::TopicComposition => {
                 api_decode!(Self, TopicCompositionRequest, src, header)
             }
-            ScPublicApiKey::UpdateMetadata => api_decode!(Self, UpdateMetadataRequest, src, header),
+            AdminPublicApiKey::UpdateMetadata => api_decode!(Self, UpdateMetadataRequest, src, header),
         }
     }
 }

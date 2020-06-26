@@ -25,7 +25,7 @@ mod request {
     use kf_protocol::Decoder;
     use kf_protocol::bytes::{Buf, BufMut};
 
-    use crate::ScPublicApiKey;
+    use crate::AdminPublicApiKey;
     use super::*;
 
     #[derive(Decode, Encode, Debug)]
@@ -43,7 +43,7 @@ mod request {
     }
 
     impl Request for UpdateMetadataRequest {
-        const API_KEY: u16 = ScPublicApiKey::UpdateMetadata as u16;
+        const API_KEY: u16 = AdminPublicApiKey::UpdateMetadata as u16;
         type Response = UpdateMetadataResponse;
     }
 

@@ -22,7 +22,7 @@ use flv_metadata::core::Removable;
 
 
 use crate::FlvStatus;
-use crate::ScPublicApiKey;
+use crate::AdminPublicApiKey;
 use crate::AdminRequest;
 
 pub trait DeleteSpec: Removable
@@ -62,7 +62,7 @@ impl DeleteRequest {
 impl AdminRequest for DeleteRequest{}
 
 impl Request for DeleteRequest {
-    const API_KEY: u16 = ScPublicApiKey::Delete as u16;
+    const API_KEY: u16 = AdminPublicApiKey::Delete as u16;
     const DEFAULT_API_VERSION: i16 = 1;
     type Response = FlvStatus;
 }

@@ -8,7 +8,7 @@ use flv_metadata::topic::TopicSpec;
 use flv_metadata::spu::SpuSpec;
 use flv_metadata::spu::CustomSpuSpec;
 use flv_metadata::spg::SpuGroupSpec;
-use crate::ScPublicApiKey;
+use crate::AdminPublicApiKey;
 use crate::AdminRequest;
 
 /// marker trait
@@ -44,7 +44,7 @@ impl Default for ListRequest {
 
 
 impl Request for ListRequest {
-    const API_KEY: u16 = ScPublicApiKey::List as u16;
+    const API_KEY: u16 = AdminPublicApiKey::List as u16;
     const DEFAULT_API_VERSION: i16 = 0;
     type Response = ListResponse;
 }

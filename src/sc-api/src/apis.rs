@@ -10,7 +10,7 @@ use kf_protocol::derive::Decode;
 /// API call from client to SPU
 #[derive(Encode, Decode, PartialEq, Debug, Clone, Copy)]
 #[repr(u16)]
-pub enum ScPublicApiKey {
+pub enum AdminPublicApiKey {
     // Mixed
     ApiVersion = 18,
 
@@ -23,7 +23,7 @@ pub enum ScPublicApiKey {
     UpdateMetadata = 2001,
 }
 
-impl Default for ScPublicApiKey {
+impl Default for AdminPublicApiKey {
     fn default() -> Self {
         Self::ApiVersion
     }

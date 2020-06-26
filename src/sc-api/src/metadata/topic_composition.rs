@@ -10,7 +10,7 @@ use kf_protocol::api::FlvErrorCode;
 use flv_types::SpuId;
 use flv_util::socket_helpers::ServerAddress;
 
-use crate::ScPublicApiKey;
+use crate::AdminPublicApiKey;
 use crate::AdminRequest;
 
 
@@ -21,7 +21,7 @@ pub struct TopicCompositionRequest {
 }
 
 impl Request for TopicCompositionRequest {
-    const API_KEY: u16 = ScPublicApiKey::TopicComposition as u16;
+    const API_KEY: u16 = AdminPublicApiKey::TopicComposition as u16;
     const DEFAULT_API_VERSION: i16 = 1;
     type Response = TopicCompositionResponse;
 }
