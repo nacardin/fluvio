@@ -27,6 +27,8 @@ use flv_future_aio::timer::sleep;
 use flv_metadata::k8::metadata::K8List;
 use flv_metadata::k8::metadata::K8Watch;
 use flv_metadata::k8::metadata::Spec as K8Spec;
+use flv_metadata::core::K8ExtendedSpec;
+use flv_metadata::core::Spec;   
 use k8_metadata_client::MetadataClient;
 use k8_metadata_client::SharedClient;
 
@@ -42,9 +44,10 @@ use super::k8_events_to_actions::k8_event_stream_to_metadata_actions;
 /// Similar to Kubernetes Shared Informer
 pub struct K8ClusterStateDispatcher<S, C>
 where
-    S: Spec,
-    S::Status: Debug + PartialEq,
-    S::Key: Debug,
+    S: StoreSpec,
+    <S as Spec>::Owner: K8ExtendedSpec,
+    S::Status: PartialEq,
+    S::IndexKey: Debug,
 {
     client: SharedClient<C>,
     metadata: Arc<LocalStore<S>>,
@@ -54,13 +57,14 @@ where
 
 impl<S, C> K8ClusterStateDispatcher<S, C>
 where
-    S: Spec + PartialEq + Debug + Sync + Send + 'static,
-    S::Status: PartialEq + Debug + Sync + Send + 'static,
-    S::Key: Display + Debug + Clone + Sync + Send + 'static,
+    S: StoreSpec + PartialEq  + Sync + Send + 'static,
+    <S as Spec>::Owner: K8ExtendedSpec,
+    S::Status: PartialEq  + Sync + Send + 'static,
+    S::IndexKey: Display  + Sync + Send + 'static,
     K8Watch<S::K8Spec>: DeserializeOwned,
     K8List<S::K8Spec>: DeserializeOwned,
-    S::K8Spec: Debug + Sync + Send + 'static,
-    <<S as Spec>::K8Spec as K8Spec>::Status: Debug + Sync + Send + 'static,
+    S::K8Type:  Sync + Send + 'static,
+    <<S as K8ExtendedSpec>::K8Spec as K8Spec>::Status:  Sync + Send + 'static,
     C: MetadataClient + 'static,
 {
     pub fn new(namespace: String, client: SharedClient<C>, metadata: Arc<LocalStore<S>>) -> Self {
@@ -106,7 +110,7 @@ where
 
         // create watch streams
         let mut k8_stream = client
-            .watch_stream_since::<S::K8Spec, _>(self.namespace.clone(), resume_stream)
+            .watch_stream_since::<S::K8Type, _>(self.namespace.clone(), resume_stream)
             .fuse();
 
         trace!("starting watch stream for: {}", S::LABEL);
@@ -147,7 +151,7 @@ where
     async fn retrieve_all_k8_items(&mut self) -> Result<String, C::MetadataClientError> {
         let k8_objects = self
             .client
-            .retrieve_items::<S::K8Spec, _>(self.namespace.clone())
+            .retrieve_items::<S::K8Type, _>(self.namespace.clone())
             .await?;
 
         self.process_retrieved_items(k8_objects).await
@@ -158,7 +162,7 @@ where
     ///
     async fn process_retrieved_items(
         &mut self,
-        k8_items: K8List<S::K8Spec>,
+        k8_items: K8List<S::K8Type>,
     ) -> Result<String, C::MetadataClientError> {
         let version = k8_items.metadata.resource_version.clone();
 

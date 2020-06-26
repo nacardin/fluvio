@@ -5,22 +5,24 @@ use std::borrow::Borrow;
 use std::io::Error as IoError;
 use std::io::ErrorKind;
 
-
+use super::StoreSpec;
 use flv_util::SimpleConcurrentBTreeMap;
+use flv_metadata::core::K8ExtendedSpec;  
+use flv_metadata::core::Spec;
 
 use super::*;
 
 /// Local state in memory
 #[derive(Debug)]
-pub struct LocalStore<S>(SimpleConcurrentBTreeMap<S::Key, KVObject<S>>)
+pub struct LocalStore<S>(SimpleConcurrentBTreeMap<S::IndexKey, KVObject<S>>)
 where
-    S: Spec,
-    <S as Spec>::Status: Debug;
+    S: StoreSpec,
+    <S as Spec>::Owner: K8ExtendedSpec;
 
 impl<S> Default for LocalStore<S>
 where
-    S: Spec,
-    <S as Spec>::Status: Debug,
+    S: StoreSpec,
+    S::Owner: K8ExtendedSpec
 {
     fn default() -> Self {
         LocalStore(SimpleConcurrentBTreeMap::new())
@@ -29,8 +31,9 @@ where
 
 impl<S> ::std::cmp::PartialEq for LocalStore<S>
 where
-    S: Spec + PartialEq,
-    S::Status: PartialEq + Debug,
+    S: StoreSpec + PartialEq,
+    <S as Spec>::Owner: K8ExtendedSpec,
+    S::Status: PartialEq ,
 {
     fn eq(&self, other: &LocalStore<S>) -> bool {
         for (key, val) in self.0.read().iter() {
@@ -49,14 +52,14 @@ where
 
 impl<S> LocalStore<S>
 where
-    S: Spec,
-    S::Status: Debug,
+    S: StoreSpec,
+    <S as Spec>::Owner: K8ExtendedSpec,
 {
     pub fn new_shared() -> Arc<Self> {
         Arc::new(Self::default())
     }
 
-    pub fn inner_store(&self) -> &SimpleConcurrentBTreeMap<S::Key, KVObject<S>> {
+    pub fn inner_store(&self) -> &SimpleConcurrentBTreeMap<S::IndexKey, KVObject<S>> {
         &self.0
     }
 
@@ -75,9 +78,8 @@ where
 
 impl<S> LocalStore<S>
 where
-    S: Spec,
-    S::Key: Ord + Clone,
-    S::Status: Debug,
+    S: StoreSpec,
+    <S as Spec>::Owner: K8ExtendedSpec,
 {
     /*
     pub fn delete<S>(&self, name: S) where S: AsRef<K> {
@@ -87,7 +89,7 @@ where
 
     pub fn delete<K: ?Sized>(&self, key: &K)
     where
-        S::Key: Borrow<K>,
+        S::IndexKey: Borrow<K>,
         K: Ord,
     {
         self.inner_store().write().remove(key);
@@ -96,7 +98,7 @@ where
     /// get copy of the value ref by key
     pub fn value<K: ?Sized>(&self, key: &K) -> Option<KVObject<S>>
     where
-        S::Key: Borrow<K>,
+        S::IndexKey: Borrow<K>,
         K: Ord,
     {
         match self.inner_store().read().get(key) {
@@ -108,7 +110,7 @@ where
     /// get copy of the spec ref by key
     pub fn spec<K: ?Sized>(&self, key: &K) -> Option<S>
     where
-        S::Key: Borrow<K>,
+        S::IndexKey: Borrow<K>,
         K: Ord,
     {
         match self.inner_store().read().get(key) {
@@ -121,7 +123,7 @@ where
     where
         F: FnMut(&'_ KVObject<S>),
         K: Ord,
-        S::Key: Borrow<K>,
+        S::IndexKey: Borrow<K>,
     {
         if let Some(value) = self.inner_store().read().get(key) {
             func(value);
@@ -133,7 +135,7 @@ where
 
     pub fn contains_key<K: ?Sized>(&self, key: &K) -> bool
     where
-        S::Key: Borrow<K>,
+        S::IndexKey: Borrow<K>,
         K: Ord,
     {
         self.inner_store().read().contains_key(key)
@@ -141,7 +143,7 @@ where
 
     pub fn remove<K: ?Sized>(&self, key: &K) -> Option<KVObject<S>>
     where
-        S::Key: Borrow<K>,
+        S::IndexKey: Borrow<K>,
         K: Ord,
     {
         self.inner_store().write().remove(key)
@@ -151,7 +153,7 @@ where
         self.inner_store().read().len() as i32
     }
 
-    pub fn all_keys(&self) -> Vec<S::Key> {
+    pub fn all_keys(&self) -> Vec<S::IndexKey> {
         self.inner_store().read().keys().cloned().collect()
     }
 
@@ -173,7 +175,7 @@ where
     /// update status
     pub fn update_status<K: ?Sized>(&self, key: &K, status: S::Status) -> Result<(), IoError>
     where
-        S::Key: Borrow<K>,
+        S::IndexKey: Borrow<K>,
         K: Display + Ord,
     {
         if let Some(old_kv) = self.inner_store().write().get_mut(key) {
@@ -190,8 +192,8 @@ where
 
 impl<S> Display for LocalStore<S>
 where
-    S: Spec,
-    <S as Spec>::Status: Debug,
+    S: StoreSpec,
+    <S as Spec>::Owner: K8ExtendedSpec,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(

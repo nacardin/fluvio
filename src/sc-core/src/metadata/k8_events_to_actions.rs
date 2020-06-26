@@ -3,7 +3,7 @@
 //!
 //! Converts Kubernetes Auth-Token events into Auth-Token actions
 //!
-use std::fmt::Debug;
+
 use std::fmt::Display;
 
 use log::{error, trace};
@@ -13,6 +13,8 @@ use flv_util::actions::Actions;
 use flv_metadata::k8::metadata::K8List;
 use flv_metadata::k8::metadata::K8Obj;
 use flv_metadata::k8::metadata::K8Watch;
+use flv_metadata::core::K8ExtendedSpec;
+use flv_metadata::core::Spec;
 use k8_metadata_client::*;
 
 
@@ -26,14 +28,14 @@ use crate::ScServerError;
 ///
 ///
 pub fn k8_events_to_metadata_actions<S>(
-    k8_tokens: K8List<S::K8Spec>,
+    k8_tokens: K8List<S::K8Type>,
     local_store: &LocalStore<S>,
 ) -> Actions<LSChange<S>>
 where
-    S: Spec + PartialEq + Debug,
-    S::Status: Status + PartialEq + Debug,
-    S::K8Spec: Debug,
-    S::Key: Clone + Ord + Debug + Display,
+    S: StoreSpec + PartialEq ,
+    <S as Spec>::Owner: K8ExtendedSpec,
+    S::Status:  PartialEq,
+    S::IndexKey: Display,
 {
     let (mut add_cnt, mut mod_cnt, mut del_cnt, mut skip_cnt) = (0, 0, 0, 0);
     let mut local_names = local_store.all_keys();
@@ -106,14 +108,14 @@ where
 /// Translates K8 events into metadata action.
 ///
 pub fn k8_event_stream_to_metadata_actions<S, E>(
-    stream: TokenStreamResult<S::K8Spec, E>,
+    stream: TokenStreamResult<S::K8Type, E>,
     local_store: &LocalStore<S>,
 ) -> Actions<LSChange<S>>
 where
-    S: Spec + Debug + PartialEq + Debug,
-    <S as Spec>::K8Spec: Debug,
-    S::Key: Debug + Display + Clone,
-    S::Status: Debug + PartialEq,
+    S: StoreSpec + PartialEq ,
+    S::IndexKey: Display,
+    <S as Spec>::Owner: K8ExtendedSpec,
+    S::Status:  PartialEq,
     E: MetadataClientError,
 {
     let (mut add_cnt, mut mod_cnt, mut del_cnt, mut skip_cnt) = (0, 0, 0, 0);
@@ -229,10 +231,10 @@ where
 ///
 /// Translates K8 object into Sc AuthToken metadata
 ///
-fn k8_obj_to_kv_obj<S>(k8_obj: K8Obj<S::K8Spec>) -> Result<KVObject<S>, ScServerError>
+fn k8_obj_to_kv_obj<S>(k8_obj: K8Obj<S::K8Type>) -> Result<KVObject<S>, ScServerError>
 where
-    S: Spec + Debug,
-    <S as Spec>::K8Spec: Debug,
+    S: StoreSpec,
+    <S as Spec>::Owner: K8ExtendedSpec,
 {
     trace!("converting k8: {:#?}", k8_obj.spec);
     S::convert_from_k8(k8_obj)

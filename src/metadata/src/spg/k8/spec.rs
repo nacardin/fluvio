@@ -9,17 +9,16 @@ use serde::Serialize;
 use k8_obj_metadata::Crd;
 use k8_obj_metadata::Spec;
 use k8_obj_metadata::DefaultHeader;
-
 use k8_obj_metadata::Env;
 use k8_obj_metadata::TemplateSpec;
-use crate::spu::EncryptionEnum;
-
 use flv_types::defaults::SPU_PUBLIC_PORT;
 use flv_types::defaults::SPU_PRIVATE_PORT;
 
-use crd::SPG_API;
-use super::K8SpuGroupStatus;
 
+use crate::spu::EncryptionEnum;
+use crate::spg::SpuGroupStatus;
+
+use crd::SPG_API;
 mod crd {
    
 
@@ -38,11 +37,11 @@ mod crd {
             singular: "spugroup",
         },
     };
-    
 }
 
+
 impl Spec for K8SpuGroupSpec {
-    type Status = K8SpuGroupStatus;
+    type Status = SpuGroupStatus;
     type Header = DefaultHeader;
     fn metadata() -> &'static Crd {
         &SPG_API

@@ -8,15 +8,15 @@ pub trait MetadataStoreDriver {
     type Metadata;
 }
 
-pub trait Spec: Encoder + Decoder + Debug {
+pub trait Spec: Encoder + Decoder + Debug + Clone {
     const LABEL: &'static str;
     type Status: Status;
     type Owner: Spec;
-    type IndexKey: Ord + Clone + ToString;
+    type IndexKey: Debug + Ord + Clone + ToString;
     
 }
 
-pub trait Status: Encoder + Decoder + Debug   {
+pub trait Status: Encoder + Decoder + Debug + Clone  {
 
 }
 
@@ -47,13 +47,14 @@ pub use k8::*;
 mod k8 {
 
     use k8_obj_metadata::Spec as K8Spec;
+    use k8_obj_metadata::Status as K8Status;
     use super::*;
 
-    pub trait K8ExtendedSpec: Spec + Clone {
-
+    pub trait K8ExtendedSpec: Spec
+    {
         type K8Spec: K8Spec;
-
-        
+        type K8Status: K8Status;
     }
+
 
 }

@@ -21,7 +21,6 @@ mod convert {
         type Status = SpuGroupStatus;
 
         type Owner = Self;
-
         type IndexKey = String;
     }
 

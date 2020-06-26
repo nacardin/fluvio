@@ -25,7 +25,7 @@ mod metadata {
         const LABEL: &'static str = "Topic";
         type IndexKey = String;
         type Status = TopicStatus;
-        type Owner = TopicSpec;
+        type Owner = Self;
     }
 
     impl Removable for TopicSpec {

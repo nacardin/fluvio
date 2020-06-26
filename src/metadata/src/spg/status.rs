@@ -23,8 +23,29 @@ impl fmt::Display for SpuGroupStatus {
     }
 }
 
+impl SpuGroupStatus {
+
+    pub fn invalid(reason: String) -> Self {
+        Self {
+            resolution: SpuGroupStatusResolution::Invalid,
+            reason: Some(reason),
+        }
+    }
+
+    pub fn reserved() -> Self {
+        Self {
+            resolution: SpuGroupStatusResolution::Reserved,
+            ..Default::default()
+        }
+    }
+
+    pub fn is_already_valid(&self) -> bool {
+        self.resolution == SpuGroupStatusResolution::Reserved
+    }
+}
+
 #[cfg_attr(feature = "use_serde", derive(serde::Serialize,serde::Deserialize))]
-#[derive(Debug,Clone)]
+#[derive(Debug,Clone,PartialEq)]
 pub enum SpuGroupStatusResolution {
     Init,
     Invalid,
@@ -41,6 +62,15 @@ impl Default for SpuGroupStatusResolution {
 }
 
 
+impl fmt::Display for SpuGroupStatusResolution {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::Init => write!(f, "Init"),
+            Self::Invalid => write!(f, "Invalid"),
+            Self::Reserved => write!(f, "Reserved"),
+        }
+    }
+}
 
 
 impl Encoder for SpuGroupStatusResolution {

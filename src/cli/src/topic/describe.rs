@@ -68,7 +68,7 @@ where
 
     let topics = admin.list::<TopicSpec>(vec![topic]).await?;
 
-    display::describe_topics(out, topics, output_type);
+    display::describe_topics(topics, output_type,out);
     Ok("".to_owned())
 }
 
@@ -119,7 +119,7 @@ mod display {
         }
 
         fn validate(&self) -> Result<(), CliError> {
-            Ok(vec![])
+            Ok(())
         }
     }
 
@@ -172,7 +172,7 @@ mod display {
                 }
             }
 
-            key_values.push(("Status".to_owned(), Some(status.resolution.to_display())));
+            key_values.push(("Status".to_owned(), Some(status.resolution.resolution_label().to_string())));
             key_values.push(("Reason".to_owned(), Some(status.reason)));
            
             key_values.push(("-----------------".to_owned(), None));

@@ -774,6 +774,7 @@ dependencies = [
  "futures",
  "internal-api",
  "k8-metadata-client",
+ "k8-obj-metadata",
  "kf-protocol 2.0.3",
  "kf-service",
  "kf-socket",

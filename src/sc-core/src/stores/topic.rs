@@ -30,31 +30,6 @@ use super::partition::*;
 use super::spu::*;
 use super::*;
 
-impl Spec for TopicSpec {
-    const LABEL: &'static str = "Topic";
-    type Key = String;
-    type Status = TopicStatus;
-    type K8Spec = TopicSpec;
-    type Owner = TopicSpec;
-
-    /// convert kubernetes objects into KV vbalue
-    fn convert_from_k8(k8_topic: K8Obj<TopicSpec>) -> Result<KVObject<Self>, IoError> {
-        // metadata is mandatory
-        let topic_name = &k8_topic.metadata.name;
-
-        // spec is mandatory
-        let topic_spec = k8_topic.spec;
-
-        // topic status is optional
-        let topic_status = k8_topic.status;
-
-        let ctx = KvContext::default().with_ctx(k8_topic.metadata.clone());
-        Ok(TopicKV::new(topic_name.to_owned(), topic_spec, topic_status).with_kv_ctx(ctx))
-    }
-}
-
-
-impl Status for TopicStatus {}
 
 /// values for next state
 #[derive(Default, Debug)]

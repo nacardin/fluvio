@@ -3,7 +3,7 @@
 //!
 //! Partition metadata information on cached in the local Controller.
 //!
-use std::io::Error as IoError;
+
 use std::sync::Arc;
 
 use log::debug;
@@ -11,29 +11,15 @@ use log::debug;
 use internal_api::messages::Replica;
 use flv_metadata::partition::ReplicaKey;
 use flv_metadata::partition::{PartitionSpec, PartitionStatus};
-use flv_metadata::topic::TopicSpec;
-use flv_metadata::k8::metadata::K8Obj;
 use flv_types::SpuId;
 use sc_api::metadata::*;
 
 use super::*;
-use crate::metadata::default_convert_from_k8;
+
 
 pub type SharedPartitionStore = Arc<PartitionLocalStore>;
 
-impl Spec for PartitionSpec {
-    const LABEL: &'static str = "Partition";
-    type Key = ReplicaKey;
-    type Status = PartitionStatus;
-    type K8Spec = PartitionSpec;
-    type Owner = TopicSpec;
 
-    fn convert_from_k8(k8_obj: K8Obj<Self::K8Spec>) -> Result<KVObject<Self>, IoError> {
-        default_convert_from_k8(k8_obj)
-    }
-}
-
-impl Status for PartitionStatus {}
 
 // -----------------------------------
 // Data Structures

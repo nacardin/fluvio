@@ -19,8 +19,8 @@ mod metadata {
     impl Spec for SpuSpec {
         const LABEL: &'static str = "SPU";
         type IndexKey  = String;
+        type Owner = Self;
         type Status = SpuStatus;
-        type Owner = SpuSpec;
     }
 
 
