@@ -5,6 +5,8 @@
 //!
 
 use std::fmt::Display;
+use std::convert::TryFrom;
+use std::fmt::Debug;
 
 use log::{error, trace};
 use log::warn;
@@ -15,6 +17,7 @@ use flv_metadata::k8::metadata::K8Obj;
 use flv_metadata::k8::metadata::K8Watch;
 use flv_metadata::core::K8ExtendedSpec;
 use flv_metadata::core::Spec;
+use k8_obj_metadata::Spec as K8Spec;
 use k8_metadata_client::*;
 
 
@@ -28,14 +31,17 @@ use crate::ScServerError;
 ///
 ///
 pub fn k8_events_to_metadata_actions<S>(
-    k8_tokens: K8List<S::K8Type>,
+    k8_tokens: K8List<S::K8Spec>,
     local_store: &LocalStore<S>,
 ) -> Actions<LSChange<S>>
 where
     S: StoreSpec + PartialEq ,
     <S as Spec>::Owner: K8ExtendedSpec,
     S::Status:  PartialEq,
-    S::IndexKey: Display,
+    <S::IndexKey as TryFrom<String>>::Error: Debug,
+    S::IndexKey: TryFrom<String> + Display,
+    <<S as K8ExtendedSpec>::K8Spec as K8Spec>::Status: Into<S::Status>,
+    S::K8Spec: Into<S>,
 {
     let (mut add_cnt, mut mod_cnt, mut del_cnt, mut skip_cnt) = (0, 0, 0, 0);
     let mut local_names = local_store.all_keys();
@@ -108,7 +114,7 @@ where
 /// Translates K8 events into metadata action.
 ///
 pub fn k8_event_stream_to_metadata_actions<S, E>(
-    stream: TokenStreamResult<S::K8Type, E>,
+    stream: TokenStreamResult<S::K8Spec, E>,
     local_store: &LocalStore<S>,
 ) -> Actions<LSChange<S>>
 where
@@ -117,6 +123,10 @@ where
     <S as Spec>::Owner: K8ExtendedSpec,
     S::Status:  PartialEq,
     E: MetadataClientError,
+    <S::IndexKey as TryFrom<String>>::Error: Debug,
+    S::IndexKey: TryFrom<String> + Display,
+    <<S as K8ExtendedSpec>::K8Spec as K8Spec>::Status: Into<S::Status>,
+    S::K8Spec: Into<S>,
 {
     let (mut add_cnt, mut mod_cnt, mut del_cnt, mut skip_cnt) = (0, 0, 0, 0);
     let mut actions: Actions<LSChange<S>> = Actions::default();
@@ -229,12 +239,17 @@ where
 }
 
 ///
-/// Translates K8 object into Sc AuthToken metadata
+/// Translates K8 object into Internal metadata object
 ///
-fn k8_obj_to_kv_obj<S>(k8_obj: K8Obj<S::K8Type>) -> Result<KVObject<S>, ScServerError>
+fn k8_obj_to_kv_obj<S>(k8_obj: K8Obj<S::K8Spec>) -> Result<KVObject<S>, ScServerError>
 where
     S: StoreSpec,
     <S as Spec>::Owner: K8ExtendedSpec,
+    <S::IndexKey as TryFrom<String>>::Error: Debug,
+    S::IndexKey: TryFrom<String> + Display,
+    <<S as K8ExtendedSpec>::K8Spec as K8Spec>::Status: Into<S::Status>,
+    S::K8Spec: Into<S>,
+    
 {
     trace!("converting k8: {:#?}", k8_obj.spec);
     S::convert_from_k8(k8_obj)

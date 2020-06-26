@@ -8,6 +8,7 @@ use std::time::Duration;
 use std::sync::Arc;
 use std::fmt::Debug;
 use std::fmt::Display;
+use std::convert::TryFrom;
 
 use futures::future::FutureExt;
 use futures::channel::mpsc::Sender;
@@ -63,9 +64,13 @@ where
     S::IndexKey: Display  + Sync + Send + 'static,
     K8Watch<S::K8Spec>: DeserializeOwned,
     K8List<S::K8Spec>: DeserializeOwned,
-    S::K8Type:  Sync + Send + 'static,
+    S::K8Spec:  Sync + Send + 'static,
     <<S as K8ExtendedSpec>::K8Spec as K8Spec>::Status:  Sync + Send + 'static,
     C: MetadataClient + 'static,
+    <S::IndexKey as TryFrom<String>>::Error: Debug,
+    S::IndexKey: TryFrom<String> + Display,
+    <<S as K8ExtendedSpec>::K8Spec as K8Spec>::Status: Into<S::Status>,
+    S::K8Spec: Into<S>,
 {
     pub fn new(namespace: String, client: SharedClient<C>, metadata: Arc<LocalStore<S>>) -> Self {
         Self {
@@ -110,7 +115,7 @@ where
 
         // create watch streams
         let mut k8_stream = client
-            .watch_stream_since::<S::K8Type, _>(self.namespace.clone(), resume_stream)
+            .watch_stream_since::<S::K8Spec, _>(self.namespace.clone(), resume_stream)
             .fuse();
 
         trace!("starting watch stream for: {}", S::LABEL);
@@ -151,7 +156,7 @@ where
     async fn retrieve_all_k8_items(&mut self) -> Result<String, C::MetadataClientError> {
         let k8_objects = self
             .client
-            .retrieve_items::<S::K8Type, _>(self.namespace.clone())
+            .retrieve_items::<S::K8Spec, _>(self.namespace.clone())
             .await?;
 
         self.process_retrieved_items(k8_objects).await
@@ -162,7 +167,7 @@ where
     ///
     async fn process_retrieved_items(
         &mut self,
-        k8_items: K8List<S::K8Type>,
+        k8_items: K8List<S::K8Spec>,
     ) -> Result<String, C::MetadataClientError> {
         let version = k8_items.metadata.resource_version.clone();
 

@@ -68,7 +68,7 @@ where
         trace!("adding KV {:#?} to k8 kv", value);
 
         let (key, spec, kv_ctx) = value.parts();
-        let k8_spec: S::K8Type = spec.into();
+        let k8_spec: S::K8Spec = spec.into();
         if let Some(item_ctx) = kv_ctx.item_ctx {
             let new_k8 = InputK8Obj::new(k8_spec, item_ctx.into());
 
@@ -118,9 +118,9 @@ where
         let k8_status: <<S as K8ExtendedSpec>::K8Spec as K8Spec>::Status = value.status().clone().into();
 
         if let Some(ref kv_ctx) = value.kv_ctx().item_ctx {
-            let k8_input: UpdateK8ObjStatus<S::K8Type> = UpdateK8ObjStatus {
-                api_version: S::K8Type::api_version(),
-                kind: S::K8Type::kind(),
+            let k8_input: UpdateK8ObjStatus<S::K8Spec> = UpdateK8ObjStatus {
+                api_version: S::K8Spec::api_version(),
+                kind: S::K8Spec::kind(),
                 metadata: kv_ctx.clone().into(),
                 status: k8_status,
                 ..Default::default()

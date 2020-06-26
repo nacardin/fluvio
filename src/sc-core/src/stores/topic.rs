@@ -12,7 +12,7 @@
 //!
 use std::collections::BTreeMap;
 use std::fmt;
-use std::io::Error as IoError;
+
 
 use log::trace;
 use log::debug;
@@ -21,7 +21,6 @@ use rand::thread_rng;
 use rand::Rng;
 
 use flv_types::ReplicaMap;
-use flv_metadata::k8::metadata::K8Obj;
 use flv_metadata::topic::*;
 use flv_metadata::partition::ReplicaKey;
 
@@ -443,10 +442,10 @@ impl TopicLocalStore {
             let topic_row = format!(
                 "{n:<18}  {t:^8}  {p:^5}  {s:^5}  {g:<8}  {l:^14}  {m:^10}  {r}\n",
                 n = name.clone(),
-                t = TopicSpec::type_label(&topic.spec.is_computed()),
-                p = TopicSpec::partitions_str(&topic.spec.partitions()),
-                s = TopicSpec::replication_factor_str(&topic.spec.replication_factor()),
-                g = TopicSpec::ignore_rack_assign_str(&topic.spec.ignore_rack_assignment()),
+                t = topic.spec.type_label(),
+                p = topic.spec.partitions_display(),
+                s = topic.spec.replication_factor_display(),
+                g = topic.spec.ignore_rack_assign_display(),
                 l = topic.status.resolution().resolution_label(),
                 m = topic.status.replica_map_cnt_str(),
                 r = topic.reason(),

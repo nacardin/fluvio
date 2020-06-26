@@ -22,7 +22,7 @@ where
 impl<S> Default for LocalStore<S>
 where
     S: StoreSpec,
-    S::Owner: K8ExtendedSpec
+    <S as Spec>::Owner: K8ExtendedSpec,
 {
     fn default() -> Self {
         LocalStore(SimpleConcurrentBTreeMap::new())
