@@ -2,7 +2,8 @@ use std::fmt::Debug;
 use std::fmt::Display;
 use std::fmt;
 
-use flv_metadata::core::K8ExtendedStatus;  
+use flv_metadata::core::K8ExtendedSpec; 
+use flv_metadata::core::Spec; 
 use crate::stores::*;
 
 /// Represents changes in Local State
@@ -10,7 +11,8 @@ use crate::stores::*;
 pub enum LSChange<S>
 where
     S: StoreSpec,
-    S::Status: K8ExtendedStatus + PartialEq,
+    <S as Spec>::Owner: K8ExtendedSpec,
+    S::Status: PartialEq,
 {
     Add(KVObject<S>),
     Mod(KVObject<S>, KVObject<S>), // new, old
@@ -20,8 +22,9 @@ where
 impl<S> fmt::Display for LSChange<S>
 where
     S: StoreSpec,
+    <S as Spec>::Owner: K8ExtendedSpec,
     S::IndexKey: Display,
-    S::Status: K8ExtendedStatus +  PartialEq,
+    S::Status:  PartialEq,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
@@ -35,7 +38,8 @@ where
 impl<S> LSChange<S>
 where
     S: StoreSpec,
-    S::Status: K8ExtendedStatus + PartialEq,
+    <S as Spec>::Owner: K8ExtendedSpec,
+    S::Status: PartialEq,
 {
     pub fn add<K>(value: K) -> Self
     where
@@ -58,8 +62,9 @@ where
 pub enum WSAction<S>
 where
     S: StoreSpec,
+    <S as Spec>::Owner: K8ExtendedSpec,
     S::IndexKey: PartialEq,
-    S::Status: K8ExtendedStatus +  PartialEq,
+    S::Status:  PartialEq,
 {
     Add(KVObject<S>),
     UpdateStatus(KVObject<S>), 
