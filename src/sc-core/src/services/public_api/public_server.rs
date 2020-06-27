@@ -19,13 +19,13 @@ use kf_service::call_service;
 use kf_socket::InnerKfSocket;
 use kf_socket::KfSocketError;
 use kf_service::KfService;
-use sc_api::ScPublicRequest;
-use sc_api::ScPublicApiKey;
+use sc_api::AdminPublicApiKey;
+use sc_api::AdminPublicRequest;
 use k8_metadata_client::MetadataClient;
 use flv_future_aio::zero_copy::ZeroCopyWrite;
 
 
-use super::SharedPublicContext;
+use super::*;
 
 pub struct PublicService<C>(PhantomData<C>);
 
@@ -42,7 +42,7 @@ where
     S: AsyncWrite + AsyncRead + Unpin + Send + ZeroCopyWrite + 'static,
 {
     type Context = SharedPublicContext<C>;
-    type Request = ScPublicRequest;
+    type Request = AdminPublicRequest;
 
     async fn respond(
         self: Arc<Self>,
@@ -50,7 +50,7 @@ where
         socket: InnerKfSocket<S>,
     ) -> Result<(), KfSocketError> {
         let (sink, mut stream) = socket.split();
-        let mut api_stream = stream.api_stream::<ScPublicRequest, ScPublicApiKey>();
+        let mut api_stream = stream.api_stream::<AdminPublicRequest, AdminPublicApiKey>();
         let mut shared_sink = sink.as_shared();
 
         let end_event = Arc::new(Event::new());
@@ -59,7 +59,7 @@ where
             api_stream,
 
 
-            ScPublicRequest::ApiVersionsRequest(request) => call_service!(
+            AdminPublicRequest::ApiVersionsRequest(request) => call_service!(
                 request,
                 super::api_version::handle_api_versions_request(request),
                 shared_sink,
@@ -67,25 +67,25 @@ where
             ),
 
 
-            ScPublicRequest::CreateTopicRequest(request) => call_service!(
+            AdminPublicRequest::CreateRequest(request) => call_service!(
                 request,
-                super::topic::handle_create_topics_request(request, &ctx),
+                super::create::handle_create_request(request, &ctx),
                 shared_sink,
-                "create topic handler"
+                "create  handler"
             ),
-            ScPublicRequest::DeleteTopicRequest(request) => call_service!(
+            AdminPublicRequest::DeleteRequest(request) => call_service!(
                 request,
-                super::topic::handle_delete_topic_request(request, &ctx),
+                super::topic::handle_delete_request(request, &ctx),
                 shared_sink,
-                "delete topic handler"
+                "delete  handler"
             ),
-            ScPublicRequest::FetchTopicsRequest(request) => call_service!(
+            AdminPublicRequest::FetchTopicsRequest(request) => call_service!(
                 request,
                 super::topic::handle_fetch_topics_request(request, ctx.shared_context.clone()),
                 shared_sink,
                 "fetch topic handler"
             ),
-            ScPublicRequest::TopicCompositionRequest(request) => call_service!(
+            AdminPublicRequest::TopicCompositionRequest(request) => call_service!(
                 request,
                 super::metadata::handle_topic_composition_request(request, ctx.shared_context.clone()),
                 shared_sink,

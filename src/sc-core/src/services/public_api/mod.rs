@@ -4,6 +4,7 @@ mod spu;
 mod topic;
 mod metadata;
 mod api_version;
+mod create;
 
 pub use context::*;
 
@@ -35,7 +36,7 @@ mod context {
     pub type SharedPublicContext<C> = Arc<PublicContext<C>>;
 
     pub type PublicApiServer<C> =
-    KfApiServer<ScPublicRequest, ScPublicApiKey, SharedPublicContext<C>, PublicService<C>>;
+    KfApiServer<AdminPublicRequest, AdminPublicApiKey, SharedPublicContext<C>, PublicService<C>>;
 
     /// create public server
     pub fn create_public_server<C>(

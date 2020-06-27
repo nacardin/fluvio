@@ -3,37 +3,38 @@
 //!
 //! Converts Spu Gruups API request into KV request and sends to KV store for processing.
 //!
-use log::{debug, trace};
+
 use std::io::Error;
 
-use kf_protocol::api::{RequestMessage, ResponseMessage};
+use log::{debug, trace};
+
 use kf_protocol::api::FlvErrorCode;
 
 use k8_metadata_client::MetadataClient;
 use sc_api::FlvStatus;
-use sc_api::spu::CreateSpuGroupRequest;
-use sc_api::spu::SpuGroupSpec;
+use sc_api::spg::*;
 
 
 use super::PublicContext;
 
 /// Handler for spu groups request
 pub async fn handle_create_spu_group_request<C>(
-    request: RequestMessage<CreateSpuGroupRequest>,
+    name: String,
+    spec: SpuGroupSpec,
+    _dry_run: bool,
     ctx: &PublicContext<C>,
-) -> Result<ResponseMessage<FlvStatus>, Error>
+) -> Result<FlvStatus,Error>
 where
     C: MetadataClient,
 {
-    let (header, req) = request.get_header_request();
-
-    debug!("creating spg: {}", req.name);
     
-   
-    let status = process_custom_spu_request(ctx, req.name,req.spec).await;
+    debug!("creating spu group: {}", name);
+    
+
+    let status = process_custom_spu_request(ctx, name,spec).await;
     trace!("create spu-group response {:#?}", status);
 
-    Ok(ResponseMessage::from_header(&header, status))
+    Ok(status)
 }
 
 /// Process custom spu, converts spu spec to K8 and sends to KV store
@@ -45,8 +46,7 @@ async fn process_custom_spu_request<C>(
 where
     C: MetadataClient,
 {
-    use flv_metadata::spg::K8SpuGroupSpec;
-
+ 
     match ctx.create::<K8SpuGroupSpec>(&name, spg_spec.into()).await {
         Ok(_) => FlvStatus::new_ok(name.clone()),
         Err(err) => {

@@ -13,16 +13,13 @@ use std::io::Error;
 
 use log::{debug, trace};
 
-use kf_protocol::api::{RequestMessage, ResponseMessage};
 use kf_protocol::api::FlvErrorCode;
 
 use flv_metadata::k8::metadata::ObjectMeta;
 use k8_metadata_client::MetadataClient;
 
 use sc_api::FlvStatus;
-use sc_api::topics::*;
-
-use flv_metadata::topic::TopicSpec;
+use sc_api::topic::*;
 
 use crate::core::Context;
 use crate::stores::topic::*;
@@ -32,29 +29,26 @@ use super::PublicContext;
 
 /// Handler for create topic request
 pub async fn handle_create_topics_request<C>(
-    request: RequestMessage<CreateTopicRequest>,
+    name: String,
+    dry_run: bool,
+    topic_spec: TopicSpec,
     ctx: &PublicContext<C>,
-) -> Result<ResponseMessage<FlvStatus>, Error>
+) -> Result<FlvStatus, Error>
 where
     C: MetadataClient,
 {
-    let (header, req) = request.get_header_request();
-
-    let validate_only = req.dry_run;
   
-    let name = req.name;
-    let topic_spec = req.spec;
     debug!("api request: create topic '{}'", name);
 
     // validate topic request
     let mut status = validate_topic_request(&name, &topic_spec, ctx.context());
-    if !validate_only {
+    if !dry_run {
         status = process_topic_request(ctx, name, topic_spec).await;
     }
 
     trace!("create topics request response {:#?}", status);
 
-    Ok(ResponseMessage::from_header(&header, status))
+    Ok(status)
 }
 
 /// Validate topic, takes advantage of the validation routines inside topic action workflow
