@@ -5,6 +5,7 @@ mod topic;
 mod metadata;
 mod api_version;
 mod create;
+mod delete;
 
 pub use context::*;
 

@@ -19,16 +19,15 @@ use super::PublicContext;
 
 /// Handler for delete custom spu request
 pub async fn handle_unregister_custom_spu_request<C>(
-    request: RequestMessage<UnregisterCustomSpuRequest>,
+    key: CustomSpuKey,
     ctx: &PublicContext<C>,
-) -> Result<ResponseMessage<FlvStatus>, Error>
+) -> Result<FlvStatus,Error>
 where
     C: MetadataClient,
 {
-    let (header, req) = request.get_header_request();
-
-    let status = match req.spu {
-        CustomSpu::Name(spu_name) => {
+   
+    let status = match key {
+        CustomSpuKey::Name(spu_name) => {
             debug!("api request: delete custom-spu with name '{}'", spu_name);
 
             // spu-name must exist
@@ -43,7 +42,7 @@ where
                 )
             }
         }
-        CustomSpu::Id(spu_id) => {
+        CustomSpuKey::Id(spu_id) => {
             debug!("api request: delete custom-spu with id '{}'", spu_id);
 
             // spu-id must exist
@@ -62,7 +61,7 @@ where
 
     trace!("flv delete custom-spus resp {:#?}", status);
 
-    Ok(ResponseMessage::from_header(&header, status))
+    Ok(status)
 }
 
 /// Generate for delete custom spu operation and return result.
