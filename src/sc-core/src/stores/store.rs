@@ -4,6 +4,8 @@ use std::fmt::Display;
 use std::borrow::Borrow;
 use std::io::Error as IoError;
 use std::io::ErrorKind;
+use std::collections::btree_map::Values;
+use std::hash::Hash;
 
 use super::StoreSpec;
 use flv_util::SimpleConcurrentBTreeMap;
@@ -67,44 +69,27 @@ where
         self.inner_store().write().insert(value.key_owned(), value)
     }
 
-    /// visit all values
-    pub fn visit_values<F>(&self, func: F)
+
+    pub fn for_each<F>(&self, func: F)
     where
         F: FnMut(&'_ KVObject<S>),
     {
         self.inner_store().read().values().for_each(func);
     }
-}
 
-impl<S> LocalStore<S>
-where
-    S: StoreSpec,
-    <S as Spec>::Owner: K8ExtendedSpec,
-{
-    /*
-    pub fn delete<S>(&self, name: S) where S: AsRef<K> {
-        self.inner_store().write().remove(name.as_ref());
-    }
-    */
-
-    pub fn delete<K: ?Sized>(&self, key: &K)
-    where
-        S::IndexKey: Borrow<K>,
-        K: Ord,
+    /// value iterators
+    pub fn values<F>(&self) -> Values<S::IndexKey,KVObject<S>>
     {
-        self.inner_store().write().remove(key);
+        self.inner_store().read().values()
     }
 
-    /// get copy of the value ref by key
-    pub fn value<K: ?Sized>(&self, key: &K) -> Option<KVObject<S>>
+
+    pub fn get<Q>(&self, key: &Q) -> Option<&KVObject<S>>
     where
-        S::IndexKey: Borrow<K>,
-        K: Ord,
+        S::IndexKey: Borrow<Q>,
+        Q: Ord + ?Sized
     {
-        match self.inner_store().read().get(key) {
-            Some(value) => Some(value.clone()),
-            None => None,
-        }
+        self.inner_store().read().get(key)
     }
 
     /// get copy of the spec ref by key
@@ -133,6 +118,7 @@ where
         }
     }
 
+    
     pub fn contains_key<K: ?Sized>(&self, key: &K) -> bool
     where
         S::IndexKey: Borrow<K>,
@@ -153,16 +139,16 @@ where
         self.inner_store().read().len() as i32
     }
 
-    pub fn all_keys(&self) -> Vec<S::IndexKey> {
+    /// get copy of keys
+    pub fn clone_keys(&self) -> Vec<S::IndexKey> {
         self.inner_store().read().keys().cloned().collect()
     }
 
-    pub fn all_values(&self) -> Vec<KVObject<S>> {
+    pub fn clone_values(&self) -> Vec<KVObject<S>> {
         self.inner_store().read().values().cloned().collect()
     }
 
-    /// copy of all specs
-    pub fn all_specs(&self) -> Vec<S> {
+    pub fn clone_specs(&self) -> Vec<S> {
         self.inner_store()
             .read()
             .values()

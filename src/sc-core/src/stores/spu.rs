@@ -472,7 +472,7 @@ pub mod test {
         assert_eq!(spus.online_spu_count(), 1);
         assert_eq!(spus.all_spu_count(), 2);
 
-        spus.delete("spu-0");
+        spus.remove("spu-0");
 
         assert_eq!(spus.online_spu_count(), 0);
         assert_eq!(spus.all_spu_count(), 1);

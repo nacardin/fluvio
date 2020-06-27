@@ -1,47 +1,21 @@
 use log::{trace, debug};
 use std::io::Error;
 
-use kf_protocol::api::{RequestMessage, ResponseMessage};
 
-use sc_api::topics::*;
-use flv_metadata::partition::ReplicaKey;
+use sc_api::objects::*;
 
 use crate::core::SharedContext;
 use crate::stores::topic::*;
-use crate::stores::partition::*;
+
 
 pub async fn handle_fetch_topics_request(
-    request: RequestMessage<FetchTopicsRequest>,
-    metadata: SharedContext,
-) -> Result<ResponseMessage<FetchTopicsResponse>, Error> {
-    // is names is provided, return list, otherwise generate all names
-    let topic_names = match &request.request.names {
-        Some(topic_names) => topic_names.clone(),
-        None => metadata.topics().all_keys(),
-    };
+    filters: Vec<NameFilter>,
+    ctx: SharedContext,
+) -> Result<ListResponse,Error> {
+    
 
     // encode topics
-    let mut topics = vec![];
-    for topic_name in &topic_names {
-        let mut topic_response =
-            topic_store_metadata_to_topic_response(metadata.topics(), topic_name);
-
-        // lookup partitions, if topic was found
-        let partitions = if topic_response.topic.is_some() {
-            Some(partition_metadata_to_replica_response(
-                metadata.partitions(),
-                topic_name,
-            ))
-        } else {
-            None
-        };
-
-        topic_response.update_partitions(partitions);
-
-        // push valid and error topics
-        topics.push(topic_response);
-    }
-
+    let mut topics = ctx.topics().
     // prepare response
     let mut response = FetchTopicsResponse::default();
     response.topics = topics;
@@ -51,6 +25,8 @@ pub async fn handle_fetch_topics_request(
 
     Ok(request.new_response(response))
 }
+
+/*
 
 /// Encode Topic metadata into a Topic FLV Reponse
 pub fn topic_store_metadata_to_topic_response(
@@ -89,3 +65,4 @@ pub fn partition_metadata_to_replica_response(
     }
     res
 }
+*/

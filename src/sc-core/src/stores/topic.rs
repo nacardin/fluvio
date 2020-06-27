@@ -576,7 +576,7 @@ mod test {
         let expected = vec![String::from("Topic-2"), String::from("Topic-4")];
         let mut pending_state_names: Vec<String> = vec![];
 
-        topics.visit_values(|topic| {
+        topics.for_each(|topic| {
             if topic.status.need_replica_map_recal() {
                 pending_state_names.push(topic.key_owned());
             }

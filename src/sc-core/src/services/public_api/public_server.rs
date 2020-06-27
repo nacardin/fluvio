@@ -75,11 +75,11 @@ where
             ),
             AdminPublicRequest::DeleteRequest(request) => call_service!(
                 request,
-                super::topic::handle_delete_request(request, &ctx),
+                super::delete::handle_delete_request(request, &ctx),
                 shared_sink,
                 "delete  handler"
             ),
-            AdminPublicRequest::FetchTopicsRequest(request) => call_service!(
+            AdminPublicRequest::ListRequest(request) => call_service!(
                 request,
                 super::topic::handle_fetch_topics_request(request, ctx.shared_context.clone()),
                 shared_sink,

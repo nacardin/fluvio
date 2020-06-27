@@ -255,7 +255,7 @@ impl TopicReducer {
         debug!("updating replica maps for topics are in pending state");
 
         // loop through topics & generate replica map (if needed)
-        self.topic_store().visit_values(|topic| {
+        self.topic_store().for_each(|topic| {
             if topic.status.need_replica_map_recal() {
                 let name = topic.key();
                 debug!("Generate R-MAP for: {:?}", name);

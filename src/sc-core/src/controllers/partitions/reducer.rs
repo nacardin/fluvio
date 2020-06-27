@@ -289,7 +289,7 @@ impl PartitionReducer {
         let policy = SimplePolicy::new();
 
         // go thru each partitions whose leader matches offline spu.
-        self.partition_store.visit_values(|partition_kv| {
+        self.partition_store.for_each(|partition_kv| {
             // find partition who's leader is same as offline spu
             if partition_kv.spec.leader == offline_leader_spu_id {
                 // find suitable leader
@@ -327,7 +327,7 @@ impl PartitionReducer {
         let policy = SimplePolicy::new();
         // go thru each partitions which are not online and try to promote given online spu
 
-        self.partition_store.visit_values(|partition_kv| {
+        self.partition_store.for_each(|partition_kv| {
             if partition_kv.status.is_offline() {
                 // we only care about partition who is follower since, leader will set partition status when it start up
                 if partition_kv.spec.leader != online_leader_spu_id {

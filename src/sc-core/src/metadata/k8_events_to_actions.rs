@@ -44,7 +44,7 @@ where
     S::K8Spec: Into<S>,
 {
     let (mut add_cnt, mut mod_cnt, mut del_cnt, mut skip_cnt) = (0, 0, 0, 0);
-    let mut local_names = local_store.all_keys();
+    let mut local_names = local_store.clone_keys();
     let all = local_store.count();
     let mut actions: Actions<LSChange<S>> = Actions::default();
 
@@ -52,20 +52,20 @@ where
     for k8_obj in k8_tokens.items {
         match k8_obj_to_kv_obj(k8_obj) {
             Ok(new_kv_value) => {
-                let key = new_kv_value.key_owned();
-                if let Some(old_value) = local_store.value(&key) {
+                let key = new_kv_value.key();
+                if let Some(old_value) = local_store.get(key) {
                     // object exists
-                    if old_value == new_kv_value {
+                    if *old_value == new_kv_value {
                         skip_cnt += 1; //nothing changed
                     } else {
                         // diff
                         mod_cnt += 1;
                         debug!("adding {}:{} to local store", S::LABEL, new_kv_value.key());
                         local_store.insert(new_kv_value.clone());
-                        actions.push(LSChange::update(new_kv_value, old_value));
+                        actions.push(LSChange::update(new_kv_value, *old_value));
                     }
 
-                    local_names.retain(|n| *n != key);
+                    local_names.retain(|n| n != key);
                 } else {
                     // object doesn't exisit
                     add_cnt += 1;
@@ -305,7 +305,7 @@ pub mod test {
             _ => assert!(false),
         }
         topic_store
-            .value(&"topic1".to_owned())
+            .get("topic1")
             .expect("topic1 should exists");
     }
 
@@ -400,7 +400,7 @@ pub mod test {
             _ => assert!(false),
         }
         topic_store
-            .value(&"topic1".to_owned())
+            .get("topic1")
             .expect("topic1 should exists");
     }
 }
