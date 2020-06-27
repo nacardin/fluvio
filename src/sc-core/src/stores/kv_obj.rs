@@ -3,6 +3,7 @@ use std::fmt::Display;
 
 use flv_metadata::core::K8ExtendedSpec;
 use flv_metadata::core::Spec;
+use sc_api::objects::Metadata;
 
 use super::*;
 
@@ -120,5 +121,36 @@ where
 {
     fn into(self) -> (S::IndexKey, S, S::Status) {
         (self.key, self.spec, self.status)
+    }
+}
+
+impl<S> Into<Metadata<S>> for KVObject<S>
+    where S: StoreSpec,
+    <S as Spec>::Owner: K8ExtendedSpec,
+    S::IndexKey: Into<String>
+ {
+
+    fn into(self) -> Metadata<S> {
+        Metadata {
+            name: self.key.into(),
+            spec: self.spec,
+            status: self.status
+        }
+    }
+}
+
+
+impl<S> Into<Metadata<S>> for &KVObject<S>
+    where S: StoreSpec,
+    <S as Spec>::Owner: K8ExtendedSpec,
+    S::IndexKey: Into<String>
+ {
+
+    fn into(self) -> Metadata<S> {
+        Metadata {
+            name: self.key.into(),
+            spec: self.spec.clone(),
+            status: self.status.clone()
+        }
     }
 }

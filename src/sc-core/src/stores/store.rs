@@ -78,7 +78,7 @@ where
     }
 
     /// value iterators
-    pub fn values<F>(&self) -> Values<S::IndexKey,KVObject<S>>
+    pub fn values(&self) -> Values<S::IndexKey,KVObject<S>>
     {
         self.inner_store().read().values()
     }

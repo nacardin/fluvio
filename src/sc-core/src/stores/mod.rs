@@ -4,12 +4,13 @@ pub mod topic;
 mod store;
 mod kv_obj;
 mod kv_context;
+mod filter;
 
 pub use store::*;
 pub use kv_obj::*;
 pub use kv_context::*;
-
 pub use metadata::*;
+pub use filter::*;
 
 
 mod metadata {

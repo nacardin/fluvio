@@ -403,7 +403,7 @@ impl SpuLocalStore {
 
     /// Encode all online SPUs to SPU Messages
     pub fn all_spus_to_spu_msgs(&self) -> Vec<SpuMsg> {
-        self.all_specs()
+        self.clone_specs()
             .into_iter()
             .map(|spu_spec| SpuMsg::update(spu_spec.into()))
             .collect()
