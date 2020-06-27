@@ -79,58 +79,8 @@ where
                 shared_sink,
                 "delete  handler"
             ),
-            AdminPublicRequest::ListRequest(request) => call_service!(
-                request,
-                super::topic::handle_fetch_topics_request(request, ctx.shared_context.clone()),
-                shared_sink,
-                "fetch topic handler"
-            ),
-            AdminPublicRequest::TopicCompositionRequest(request) => call_service!(
-                request,
-                super::metadata::handle_topic_composition_request(request, ctx.shared_context.clone()),
-                shared_sink,
-                "topic metadata handler"
-            ),
-
-            
-            ScPublicRequest::RegisterCustomSpuRequest(request) => call_service!(
-                request,
-                super::spu::handle_register_custom_spu_request(request, &ctx),
-                shared_sink,
-                "create custom spus handler"
-            ),
-            ScPublicRequest::UnregisterCustomSpuRequest(request) => call_service!(
-                request,
-                super::spu::handle_unregister_custom_spu_request(request, &ctx),
-                shared_sink,
-                "delete custom spus handler"
-            ),
-            ScPublicRequest::FetchSpusRequest(request) => call_service!(
-                request,
-                super::spu::handle_fetch_spus_request(request, ctx.shared_context.clone()),
-                shared_sink,
-                "fetch spus handler"
-            ),
-
-            ScPublicRequest::CreateSpuGroupRequest(request) => call_service!(
-                request,
-                super::spg::handle_create_spu_group_request(request, &ctx),
-                shared_sink,
-                "create spu groups handler"
-            ),
-            ScPublicRequest::DeleteSpuGroupRequest(request) => call_service!(
-                request,
-                super::spg::handle_delete_spu_group_request(request, &ctx),
-                shared_sink,
-                "delete spu groups handler"
-            ),
-            ScPublicRequest::FetchSpuGroupsRequest(request) => call_service!(
-                request,
-                super::spg::handle_fetch_spu_groups_request(request, &ctx),
-                shared_sink,
-                "fetch spu groups handler"
-            ),
-            ScPublicRequest::UpdateMetadataRequest(request) => super::metadata::ClientMetadataController::handle_metadata_update(
+           
+            AdminPublicRequest::UpdateMetadataRequest(request) => super::metadata::ClientMetadataController::handle_metadata_update(
                 request,
                 shared_sink.clone(), 
                 end_event.clone(),

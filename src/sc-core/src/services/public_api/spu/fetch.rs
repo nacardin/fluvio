@@ -2,55 +2,60 @@ use std::io::Error;
 
 use log::{trace, debug};
 
-use kf_protocol::api::{RequestMessage, ResponseMessage};
-use sc_api::spu::*;
+use sc_api::objects::*;
+use sc_api::spu::SpuSpec;
+use sc_api::spu::CustomSpuSpec;
 
 use crate::core::SharedContext;
-use crate::stores::spu::*;
+use crate::stores::KeyFilter;
 
-pub async fn handle_fetch_spus_request(
-    request: RequestMessage<FetchSpusRequest>,
-    metadata: SharedContext,
-) -> Result<ResponseMessage<FetchSpusResponse>, Error> {
+pub async fn handle_fetch_custom_spu_request(
+    filters: Vec<String>,
+    ctx: SharedContext,
+) -> Result<ListResponse, Error> {
+    let spus: Vec<Metadata<SpuSpec>> = ctx
+        .spus()
+        .values()
+        .filter_map(|value| {
+            if value.spec().is_custom() && filters.filter(value.key()) {
+                Some(value.into())
+            } else {
+                None
+            }
+        })
+        .collect();
 
-    let (header, req) = request.get_header_request();
+    let custom_spus: Vec<Metadata<CustomSpuSpec>> = spus.into_iter()
+        .map(|spu| Metadata {
+            name: spu.name,
+            spec: spu.spec.into(),
+            status: spu.status
+        }).collect();
 
-    // identify query type
-    let (query_custom, query_type) = match req.spu_type {
-        RequestSpuType::Custom => (true, "custom"),
-        RequestSpuType::All => (false, "all"),
-    };
+    debug!("flv fetch custom resp: {} items", custom_spus.len());
+    trace!("flv fetch custom spus resp {:#?}", custom_spus);
 
-    // traverse and convert spus to FLV response
-    let mut flv_spu: Vec<FetchSpu> = Vec::default();
-    for (name, spu) in metadata.spus().inner_store().read().iter() {
-        // skip custom if necessary
-        if query_custom && !spu.is_custom() {
-            continue;
-        }
-        flv_spu.push(spu_store_metadata_to_spu_response(name, spu));
-    }
-
-    debug!(
-        "flv fetch {} spus resp: {} items",
-        query_type,
-        flv_spu.len()
-    );
-    trace!("flv fetch {} spus resp {:#?}", query_type, flv_spu);
-
-    // prepare response
-    let mut response = FetchSpusResponse::default();
-    response.spus = flv_spu;
-
-    Ok(ResponseMessage::from_header(&header,response))
+    Ok(ListResponse::CustomSpu(custom_spus))
 }
 
-/// Encode Spus metadata into SPU FLV response
-fn spu_store_metadata_to_spu_response(name: &str, spu: &SpuKV) -> FetchSpu {
-    
-    FetchSpu {
-        name: name.to_owned(),
-        spec: spu.spec.clone(),
-        status: spu.status.clone()
-    }
+pub async fn handle_fetch_spus_request(
+    filters: Vec<String>,
+    ctx: SharedContext,
+) -> Result<ListResponse, Error> {
+    let spus: Vec<Metadata<SpuSpec>> = ctx
+        .spus()
+        .values()
+        .filter_map(|value| {
+            if filters.filter(value.key()) {
+                Some(value.into())
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    debug!("flv fetch spus resp: {} items", spus.len());
+    trace!("flv fetch spus resp {:#?}", spus);
+
+    Ok(ListResponse::Spu(spus))
 }

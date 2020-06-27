@@ -1,6 +1,7 @@
 pub mod partition;
 pub mod spu;
 pub mod topic;
+pub mod spg;
 mod store;
 mod kv_obj;
 mod kv_context;

@@ -12,6 +12,7 @@ use crate::config::ScConfig;
 use crate::stores::spu::*;
 use crate::stores::partition::*;
 use crate::stores::topic::*;
+use crate::stores::spg::SpuGroupLocalStore;
 use crate::controllers::ClientNotification;
 
 pub type SharedContext = Arc<Context>;
@@ -22,6 +23,7 @@ pub struct Context {
     spus: SharedSpuLocalStore,
     partitions: Arc<PartitionLocalStore>,
     topics: Arc<TopicLocalStore>,
+    spgs: Arc<SpuGroupLocalStore>,
     config: ScConfig,
 }
 
@@ -42,6 +44,7 @@ impl Context {
             spus: SpuLocalStore::new_shared(),
             partitions: PartitionLocalStore::new_shared(),
             topics: TopicLocalStore::new_shared(),
+            spgs: SpuGroupLocalStore::new_shared(),
             config: config,
         }
     }
@@ -63,6 +66,10 @@ impl Context {
     /// reference to topics
     pub fn topics(&self) -> &Arc<TopicLocalStore> {
         &self.topics
+    }
+
+    pub fn spgs(&self) -> &Arc<SpuGroupLocalStore> {
+        &self.spgs
     }
 
     /// reference to config

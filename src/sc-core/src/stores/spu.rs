@@ -22,7 +22,6 @@ use super::*;
 pub type SharedSpuLocalStore = Arc<SpuLocalStore>;
 
 
-
 // -----------------------------------
 // Data Structures
 // -----------------------------------
