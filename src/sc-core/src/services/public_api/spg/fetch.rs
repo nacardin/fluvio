@@ -14,6 +14,7 @@ pub async fn handle_fetch_spu_groups_request(
     ctx: &Context
 ) -> Result<ListResponse, Error>
 {
+    debug!("fetching spu groups");
     let spgs: Vec<Metadata<SpuGroupSpec>> = ctx
             .spgs()
             .read()

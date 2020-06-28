@@ -133,7 +133,7 @@ pub type SpuLocalStore = LocalStore<SpuSpec>;
 impl SpuLocalStore {
     /// update the spec
     pub fn update_spec(&self, name: &str, other_spu: &SpuKV) -> Result<(), IoError> {
-        if let Some(spu) = (*self.inner_store().write()).get_mut(name) {
+        if let Some(spu) = self.write().get_mut(name) {
             if spu.id() != other_spu.id() {
                 Err(IoError::new(
                     ErrorKind::InvalidData,
@@ -175,7 +175,7 @@ impl SpuLocalStore {
     // build hashmap of online
     pub fn online_status(&self) -> HashSet<SpuId> {
         let mut status = HashSet::new();
-        for (_, spu) in self.inner_store().read().iter() {
+        for (_, spu) in self.read().iter() {
             if spu.status.is_online() {
                 status.insert(*spu.id());
             }
@@ -185,8 +185,7 @@ impl SpuLocalStore {
 
     /// count online SPUs
     pub fn online_spu_count(&self) -> i32 {
-        self.inner_store()
-            .read()
+        self.read()
             .values()
             .filter_map(|spu| {
                 if spu.status.is_online() {
@@ -205,8 +204,7 @@ impl SpuLocalStore {
 
     // retrieve SPU ids.
     pub fn online_spu_ids(&self) -> Vec<i32> {
-        self.inner_store()
-            .read()
+        self.read()
             .values()
             .filter_map(|spu| {
                 if spu.status.is_online() {
@@ -220,16 +218,14 @@ impl SpuLocalStore {
 
     // find spu id that can be used in the reeokuca
     pub fn spu_ids_for_replica(&self) -> Vec<i32> {
-        self.inner_store()
-            .read()
+        self.read()
             .values()
             .filter_map(|spu| Some(*spu.id()))
             .collect()
     }
 
     pub fn online_spus(&self) -> Vec<SpuKV> {
-        self.inner_store()
-            .read()
+        self.read()
             .values()
             .filter_map(|spu| {
                 if spu.status.is_online() {
@@ -242,8 +238,7 @@ impl SpuLocalStore {
     }
 
     pub fn custom_spus(&self) -> Vec<SpuKV> {
-        self.inner_store()
-            .read()
+        self.read()
             .values()
             .filter_map(|spu| {
                 if spu.is_custom() {
@@ -256,14 +251,14 @@ impl SpuLocalStore {
     }
 
     pub fn spu(&self, name: &str) -> Option<SpuKV> {
-        match (*self.inner_store().read()).get(name) {
+        match (*self.read()).get(name) {
             Some(spu) => Some(spu.clone()),
             None => None,
         }
     }
 
     pub fn get_by_id(&self, id: &i32) -> Option<SpuKV> {
-        for (_, spu) in (*self.inner_store().read()).iter() {
+        for (_, spu) in (*self.read()).iter() {
             if spu.id() == id {
                 return Some(spu.clone());
             }
@@ -273,7 +268,7 @@ impl SpuLocalStore {
 
     // check if spu can be registered
     pub fn validate_spu_for_registered(&self, id: &SpuId) -> bool {
-        for (_, spu) in (self.inner_store().read()).iter() {
+        for (_, spu) in (self.read()).iter() {
             if spu.id() == id {
                 return true;
             }
@@ -283,7 +278,7 @@ impl SpuLocalStore {
 
     // check if given range is conflict with any of the range
     pub fn is_conflict(&self, owner_uid: &str, start: i32, end_exclusive: i32) -> Option<i32> {
-        for (_, spu) in (self.inner_store().read()).iter() {
+        for (_, spu) in (self.read()).iter() {
             if !spu.is_owned(owner_uid) {
                 let id = *spu.id();
                 if id >= start && id < end_exclusive {
@@ -296,11 +291,11 @@ impl SpuLocalStore {
 
     #[cfg(test)]
     pub fn all_spu_count(&self) -> i32 {
-        self.inner_store().read().len() as i32
+        self.read().len() as i32
     }
 
     pub fn all_names(&self) -> Vec<String> {
-        self.inner_store().read().keys().cloned().collect()
+        self.read().keys().cloned().collect()
     }
 
     pub fn table_fmt(&self) -> String {
@@ -318,7 +313,7 @@ impl SpuLocalStore {
         );
         table.push_str(&hdr);
 
-        for (name, spu) in self.inner_store().read().iter() {
+        for (name, spu) in self.read().iter() {
             let rack = match spu.rack() {
                 Some(rack) => rack.clone(),
                 None => String::from(""),
@@ -341,8 +336,7 @@ impl SpuLocalStore {
 
     /// number of spus in rack count
     pub fn spus_in_rack_count(&self) -> i32 {
-        self.inner_store()
-            .read()
+        self.read()
             .values()
             .filter_map(|spu| if spu.rack().is_some() { Some(1) } else { None })
             .sum()
@@ -360,7 +354,7 @@ impl SpuLocalStore {
     fn online_spu_rack_map(spus: &SpuLocalStore) -> BTreeMap<String, Vec<i32>> {
         let mut rack_spus: BTreeMap<String, Vec<i32>> = BTreeMap::new();
 
-        for spu in spus.inner_store().read().values() {
+        for spu in spus.read().values() {
             if let Some(rack) = spu.rack() {
                 let mut ids: Vec<i32>;
                 let mut ids_in_map = rack_spus.remove(rack);

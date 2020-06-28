@@ -6,6 +6,7 @@ use std::io::Error as IoError;
 use std::io::ErrorKind;
 use std::collections::BTreeMap;
 use std::sync::RwLockReadGuard;
+use std::sync::RwLockWriteGuard;
 
 
 use super::StoreSpec;
@@ -62,12 +63,21 @@ where
         Arc::new(Self::default())
     }
 
-    pub fn inner_store(&self) -> &SimpleConcurrentBTreeMap<S::IndexKey, KVObject<S>> {
-        &self.0
+    /// read access
+    #[inline(always)]
+    pub fn read(&self) -> RwLockReadGuard<BTreeMap<S::IndexKey,KVObject<S>>>
+    {
+        self.0.read()
     }
 
+    #[inline(always)]
+    pub fn write(&self) -> RwLockWriteGuard<BTreeMap<S::IndexKey,KVObject<S>>>
+    {
+        self.0.write()
+    } 
+    
     pub fn insert(&self, value: KVObject<S>) -> Option<KVObject<S>> {
-        self.inner_store().write().insert(value.key_owned(), value)
+        self.write().insert(value.key_owned(), value)
     }
 
 
@@ -75,14 +85,9 @@ where
     where
         F: FnMut(&'_ KVObject<S>),
     {
-        self.inner_store().read().values().for_each(func);
+        self.read().values().for_each(func);
     }
 
-    /// value iterators
-    pub fn read(&self) -> RwLockReadGuard<BTreeMap<S::IndexKey,KVObject<S>>>
-    {
-        self.inner_store().read()
-    }
 
     /// get copy of the value ref by key
     pub fn value<K: ?Sized>(&self, key: &K) -> Option<KVObject<S>>
@@ -90,7 +95,7 @@ where
         S::IndexKey: Borrow<K>,
         K: Ord,
     {
-        match self.inner_store().read().get(key) {
+        match self.read().get(key) {
             Some(value) => Some(value.clone()),
             None => None,
         }
@@ -103,7 +108,7 @@ where
         S::IndexKey: Borrow<K>,
         K: Ord,
     {
-        match self.inner_store().read().get(key) {
+        match self.read().get(key) {
             Some(value) => Some(value.spec.clone()),
             None => None,
         }
@@ -115,7 +120,7 @@ where
         K: Ord,
         S::IndexKey: Borrow<K>,
     {
-        if let Some(value) = self.inner_store().read().get(key) {
+        if let Some(value) = self.read().get(key) {
             func(value);
             Some(())
         } else {
@@ -129,7 +134,7 @@ where
         S::IndexKey: Borrow<K>,
         K: Ord,
     {
-        self.inner_store().read().contains_key(key)
+        self.read().contains_key(key)
     }
 
     pub fn remove<K: ?Sized>(&self, key: &K) -> Option<KVObject<S>>
@@ -137,25 +142,24 @@ where
         S::IndexKey: Borrow<K>,
         K: Ord,
     {
-        self.inner_store().write().remove(key)
+        self.write().remove(key)
     }
 
     pub fn count(&self) -> i32 {
-        self.inner_store().read().len() as i32
+        self.read().len() as i32
     }
 
     /// get copy of keys
     pub fn clone_keys(&self) -> Vec<S::IndexKey> {
-        self.inner_store().read().keys().cloned().collect()
+        self.read().keys().cloned().collect()
     }
 
     pub fn clone_values(&self) -> Vec<KVObject<S>> {
-        self.inner_store().read().values().cloned().collect()
+        self.read().values().cloned().collect()
     }
 
     pub fn clone_specs(&self) -> Vec<S> {
-        self.inner_store()
-            .read()
+        self.read()
             .values()
             .map(|kv| kv.spec.clone())
             .collect()
@@ -169,7 +173,7 @@ where
         S::IndexKey: Borrow<K>,
         K: Display + Ord,
     {
-        if let Some(old_kv) = self.inner_store().write().get_mut(key) {
+        if let Some(old_kv) = self.write().get_mut(key) {
             old_kv.status = status;
             Ok(())
         } else {
@@ -191,7 +195,7 @@ where
             f,
             "{} Store count: {}",
             S::LABEL,
-            self.inner_store().read().len()
+            self.read().len()
         )
     }
 }

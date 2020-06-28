@@ -1,4 +1,4 @@
-#![feature(trace_macros, generators, specialization)]
+#![feature(specialization)]
 #![recursion_limit = "256"]
 
 pub mod config;
@@ -11,6 +11,5 @@ mod services;
 pub mod stores;
 
 
-use init::create_core_services;
 use self::error::ScServerError;
 pub use init::start_main_loop;

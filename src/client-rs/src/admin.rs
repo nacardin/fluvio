@@ -1,4 +1,5 @@
 use std::convert::TryInto;
+use std::fmt::Display;
 
 use flv_api_sc::objects::*;
 use flv_api_sc::AdminRequest;
@@ -60,7 +61,8 @@ impl AdminClient {
         where
             S: ListSpec,
             F: Into<Vec<S::Filter>>,
-            ListResponse: TryInto<Vec<Metadata<S>>>
+            ListResponse: TryInto<Vec<Metadata<S>>>,
+            <ListResponse as TryInto<Vec<Metadata<S>>>>::Error: Display
     {
         use std::io::Error;
         use std::io::ErrorKind;
@@ -70,7 +72,7 @@ impl AdminClient {
         let response = self.send_receive(list_request).await?;
 
         response.try_into()
-            .map_err(|_| Error::new(ErrorKind::Other,"can't convert").into())
+            .map_err(|err| Error::new(ErrorKind::Other,format!("can't convert: {}",err)).into())
     }
 
     

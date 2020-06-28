@@ -416,7 +416,7 @@ pub type TopicLocalStore = LocalStore<TopicSpec>;
 
 impl TopicLocalStore {
     pub fn topic(&self, topic_name: &str) -> Option<TopicKV> {
-        match (*self.inner_store().read()).get(topic_name) {
+        match self.read().get(topic_name) {
             Some(topic) => Some(topic.clone()),
             None => None,
         }
@@ -438,7 +438,7 @@ impl TopicLocalStore {
         );
         table.push_str(&topic_hdr);
 
-        for (name, topic) in self.inner_store().read().iter() {
+        for (name, topic) in self.read().iter() {
             let topic_row = format!(
                 "{n:<18}  {t:^8}  {p:^5}  {s:^5}  {g:<8}  {l:^14}  {m:^10}  {r}\n",
                 n = name.clone(),

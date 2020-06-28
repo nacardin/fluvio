@@ -175,7 +175,7 @@ mod encoding {
                 SpuSpec::LABEL => {
                     let mut response: Vec<NameFilter> = vec![];
                     response.decode(src, version)?;
-                    *self = Self::SpuGroup(response);
+                    *self = Self::Spu(response);
                     Ok(())
                 }
 
@@ -271,9 +271,9 @@ mod encoding {
                 },
 
                 SpuSpec::LABEL => {
-                    let mut response: Vec<Metadata<SpuGroupSpec>>= vec![];
+                    let mut response: Vec<Metadata<SpuSpec>>= vec![];
                     response.decode(src, version)?;
-                    *self = Self::SpuGroup(response);
+                    *self = Self::Spu(response);
                     Ok(())
                 }
 

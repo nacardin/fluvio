@@ -24,7 +24,6 @@ use sc_api::AdminPublicRequest;
 use k8_metadata_client::MetadataClient;
 use flv_future_aio::zero_copy::ZeroCopyWrite;
 
-
 use super::*;
 
 pub struct PublicService<C>(PhantomData<C>);
@@ -58,14 +57,12 @@ where
         api_loop!(
             api_stream,
 
-
             AdminPublicRequest::ApiVersionsRequest(request) => call_service!(
                 request,
                 super::api_version::handle_api_versions_request(request),
                 shared_sink,
                 "api version handler"
             ),
-
 
             AdminPublicRequest::CreateRequest(request) => call_service!(
                 request,
@@ -88,7 +85,7 @@ where
             ),
             AdminPublicRequest::UpdateMetadataRequest(request) => super::metadata::ClientMetadataController::handle_metadata_update(
                 request,
-                shared_sink.clone(), 
+                shared_sink.clone(),
                 end_event.clone(),
                 ctx.shared_context.clone()),
             _ => {

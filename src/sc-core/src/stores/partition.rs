@@ -57,12 +57,12 @@ pub type PartitionLocalStore = LocalStore<PartitionSpec>;
 
 impl PartitionLocalStore {
     pub fn names(&self) -> Vec<ReplicaKey> {
-        self.inner_store().read().keys().cloned().collect()
+        self.read().keys().cloned().collect()
     }
 
     pub fn topic_partitions(&self, topic: &str) -> Vec<PartitionKV> {
         let mut res: Vec<PartitionKV> = Vec::default();
-        for (name, partition) in self.inner_store().read().iter() {
+        for (name, partition) in self.read().iter() {
             if name.topic == topic {
                 res.push(partition.clone());
             }
@@ -73,7 +73,7 @@ impl PartitionLocalStore {
     /// find all partitions that has spu in the replicas
     pub fn partition_spec_for_spu(&self, target_spu: &i32) -> Vec<(ReplicaKey, PartitionSpec)> {
         let mut res = vec![];
-        for (name, partition) in self.inner_store().read().iter() {
+        for (name, partition) in self.read().iter() {
             if partition.spec.replicas.contains(target_spu) {
                 res.push((name.clone(), partition.spec.clone()));
             }
@@ -83,7 +83,7 @@ impl PartitionLocalStore {
 
     pub fn count_topic_partitions(&self, topic: &str) -> i32 {
         let mut count: i32 = 0;
-        for (name, _) in self.inner_store().read().iter() {
+        for (name, _) in self.read().iter() {
             if name.topic == topic {
                 count += 1;
             }
@@ -94,8 +94,7 @@ impl PartitionLocalStore {
     // return partitions that belong to this topic
     #[allow(dead_code)]
     fn topic_partitions_list(&self, topic: &str) -> Vec<ReplicaKey> {
-        self.inner_store()
-            .read()
+        self.read()
             .keys()
             .filter_map(|name| {
                 if &name.topic == topic {
@@ -127,8 +126,7 @@ impl PartitionLocalStore {
 
     pub fn leaders(&self) -> Vec<ReplicaLeader> {
     
-        self.inner_store()
-            .read()
+        self.read()
             .iter()
             .map(|(key, value)| ReplicaLeader { id: key.clone(), leader: value.spec.leader })
             .collect()
@@ -146,7 +144,7 @@ impl PartitionLocalStore {
         );
         table.push_str(&partition_hdr);
 
-        for (name, partition) in self.inner_store().read().iter() {
+        for (name, partition) in self.read().iter() {
             let mut leader = String::from("-");
             let mut _lrs = String::from("[]");
 

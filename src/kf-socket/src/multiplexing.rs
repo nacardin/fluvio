@@ -209,6 +209,7 @@ where
         req_msg.header.set_correlation_id(self.correlation_id);
 
         debug!("serial: sending serial request id: {}", self.correlation_id);
+        trace!("sending request: {:#?}",req_msg);
         self.sink.send_request(&req_msg).await?;
         debug!(
             "serial: finished and waiting for reply from dispatcher for: {}",

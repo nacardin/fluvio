@@ -24,7 +24,7 @@ use crate::common::OutputFormat;
 #[derive(Debug, StructOpt)]
 pub struct DescribeTopicsOpt {
     /// Topic filter
-    #[structopt(short, long, value_name = "string")]
+    #[structopt(value_name = "string")]
     topic: String,
 
     #[structopt(flatten)]

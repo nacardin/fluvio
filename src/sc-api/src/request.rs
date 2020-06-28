@@ -7,7 +7,7 @@
 use std::convert::TryInto;
 use std::io::Error as IoError;
 
-use log::trace;
+use log::debug;
 
 use kf_protocol::bytes::Buf;
 
@@ -51,8 +51,9 @@ impl KfRequestMessage for AdminPublicRequest {
         Self::ApiKey: Sized,
         T: Buf,
     {
-        trace!("decoding header: {:#?}", header);
-        match header.api_key().try_into()? {
+        let api_key = header.api_key().try_into()?;
+        debug!("decoding admin public request from: {} api: {:#?}", header.client_id(),api_key);
+        match api_key {
             AdminPublicApiKey::ApiVersion => api_decode!(Self, ApiVersionsRequest, src, header),
 
             AdminPublicApiKey::Create => api_decode!(Self, CreateRequest, src, header),
