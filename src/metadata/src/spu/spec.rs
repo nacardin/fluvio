@@ -26,6 +26,7 @@ use kf_protocol::Version;
 #[derive(Decode, Encode, Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "use_serde", derive(serde::Serialize,serde::Deserialize),serde(rename_all = "camelCase"))]
 pub struct SpuSpec {
+    #[cfg_attr(feature = "use_serde", serde(rename = "spuId"))]
     pub id: SpuId,
     #[cfg_attr(feature = "use_serde",serde(default))]
     pub spu_type: SpuType,
