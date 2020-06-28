@@ -144,7 +144,7 @@ mod produce {
     pub async fn produce_file_records<O: Terminal>(
         mut producer: Producer,
         out: std::sync::Arc<O>,
-        opt: ProduceLogConfig,
+        _cfg: ProduceLogConfig,
         file: FileRecord
     ) -> Result<(), CliError> {
         let tuples = file_to_records(file).await?;

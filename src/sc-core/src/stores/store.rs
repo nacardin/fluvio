@@ -84,6 +84,17 @@ where
         self.inner_store().read()
     }
 
+    /// get copy of the value ref by key
+    pub fn value<K: ?Sized>(&self, key: &K) -> Option<KVObject<S>>
+    where
+        S::IndexKey: Borrow<K>,
+        K: Ord,
+    {
+        match self.inner_store().read().get(key) {
+            Some(value) => Some(value.clone()),
+            None => None,
+        }
+    }
 
 
     /// get copy of the spec ref by key
