@@ -148,7 +148,7 @@ impl<S> Into<Metadata<S>> for &KVObject<S>
 
     fn into(self) -> Metadata<S> {
         Metadata {
-            name: self.key.into(),
+            name: self.key.clone().into(),
             spec: self.spec.clone(),
             status: self.status.clone()
         }

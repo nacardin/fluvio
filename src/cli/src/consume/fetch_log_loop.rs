@@ -8,8 +8,6 @@ use std::io::Error as IoError;
 use std::io::ErrorKind;
 
 use log::debug;
-use futures::stream::StreamExt;
-
 
 use flv_client::params::*;
 use flv_client::Consumer;

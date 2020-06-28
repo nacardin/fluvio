@@ -62,7 +62,7 @@ where
                         mod_cnt += 1;
                         debug!("adding {}:{} to local store", S::LABEL, new_kv_value.key());
                         local_store.insert(new_kv_value.clone());
-                        actions.push(LSChange::update(new_kv_value, *old_value));
+                        actions.push(LSChange::update(new_kv_value.clone(), old_value.clone()));
                     }
 
                     local_names.retain(|n| n != key);
