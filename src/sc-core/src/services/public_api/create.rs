@@ -1,6 +1,5 @@
 use std::io::Error as IoError;
 
-use log::debug;
 use kf_protocol::api::*;
 use k8_metadata_client::MetadataClient;
 

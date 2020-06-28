@@ -68,7 +68,7 @@ where
 
     let topics = admin.list::<TopicSpec,_>(vec![topic]).await?;
 
-    display::describe_topics(topics, output_type, out);
+    display::describe_topics(topics, output_type, out).await?;
     Ok("".to_owned())
 }
 
@@ -143,7 +143,6 @@ mod display {
             let spec = &self.spec;
             let status = &self.status;
 
-            let reason = &status.reason;
             key_values.push(("Name".to_owned(), Some(self.name.clone())));
             key_values.push(("Type".to_owned(), Some(spec.type_label().to_string())));
             match spec {

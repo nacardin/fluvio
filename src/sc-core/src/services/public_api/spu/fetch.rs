@@ -15,6 +15,7 @@ pub async fn handle_fetch_custom_spu_request(
 ) -> Result<ListResponse, Error> {
     let spus: Vec<Metadata<SpuSpec>> = ctx
         .spus()
+        .read()
         .values()
         .filter_map(|value| {
             if value.spec().is_custom() && filters.filter(value.key()) {
@@ -44,6 +45,7 @@ pub async fn handle_fetch_spus_request(
 ) -> Result<ListResponse, Error> {
     let spus: Vec<Metadata<SpuSpec>> = ctx
         .spus()
+        .read()
         .values()
         .filter_map(|value| {
             if filters.filter(value.key()) {

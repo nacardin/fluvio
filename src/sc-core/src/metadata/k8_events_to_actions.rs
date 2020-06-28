@@ -53,7 +53,7 @@ where
         match k8_obj_to_kv_obj(k8_obj) {
             Ok(new_kv_value) => {
                 let key = new_kv_value.key();
-                if let Some(old_value) = local_store.get(key) {
+                if let Some(old_value) = local_store.read().get(key) {
                     // object exists
                     if *old_value == new_kv_value {
                         skip_cnt += 1; //nothing changed
@@ -305,6 +305,7 @@ pub mod test {
             _ => assert!(false),
         }
         topic_store
+            .read()
             .get("topic1")
             .expect("topic1 should exists");
     }
@@ -400,6 +401,7 @@ pub mod test {
             _ => assert!(false),
         }
         topic_store
+            .read()
             .get("topic1")
             .expect("topic1 should exists");
     }

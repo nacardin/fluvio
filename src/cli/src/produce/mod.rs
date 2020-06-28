@@ -158,7 +158,7 @@ mod produce {
     /// Dispatch records based on the content of the record tuples variable
     pub async fn produce_from_stdin<O: Terminal>(
         mut producer: Producer,
-        out: std::sync::Arc<O>,
+        _out: std::sync::Arc<O>,
         opt: ProduceLogConfig,
     ) -> Result<(), CliError> {
         

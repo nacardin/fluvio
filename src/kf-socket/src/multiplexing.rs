@@ -337,7 +337,7 @@ impl MultiPlexingResponseDispatcher {
                         ))),
                     }
                 }
-                SharedSender::Queue(queue_sender) => queue_sender.send(msg).await.map_err(|err| {
+                SharedSender::Queue(queue_sender) => queue_sender.send(msg).await.map_err(|_| {
                     KfSocketError::IoError(IoError::new(
                         ErrorKind::BrokenPipe,
                         format!("problem sending to queue socket: {}", correlation_id),

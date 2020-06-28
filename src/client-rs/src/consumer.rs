@@ -32,8 +32,8 @@ impl Consumer  {
 
     pub async fn fetch_logs_once(
         &mut self,
-        offset_option: FetchOffset,
-        option: FetchLogOption,
+        _offset_option: FetchOffset,
+        _option: FetchLogOption,
     ) -> Result<FetchablePartitionResponse<RecordSet>, ClientError> {
 
         todo!()

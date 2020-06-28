@@ -7,7 +7,6 @@
 use log::{debug, trace};
 use std::io::Error;
 
-use kf_protocol::api::{RequestMessage, ResponseMessage};
 use kf_protocol::api::FlvErrorCode;
 use sc_api::FlvStatus;
 use sc_api::spu::*;

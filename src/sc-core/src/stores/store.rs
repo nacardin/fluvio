@@ -4,8 +4,9 @@ use std::fmt::Display;
 use std::borrow::Borrow;
 use std::io::Error as IoError;
 use std::io::ErrorKind;
-use std::collections::btree_map::Values;
-use std::hash::Hash;
+use std::collections::BTreeMap;
+use std::sync::RwLockReadGuard;
+use std::sync::RwLockWriteGuard;
 
 use super::StoreSpec;
 use flv_util::SimpleConcurrentBTreeMap;
@@ -78,19 +79,12 @@ where
     }
 
     /// value iterators
-    pub fn values(&self) -> Values<S::IndexKey,KVObject<S>>
+    pub fn read(&self) -> RwLockReadGuard<BTreeMap<S::IndexKey,KVObject<S>>>
     {
-        self.inner_store().read().values()
+        self.inner_store().read()
     }
 
 
-    pub fn get<Q>(&self, key: &Q) -> Option<&KVObject<S>>
-    where
-        S::IndexKey: Borrow<Q>,
-        Q: Ord + ?Sized
-    {
-        self.inner_store().read().get(key)
-    }
 
     /// get copy of the spec ref by key
     pub fn spec<K: ?Sized>(&self, key: &K) -> Option<S>

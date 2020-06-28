@@ -15,6 +15,7 @@ pub async fn handle_fetch_topics_request(
     
     let topics: Vec<Metadata<TopicSpec>> = ctx
             .topics()
+            .read()
             .values()
             .filter_map(|value| {
                 if filters.filter(value.key()) {

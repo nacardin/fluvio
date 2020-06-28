@@ -35,7 +35,7 @@ impl Producer {
     }
 
 
-    pub async fn send_record(&mut self, record: Vec<u8>) -> Result<(), ClientError> {
+    pub async fn send_record(&mut self, _record: Vec<u8>) -> Result<(), ClientError> {
         todo!()
     }
 
@@ -44,14 +44,14 @@ impl Producer {
 
 impl AsyncWrite for Producer{
 
-    fn poll_write(self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &[u8])
+    fn poll_write(self: Pin<&mut Self>, _cx: &mut Context<'_>, _buf: &[u8])
             -> Poll<Result<usize,IoError>> {
         todo!()
     }
-    fn poll_flush(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(),IoError>> {
+    fn poll_flush(self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Result<(),IoError>> {
         todo!()
     }
-    fn poll_close(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(),IoError>> {
+    fn poll_close(self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Result<(),IoError>> {
         todo!()
     }
 
