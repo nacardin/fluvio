@@ -160,7 +160,7 @@ mod display {
                         Some(param.ignore_rack_assignment.to_string()),
                     ));
                 }
-                TopicSpec::Assigned(partitions) => {
+                TopicSpec::Assigned(_partitions) => {
                     /*
                     key_values.push((
                         "Assigned Partitions".to_owned(),

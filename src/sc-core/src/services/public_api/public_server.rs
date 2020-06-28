@@ -79,7 +79,13 @@ where
                 shared_sink,
                 "delete  handler"
             ),
-           
+
+            AdminPublicRequest::ListRequest(request) => call_service!(
+                request,
+                super::list::handle_list_request(request, ctx.context().clone()),
+                shared_sink,
+                "list handler"
+            ),
             AdminPublicRequest::UpdateMetadataRequest(request) => super::metadata::ClientMetadataController::handle_metadata_update(
                 request,
                 shared_sink.clone(), 

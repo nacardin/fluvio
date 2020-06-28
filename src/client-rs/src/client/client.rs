@@ -97,13 +97,6 @@ impl RawClient {
     }
 
     
-    pub fn socket(&self) -> &AllKfSocket {
-        &self.socket
-    }
-
-    pub fn mut_socket(&mut self) -> &mut AllKfSocket {
-        &mut self.socket
-    }
 
     /// send request only
     pub async fn send_request<R>(&mut self, request: R) -> Result<RequestMessage<R>, KfSocketError>

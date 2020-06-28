@@ -8,7 +8,7 @@ repository = "https://github.com/infinyon/fluvio"
 license = "Apache-2.0"
 
 [features]
-use_serde = ["flv-metadata/use_serde"]
+use_serde = ["flv-metadata/use_serde","serde"]
 
 [dependencies]
 log = "0.4.8"

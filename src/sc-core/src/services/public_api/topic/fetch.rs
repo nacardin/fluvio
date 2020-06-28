@@ -5,12 +5,12 @@ use std::io::Error;
 use sc_api::objects::*;
 use sc_api::topic::TopicSpec;
 
-use crate::core::SharedContext;
+use crate::core::Context;
 use crate::stores::KeyFilter;
 
 pub async fn handle_fetch_topics_request(
     filters: Vec<String>,
-    ctx: SharedContext,
+    ctx: &Context,
 ) -> Result<ListResponse,Error> {
     
     let topics: Vec<Metadata<TopicSpec>> = ctx

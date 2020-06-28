@@ -4,12 +4,12 @@ use std::io::Error;
 use kf_protocol::api::{RequestMessage, ResponseMessage};
 use sc_api::objects::*;
 
-use crate::core::SharedContext;
+use crate::core::Context;
 
 
 pub async fn handle_list_request(
     request: RequestMessage<ListRequest>,
-    ctx: SharedContext,
+    ctx: &Context,
 ) -> Result<ResponseMessage<ListResponse>, Error> {
     let (header, req) = request.get_header_request();
 

@@ -6,7 +6,7 @@ use std::io::Error as IoError;
 use std::io::ErrorKind;
 use std::collections::BTreeMap;
 use std::sync::RwLockReadGuard;
-use std::sync::RwLockWriteGuard;
+
 
 use super::StoreSpec;
 use flv_util::SimpleConcurrentBTreeMap;

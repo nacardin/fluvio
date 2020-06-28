@@ -2,7 +2,7 @@ use std::fmt;
 use std::io::Error as IoError;
 
 use kf_socket::KfSocketError;
-use sc_api::ApiError;
+use flv_api_sc::ApiError;
 
 #[derive(Debug)]
 pub enum ClientError {

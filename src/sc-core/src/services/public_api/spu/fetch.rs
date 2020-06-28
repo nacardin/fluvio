@@ -6,12 +6,12 @@ use sc_api::objects::*;
 use sc_api::spu::SpuSpec;
 use sc_api::spu::CustomSpuSpec;
 
-use crate::core::SharedContext;
+use crate::core::Context;
 use crate::stores::KeyFilter;
 
 pub async fn handle_fetch_custom_spu_request(
     filters: Vec<String>,
-    ctx: SharedContext,
+    ctx: &Context,
 ) -> Result<ListResponse, Error> {
     let spus: Vec<Metadata<SpuSpec>> = ctx
         .spus()
@@ -41,7 +41,7 @@ pub async fn handle_fetch_custom_spu_request(
 
 pub async fn handle_fetch_spus_request(
     filters: Vec<String>,
-    ctx: SharedContext,
+    ctx: &Context,
 ) -> Result<ListResponse, Error> {
     let spus: Vec<Metadata<SpuSpec>> = ctx
         .spus()

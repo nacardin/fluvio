@@ -18,19 +18,19 @@ pub use consumer::Consumer;
 pub mod metadata {
 
     pub mod topic {
-        pub use sc_api::topic::*;
+        pub use flv_api_sc::topic::*;
     }
 
     pub mod spu {
-        pub use sc_api::spu::*;
+        pub use flv_api_sc::spu::*;
     }
 
     pub mod spg {
-        pub use sc_api::spg::*;
+        pub use flv_api_sc::spg::*;
     }
 
     pub mod objects {
-        pub use sc_api::objects::*;
+        pub use flv_api_sc::objects::*;
     }
 }
 

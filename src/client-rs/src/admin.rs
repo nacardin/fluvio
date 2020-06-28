@@ -1,7 +1,7 @@
 use std::convert::TryInto;
 
-use sc_api::objects::*;
-use sc_api::AdminRequest;
+use flv_api_sc::objects::*;
+use flv_api_sc::AdminRequest;
 use kf_socket::*;
 
 use crate::client::*;
