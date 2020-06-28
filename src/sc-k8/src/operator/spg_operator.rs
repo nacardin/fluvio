@@ -12,7 +12,7 @@ use k8_client::ClientError;
 use flv_metadata::k8::metadata::*;
 use flv_metadata::k8::core::service::*;
 use flv_metadata::spg::K8SpuGroupSpec;
-use flv_metadata::spg::K8SpuGroupStatus;
+use flv_metadata::spg::SpuGroupStatus;
 use flv_metadata::spg::SpuEndpointTemplate;
 use flv_metadata::spu::*;
 use k8_client::metadata::MetadataClient;
@@ -117,7 +117,7 @@ impl SpgOperator {
                 "spg group: {} is conflict with existing id: {}",
                 spg_name, conflict_id
             );
-            let status = K8SpuGroupStatus::invalid(format!("conflict with: {}", conflict_id));
+            let status = SpuGroupStatus::invalid(format!("conflict with: {}", conflict_id));
 
             let k8_status_change = spu_group.as_status_update(status);
             if let Err(err) = self.client.update_status(&k8_status_change).await {
@@ -126,7 +126,7 @@ impl SpgOperator {
         } else {
             // if we pass this stage, then we reserved id.
             if !spu_group.is_already_valid() {
-                let status_change = spu_group.as_status_update(K8SpuGroupStatus::reserved());
+                let status_change = spu_group.as_status_update(SpuGroupStatus::reserved());
                 if let Err(err) = self.client.update_status(&status_change).await {
                     error!("error: {} updating status: {:#?}", err, status_change)
                 }

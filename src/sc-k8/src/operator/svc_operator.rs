@@ -98,7 +98,7 @@ impl SvcOperator {
         debug!("svc spec: {:#?}", svc_obj);
 
         if let Some(spu_id) = svc_obj.metadata.labels.get("fluvio.io/spu-name") {
-            if let Some(mut old_value) = self.spu_store.value(spu_id) {
+            if let Some(mut old_value) = self.spu_store.read().get(spu_id) {
                 debug!(
                     "found spu: {} to update ingress from external load balancer ",
                     spu_id
@@ -107,7 +107,7 @@ impl SvcOperator {
                 let ingresses = svc_obj.status.load_balancer.ingress;
                 old_value.spec.public_endpoint.ingress =
                     ingresses.into_iter().map(|addr| convert(addr)).collect();
-                self.k8_ws.update_spec(old_value).await?;
+                self.k8_ws.update_spec(old_value.clone()).await?;
             }
         }
         Ok(())
