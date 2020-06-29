@@ -591,7 +591,7 @@ mod test {
         let topics = TopicLocalStore::default();
 
         let topic1 = TopicKV::new("Topic-1", (1, 1, false).into(), TopicStatus::default());
-        topics.insert(topic1);
+        topics.insert(topic1).await;
 
         let topic2 = TopicKV::new(
             "Topic-2",

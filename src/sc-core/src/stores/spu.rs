@@ -112,16 +112,7 @@ impl SpuLocalStore {
         }
     }
 
-    // do bulk add,
-    // assume spu stars with id
-    #[cfg(test)]
-    pub fn bulk_add(&self, spus: Vec<(i32, bool, Option<String>)>) {
-        for (spu_id, online, rack) in spus.into_iter() {
-            let spu_key = format!("spu-{}", spu_id);
-            let spu: SpuKV = (spu_key, spu_id, online, rack).into();
-            self.insert(spu);
-        }
-    }
+    
 
     // build hashmap of online
     pub async fn online_status(&self) -> HashSet<SpuId> {
@@ -361,12 +352,15 @@ impl SpuLocalStore {
     }
 }
 
-#[cfg(test)]
+
+
 impl From<Vec<(i32, bool, Option<String>)>> for SpuLocalStore {
     fn from(spus: Vec<(i32, bool, Option<String>)>) -> Self {
-        let store = Self::default();
-        store.bulk_add(spus);
-        store
+        let elements = spus.into_iter().map(|(spu_id,online,rack)| {
+            let spu_key = format!("spu-{}", spu_id);
+            (spu_key, spu_id, online, rack).into()
+        }).collect();
+        Self::bulk_new(elements)
     }
 }
 
@@ -392,9 +386,9 @@ pub mod test {
         assert_eq!(no_status_spu.status.is_online(), false);
 
         let spus = SpuLocalStore::default();
-        spus.insert(online_spu);
-        spus.insert(offline_spu);
-        spus.insert(no_status_spu);
+        spus.insert(online_spu).await;
+        spus.insert(offline_spu).await;
+        spus.insert(no_status_spu).await;
 
         assert_eq!(spus.all_spu_count().await, 3);
         assert_eq!(spus.online_spu_count().await, 1);
@@ -419,8 +413,8 @@ pub mod test {
         let offline_spu: SpuKV = ("spu-1", 1, false, None).into();
 
         let spus = SpuLocalStore::default();
-        spus.insert(online_spu);
-        spus.insert(offline_spu);
+        spus.insert(online_spu).await;
+        spus.insert(offline_spu).await;
 
         assert_eq!(spus.online_spu_count().await, 1);
         assert_eq!(spus.all_spu_count().await, 2);
@@ -466,9 +460,9 @@ pub mod test {
         assert_eq!(offline.status.is_online(), false);
 
         let spus = SpuLocalStore::default();
-        spus.insert(online.clone());
-        spus.insert(offline.clone());
-        spus.insert(offline2);
+        spus.insert(online.clone()).await;
+        spus.insert(offline.clone()).await;
+        spus.insert(offline2).await;
         assert_eq!(spus.all_spu_count().await, 3);
         assert_eq!(spus.online_spu_count().await, 1);
 
