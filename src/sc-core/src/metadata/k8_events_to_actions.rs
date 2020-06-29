@@ -30,7 +30,7 @@ use crate::ScServerError;
 /// It only generates KVInputAction if incoming k8 object is different from memstore
 ///
 ///
-pub fn k8_events_to_metadata_actions<S>(
+pub async fn k8_events_to_metadata_actions<S>(
     k8_tokens: K8List<S::K8Spec>,
     local_store: &LocalStore<S>,
 ) -> Actions<LSChange<S>>
@@ -44,8 +44,8 @@ where
     S::K8Spec: Into<S>,
 {
     let (mut add_cnt, mut mod_cnt, mut del_cnt, mut skip_cnt) = (0, 0, 0, 0);
-    let mut local_names = local_store.clone_keys();
-    let all = local_store.count();
+    let mut local_names = local_store.clone_keys().await;
+    let all = local_store.count().await;
     let mut actions: Actions<LSChange<S>> = Actions::default();
 
     // loop through items and generate add/mod actions
@@ -53,7 +53,7 @@ where
         match k8_obj_to_kv_obj(k8_obj) {
             Ok(new_kv_value) => {
                 let key = new_kv_value.key();
-                if let Some(old_value) = local_store.read().get(key) {
+                if let Some(old_value) = local_store.read().await.get(key) {
                     // object exists
                     if *old_value == new_kv_value {
                         skip_cnt += 1; //nothing changed
@@ -61,7 +61,7 @@ where
                         // diff
                         mod_cnt += 1;
                         debug!("adding {}:{} to local store", S::LABEL, new_kv_value.key());
-                        local_store.insert(new_kv_value.clone());
+                        local_store.insert(new_kv_value.clone()).await;
                         actions.push(LSChange::update(new_kv_value.clone(), old_value.clone()));
                     }
 
@@ -69,7 +69,7 @@ where
                 } else {
                     // object doesn't exisit
                     add_cnt += 1;
-                    local_store.insert(new_kv_value.clone());
+                    local_store.insert(new_kv_value.clone()).await;
                     actions.push(LSChange::add(new_kv_value));
                 }
             }
@@ -82,8 +82,8 @@ where
 
     // loop through the remaining names and generate delete actions
     for name in local_names.into_iter() {
-        if local_store.contains_key(&name) {
-            if let Some(old_value) = local_store.remove(&name) {
+        if local_store.contains_key(&name).await {
+            if let Some(old_value) = local_store.remove(&name).await {
                 del_cnt += 1;
                 actions.push(LSChange::delete(old_value));
             } else {
@@ -113,7 +113,7 @@ where
 ///
 /// Translates K8 events into metadata action.
 ///
-pub fn k8_event_stream_to_metadata_actions<S, E>(
+pub async fn k8_event_stream_to_metadata_actions<S, E>(
     stream: TokenStreamResult<S::K8Spec, E>,
     local_store: &LocalStore<S>,
 ) -> Actions<LSChange<S>>
@@ -140,7 +140,7 @@ where
                     match converted {
                         Ok(new_kv_value) => {
                             trace!("KV ({}): push ADD action", new_kv_value.key());
-                            if let Some(old_value) = local_store.insert(new_kv_value.clone()) {
+                            if let Some(old_value) = local_store.insert(new_kv_value.clone()).await {
                                 // some old value, check if same as new one, if they are same, no need for action
                                 warn!(
                                     "detected exist value: {:#?} which sould not exists",
@@ -171,7 +171,7 @@ where
                     let converted: Result<KVObject<S>, ScServerError> = k8_obj_to_kv_obj(k8_obj); // help out compiler
                     match converted {
                         Ok(new_kv_value) => {
-                            if let Some(old_value) = local_store.insert(new_kv_value.clone()) {
+                            if let Some(old_value) = local_store.insert(new_kv_value.clone()).await {
                                 if old_value == new_kv_value {
                                     // this is unexpected,
                                     warn!(
@@ -201,7 +201,7 @@ where
                             trace!("KV ({}): push DEL action", kv_value.key());
 
                             // try to delete it
-                            if let Some(_old_value) = local_store.remove(kv_value.key()) {
+                            if let Some(_old_value) = local_store.remove(kv_value.key()).await {
                                 del_cnt += 1;
                                 actions.push(LSChange::delete(kv_value));
                             } else {
@@ -271,6 +271,7 @@ pub mod test {
     use flv_metadata::k8::metadata::K8Watch;
     use k8_metadata_client::as_token_stream_result;
     use k8_metadata_client::DoNothingError;
+    use flv_future_aio::test_async;
 
     //use k8_metadata::core::metadata::K8Watch;
     //use k8_metadata::core::Spec as K8Spec;
@@ -285,8 +286,8 @@ pub mod test {
     type K8Topic = K8Obj<TopicSpec>;
     type K8TopicWatch = K8Watch<TopicSpec>;
 
-    #[test]
-    fn test_check_items_against_empty() {
+    #[test_async]
+    async fn test_check_items_against_empty() -> Result<(),()> {
         let mut topics = TopicList::new();
         topics
             .items
@@ -294,7 +295,7 @@ pub mod test {
 
         let topic_store = TopicLocalStore::default();
 
-        let kv_actions = k8_events_to_metadata_actions(topics, &topic_store);
+        let kv_actions = k8_events_to_metadata_actions(topics, &topic_store).await;
 
         assert_eq!(kv_actions.count(), 1);
         let action = kv_actions.iter().next().expect("first");
@@ -306,12 +307,15 @@ pub mod test {
         }
         topic_store
             .read()
+            .await
             .get("topic1")
             .expect("topic1 should exists");
+
+        Ok(())
     }
 
-    #[test]
-    fn test_check_items_against_same() {
+    #[test_async]
+    async fn test_check_items_against_same() -> Result<(),()> {
         let mut topics = TopicList::new();
         topics
             .items
@@ -320,15 +324,16 @@ pub mod test {
         let topic_store = TopicLocalStore::default();
         let topic_kv =
             k8_obj_to_kv_obj(K8Topic::new("topic1", TopicSpec::default())).expect("work");
-        topic_store.insert(topic_kv);
+        topic_store.insert(topic_kv).await;
 
-        let kv_actions = k8_events_to_metadata_actions(topics, &topic_store);
+        let kv_actions = k8_events_to_metadata_actions(topics, &topic_store).await;
 
         assert_eq!(kv_actions.count(), 0);
+        Ok(())
     }
 
-    #[test]
-    fn test_items_generate_modify() {
+    #[test_async]
+    async fn test_items_generate_modify() -> Result<(),()> {
         let mut status = TopicStatus::default();
         status.resolution = TopicResolution::Provisioned;
         let new_topic = K8Topic::new("topic1", TopicSpec::default()).set_status(status);
@@ -341,7 +346,7 @@ pub mod test {
         let old_kv = k8_obj_to_kv_obj(old_topic).expect("conversion");
         topic_store.insert(old_kv.clone());
 
-        let kv_actions = k8_events_to_metadata_actions(topics, &topic_store);
+        let kv_actions = k8_events_to_metadata_actions(topics, &topic_store).await;
 
         assert_eq!(kv_actions.count(), 1);
         let action = kv_actions.iter().next().expect("first");
@@ -354,10 +359,12 @@ pub mod test {
             }
             _ => assert!(false),
         }
+        
+        Ok(())
     }
 
-    #[test]
-    fn test_items_delete() {
+    #[test_async]
+    async fn test_items_delete() -> Result<(),()> {
         let topics = TopicList::new();
 
         let topic_store = TopicLocalStore::default();
@@ -365,7 +372,7 @@ pub mod test {
             k8_obj_to_kv_obj(K8Topic::new("topic1", TopicSpec::default())).expect("work");
         topic_store.insert(topic_kv);
 
-        let kv_actions = k8_events_to_metadata_actions(topics, &topic_store);
+        let kv_actions = k8_events_to_metadata_actions(topics, &topic_store).await;
 
         assert_eq!(kv_actions.count(), 1);
         let action = kv_actions.iter().next().expect("first");
@@ -375,10 +382,11 @@ pub mod test {
             }
             _ => assert!(false),
         }
+        Ok(())
     }
 
-    #[test]
-    fn test_watch_add_actions() {
+    #[test_async]
+    async fn test_watch_add_actions() -> Result<(),()>{
         let new_topic =
             K8Topic::new("topic1", TopicSpec::default()).set_status(TopicStatus::default());
 
@@ -390,7 +398,7 @@ pub mod test {
         let kv_actions = k8_event_stream_to_metadata_actions::<_, DoNothingError>(
             as_token_stream_result(watches),
             &topic_store,
-        );
+        ).await;
 
         assert_eq!(kv_actions.count(), 1);
         let action = kv_actions.iter().next().expect("first");
@@ -402,7 +410,10 @@ pub mod test {
         }
         topic_store
             .read()
+            .await
             .get("topic1")
             .expect("topic1 should exists");
+
+        Ok(())
     }
 }

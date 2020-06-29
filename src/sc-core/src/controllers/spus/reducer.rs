@@ -167,11 +167,11 @@ impl SpuReducer {
 
     /// notification from Connection Manager indicating connection status changed
     /// this will generate KV action
-    fn conn_status_update(&self, status: SpuConnectionStatusChange, actions: &mut SpuActions) {
+    async fn conn_status_update(&self, status: SpuConnectionStatusChange, actions: &mut SpuActions) {
         debug!("processing conn request: {}", status);
         let spu_id = status.spu_id();
 
-        if let Some(spu) = self.0.get_by_id(spu_id) {
+        if let Some(spu) = self.0.get_by_id(spu_id).await {
             let mut spu_kv = spu.clone();
             match status {
                 SpuConnectionStatusChange::Off(_) => spu_kv.status.set_offline(),

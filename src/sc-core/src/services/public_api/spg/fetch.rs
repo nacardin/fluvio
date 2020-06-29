@@ -18,6 +18,7 @@ pub async fn handle_fetch_spu_groups_request(
     let spgs: Vec<Metadata<SpuGroupSpec>> = ctx
             .spgs()
             .read()
+            .await
             .values()
             .filter_map(|value| {
                 if filters.filter(value.key()) {

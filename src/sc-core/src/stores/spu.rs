@@ -90,8 +90,8 @@ pub type SpuLocalStore = LocalStore<SpuSpec>;
 
 impl SpuLocalStore {
     /// update the spec
-    pub fn update_spec(&self, name: &str, other_spu: &SpuKV) -> Result<(), IoError> {
-        if let Some(spu) = self.write().get_mut(name) {
+    pub async fn update_spec(&self, name: &str, other_spu: &SpuKV) -> Result<(), IoError> {
+        if let Some(spu) = self.write().await.get_mut(name) {
 
             if spu.spec.id != other_spu.spec.id {
                 Err(IoError::new(
@@ -124,9 +124,9 @@ impl SpuLocalStore {
     }
 
     // build hashmap of online
-    pub fn online_status(&self) -> HashSet<SpuId> {
+    pub async fn online_status(&self) -> HashSet<SpuId> {
         let mut status = HashSet::new();
-        for (_, spu) in self.read().iter() {
+        for (_, spu) in self.read().await.iter() {
             if spu.status.is_online() {
                 status.insert(spu.id());
             }
@@ -135,8 +135,9 @@ impl SpuLocalStore {
     }
 
     /// count online SPUs
-    pub fn online_spu_count(&self) -> i32 {
+    pub async fn online_spu_count(&self) -> i32 {
         self.read()
+            .await
             .values()
             .filter_map(|spu| {
                 if spu.status.is_online() {
@@ -149,13 +150,14 @@ impl SpuLocalStore {
     }
 
     /// count spus that can be used for replica
-    pub fn spu_used_for_replica(&self) -> i32 {
-        self.count()
+    pub async fn spu_used_for_replica(&self) -> i32 {
+        self.count().await
     }
 
     // retrieve SPU ids.
-    pub fn online_spu_ids(&self) -> Vec<i32> {
+    pub async fn online_spu_ids(&self) -> Vec<i32> {
         self.read()
+            .await
             .values()
             .filter_map(|spu| {
                 if spu.status.is_online() {
@@ -168,15 +170,17 @@ impl SpuLocalStore {
     }
 
     // find spu id that can be used in the reeokuca
-    pub fn spu_ids_for_replica(&self) -> Vec<i32> {
+    pub async fn spu_ids_for_replica(&self) -> Vec<i32> {
         self.read()
+            .await
             .values()
             .filter_map(|spu| Some(spu.id()))
             .collect()
     }
 
-    pub fn online_spus(&self) -> Vec<SpuKV> {
+    pub async fn online_spus(&self) -> Vec<SpuKV> {
         self.read()
+            .await
             .values()
             .filter_map(|spu| {
                 if spu.status.is_online() {
@@ -188,8 +192,9 @@ impl SpuLocalStore {
             .collect()
     }
 
-    pub fn custom_spus(&self) -> Vec<SpuKV> {
+    pub async fn custom_spus(&self) -> Vec<SpuKV> {
         self.read()
+            .await
             .values()
             .filter_map(|spu| {
                 if spu.is_custom() {
@@ -201,15 +206,15 @@ impl SpuLocalStore {
             .collect()
     }
 
-    pub fn spu(&self, name: &str) -> Option<SpuKV> {
-        match self.read().get(name) {
+    pub async fn spu(&self, name: &str) -> Option<SpuKV> {
+        match self.read().await.get(name) {
             Some(spu) => Some(spu.clone()),
             None => None,
         }
     }
 
-    pub fn get_by_id(&self, id: i32) -> Option<SpuKV> {
-        for (_, spu) in self.read().iter() {
+    pub async fn get_by_id(&self, id: i32) -> Option<SpuKV> {
+        for (_, spu) in self.read().await.iter() {
             if spu.id() == id {
                 return Some(spu.clone());
             }
@@ -218,8 +223,8 @@ impl SpuLocalStore {
     }
 
     // check if spu can be registered
-    pub fn validate_spu_for_registered(&self, id: SpuId) -> bool {
-        for (_, spu) in (self.read()).iter() {
+    pub async fn validate_spu_for_registered(&self, id: SpuId) -> bool {
+        for (_, spu) in self.read().await.iter() {
             if spu.id() == id {
                 return true;
             }
@@ -228,8 +233,8 @@ impl SpuLocalStore {
     }
 
     // check if given range is conflict with any of the range
-    pub fn is_conflict(&self, owner_uid: &str, start: i32, end_exclusive: i32) -> Option<i32> {
-        for (_, spu) in (self.read()).iter() {
+    pub async fn is_conflict(&self, owner_uid: &str, start: i32, end_exclusive: i32) -> Option<i32> {
+        for (_, spu) in self.read().await.iter() {
             if !spu.is_owned(owner_uid) {
                 let id = spu.id();
                 if id >= start && id < end_exclusive {
@@ -241,15 +246,15 @@ impl SpuLocalStore {
     }
 
     #[cfg(test)]
-    pub fn all_spu_count(&self) -> i32 {
-        self.read().len() as i32
+    pub async fn all_spu_count(&self) -> i32 {
+        self.read().await.len() as i32
     }
 
-    pub fn all_names(&self) -> Vec<String> {
-        self.read().keys().cloned().collect()
+    pub async fn all_names(&self) -> Vec<String> {
+        self.read().await.keys().cloned().collect()
     }
 
-    pub fn table_fmt(&self) -> String {
+    pub async fn table_fmt(&self) -> String {
         let mut table = String::new();
 
         let hdr = format!(
@@ -264,7 +269,7 @@ impl SpuLocalStore {
         );
         table.push_str(&hdr);
 
-        for (name, spu) in self.read().iter() {
+        for (name, spu) in self.read().await.iter() {
             let rack = match &spu.spec.rack {
                 Some(rack) => rack.clone(),
                 None => String::from(""),
@@ -286,26 +291,27 @@ impl SpuLocalStore {
     }
 
     /// number of spus in rack count
-    pub fn spus_in_rack_count(&self) -> i32 {
+    pub async fn spus_in_rack_count(&self) -> i32 {
         self.read()
+            .await
             .values()
             .filter_map(|spu| if spu.spec.rack.is_some() { Some(1) } else { None })
             .sum()
     }
 
     // Returns array of touples [("r1", [0,1,2]), ("r2", [3,4]), ("r3", [5])]
-    pub fn live_spu_rack_map_sorted(spus: &SpuLocalStore) -> Vec<(String, Vec<i32>)> {
-        let rack_map = SpuLocalStore::online_spu_rack_map(spus);
+    pub async fn live_spu_rack_map_sorted(spus: &SpuLocalStore) -> Vec<(String, Vec<i32>)> {
+        let rack_map = SpuLocalStore::online_spu_rack_map(spus).await;
         let mut racked_vector = Vec::from_iter(rack_map);
         racked_vector.sort_by(|a, b| b.1.len().cmp(&a.1.len()));
         racked_vector
     }
 
     // Return a list of spu ids sorted by rack ["r1":[0,1,2], "r2":[3,4], "r3":[5]]
-    fn online_spu_rack_map(spus: &SpuLocalStore) -> BTreeMap<String, Vec<i32>> {
+    async fn online_spu_rack_map(spus: &SpuLocalStore) -> BTreeMap<String, Vec<i32>> {
         let mut rack_spus: BTreeMap<String, Vec<i32>> = BTreeMap::new();
 
-        for spu in spus.read().values() {
+        for spu in spus.read().await.values() {
             if let Some(rack) = &spu.spec.rack {
                 let mut ids: Vec<i32>;
                 let mut ids_in_map = rack_spus.remove(rack);
@@ -346,8 +352,9 @@ impl SpuLocalStore {
     }
 
     /// Encode all online SPUs to SPU Messages
-    pub fn all_spus_to_spu_msgs(&self) -> Vec<SpuMsg> {
+    pub async fn all_spus_to_spu_msgs(&self) -> Vec<SpuMsg> {
         self.clone_specs()
+            .await
             .into_iter()
             .map(|spu_spec| SpuMsg::update(spu_spec.into()))
             .collect()
@@ -370,11 +377,12 @@ impl From<Vec<(i32, bool, Option<String>)>> for SpuLocalStore {
 #[cfg(test)]
 pub mod test {
     use flv_metadata::spu::{SpuSpec, SpuStatus};
+    use flv_future_aio::test_async;
 
     use super::{SpuKV, SpuLocalStore};
 
-    #[test]
-    fn test_spu_inquiry_online_offline_count() {
+    #[test_async]
+    async fn test_spu_inquiry_online_offline_count() -> Result<(),()> {
         let online_spu: SpuKV = ("spu-0", 0, true, None).into();
         let offline_spu: SpuKV = ("spu-1", 1, false, None).into();
         let no_status_spu: SpuKV = ("spu-2", 5001, false, None).into();
@@ -388,8 +396,9 @@ pub mod test {
         spus.insert(offline_spu);
         spus.insert(no_status_spu);
 
-        assert_eq!(spus.all_spu_count(), 3);
-        assert_eq!(spus.online_spu_count(), 1);
+        assert_eq!(spus.all_spu_count().await, 3);
+        assert_eq!(spus.online_spu_count().await, 1);
+        Ok(())
     }
 
     #[test]
@@ -404,8 +413,8 @@ pub mod test {
         assert_eq!(test_spu.status.is_online(), false);
     }
 
-    #[test]
-    fn test_delete_spu_from_local_cache() {
+    #[test_async]
+    async fn test_delete_spu_from_local_cache() -> Result<(),()> {
         let online_spu: SpuKV = ("spu-0", 0, true, None).into();
         let offline_spu: SpuKV = ("spu-1", 1, false, None).into();
 
@@ -413,17 +422,18 @@ pub mod test {
         spus.insert(online_spu);
         spus.insert(offline_spu);
 
-        assert_eq!(spus.online_spu_count(), 1);
-        assert_eq!(spus.all_spu_count(), 2);
+        assert_eq!(spus.online_spu_count().await, 1);
+        assert_eq!(spus.all_spu_count().await, 2);
 
-        spus.remove("spu-0");
+        spus.remove("spu-0").await;
 
-        assert_eq!(spus.online_spu_count(), 0);
-        assert_eq!(spus.all_spu_count(), 1);
+        assert_eq!(spus.online_spu_count().await, 0);
+        assert_eq!(spus.all_spu_count().await, 1);
+        Ok(())
     }
 
-    #[test]
-    fn test_update_spu_spec_in_local_cache() {
+    #[test_async]
+    async fn test_update_spu_spec_in_local_cache() -> Result<(),()> {
         let spu_0 = ("spu-0", 0, false, None).into();
         let spu_1 = ("spu-1", 1, false, None).into();
 
@@ -433,20 +443,21 @@ pub mod test {
         let other_spu = SpuKV::new("spu-1", other_spec, SpuStatus::default());
 
         let spus = SpuLocalStore::default();
-        spus.insert(spu_0);
-        spus.insert(spu_1);
+        spus.insert(spu_0).await;
+        spus.insert(spu_1).await;
 
         // run test
-        let res = spus.update_spec("spu-1", &other_spu);
+        let res = spus.update_spec("spu-1", &other_spu).await;
         assert_eq!(res.is_ok(), true);
 
         // test result
-        let updated_spu = spus.spu("spu-1").unwrap();
+        let updated_spu = spus.spu("spu-1").await.unwrap();
         assert_eq!(updated_spu, other_spu);
+        Ok(())
     }
 
-    #[test]
-    fn test_update_spu_status_in_local_cache() {
+    #[test_async]
+    async fn test_update_spu_status_in_local_cache() -> Result<(),()> {
         let online: SpuKV = ("spu-0", 0, true, None).into();
         let offline: SpuKV = ("spu-1", 1, false, None).into();
         let offline2: SpuKV = ("spu-3", 2, false, None).into();
@@ -458,35 +469,36 @@ pub mod test {
         spus.insert(online.clone());
         spus.insert(offline.clone());
         spus.insert(offline2);
-        assert_eq!(spus.all_spu_count(), 3);
-        assert_eq!(spus.online_spu_count(), 1);
+        assert_eq!(spus.all_spu_count().await, 3);
+        assert_eq!(spus.online_spu_count().await, 1);
 
         //test - not found
-        let res = spus.update_status("spu-9", offline.status.clone());
+        let res = spus.update_status("spu-9", offline.status.clone()).await;
         assert_eq!(
             res.unwrap_err().to_string(),
             "SPU 'spu-9': not found, cannot update"
         );
 
         // [online] -> [offline]
-        let res = spus.update_status("spu-0", offline.status.clone());
-        let spu = spus.spu("spu-0");
+        let res = spus.update_status("spu-0", offline.status.clone()).await;
+        let spu = spus.spu("spu-0").await;
         assert_eq!(res.is_ok(), true);
-        assert_eq!(spus.all_spu_count(), 3);
-        assert_eq!(spus.online_spu_count(), 0);
+        assert_eq!(spus.all_spu_count().await, 3);
+        assert_eq!(spus.online_spu_count().await, 0);
         assert_eq!(spu.unwrap().status.is_online(), false);
 
         // [offline] -> [online]
-        let res = spus.update_status("spu-3", online.status.clone());
-        let spu = spus.spu("spu-3");
+        let res = spus.update_status("spu-3", online.status.clone()).await;
+        let spu = spus.spu("spu-3").await;
         assert_eq!(res.is_ok(), true);
-        assert_eq!(spus.all_spu_count(), 3);
-        assert_eq!(spus.online_spu_count(), 1);
+        assert_eq!(spus.all_spu_count().await, 3);
+        assert_eq!(spus.online_spu_count().await, 1);
         assert_eq!(spu.unwrap().status.is_online(), true);
+        Ok(())
     }
 
-    #[test]
-    fn rack_map_test_racks_3_spus_6_unbalanced() {
+    #[test_async]
+    async fn rack_map_test_racks_3_spus_6_unbalanced() -> Result<(),()> {
         let r1 = String::from("r1");
         let r2 = String::from("r2");
         let r3 = String::from("r3");
@@ -502,7 +514,7 @@ pub mod test {
         .into();
 
         // run test
-        let rack_map = SpuLocalStore::live_spu_rack_map_sorted(&spus);
+        let rack_map = SpuLocalStore::live_spu_rack_map_sorted(&spus).await;
         let spu_list = SpuLocalStore::online_spus_in_rack(&rack_map);
 
         // validate result
@@ -513,14 +525,15 @@ pub mod test {
         ];
         let expected_list = vec![0, 4, 5, 1, 3, 2];
 
-        assert_eq!(6, spus.all_spu_count());
-        assert_eq!(6, spus.online_spu_count());
+        assert_eq!(6, spus.all_spu_count().await);
+        assert_eq!(6, spus.online_spu_count().await);
         assert_eq!(expected_map, rack_map);
         assert_eq!(expected_list, spu_list);
+        Ok(())
     }
 
-    #[test]
-    fn rack_map_test_racks_5_spus_10_unbalanced() {
+    #[test_async]
+    async fn rack_map_test_racks_5_spus_10_unbalanced() -> Result<(),()> {
         let r1 = String::from("r1");
         let r2 = String::from("r2");
         let r3 = String::from("r3");
@@ -542,7 +555,7 @@ pub mod test {
         .into();
 
         // run test
-        let rack_map = SpuLocalStore::live_spu_rack_map_sorted(&spus);
+        let rack_map = SpuLocalStore::live_spu_rack_map_sorted(&spus).await;
         let spu_list = SpuLocalStore::online_spus_in_rack(&rack_map);
 
         // validate result
@@ -557,10 +570,11 @@ pub mod test {
 
         assert_eq!(rack_map, expected_map);
         assert_eq!(spu_list, expected_list);
+        Ok(())
     }
 
-    #[test]
-    fn rack_map_test_racks_4_spus_10_unbalanced() {
+    #[test_async]
+    async fn rack_map_test_racks_4_spus_10_unbalanced() -> Result<(),()> {
         let r1 = String::from("r1");
         let r2 = String::from("r2");
         let r3 = String::from("r3");
@@ -581,7 +595,7 @@ pub mod test {
         .into();
 
         // run test
-        let rack_map = SpuLocalStore::live_spu_rack_map_sorted(&spus);
+        let rack_map = SpuLocalStore::live_spu_rack_map_sorted(&spus).await;
         let spu_list = SpuLocalStore::online_spus_in_rack(&rack_map);
 
         // validate result
@@ -595,10 +609,11 @@ pub mod test {
 
         assert_eq!(rack_map, expected_map);
         assert_eq!(spu_list, expected_list);
+        Ok(())
     }
 
-    #[test]
-    fn rack_map_test_racks_4_spus_12_full() {
+    #[test_async]
+    async fn rack_map_test_racks_4_spus_12_full() -> Result<(),()> {
         let r1 = String::from("r1");
         let r2 = String::from("r2");
         let r3 = String::from("r3");
@@ -621,7 +636,7 @@ pub mod test {
         .into();
 
         // run test
-        let rack_map = SpuLocalStore::live_spu_rack_map_sorted(&spus);
+        let rack_map = SpuLocalStore::live_spu_rack_map_sorted(&spus).await;
         let spu_list = SpuLocalStore::online_spus_in_rack(&rack_map);
 
         // validate result
@@ -635,5 +650,6 @@ pub mod test {
 
         assert_eq!(rack_map, expected_map);
         assert_eq!(spu_list, expected_list);
+        OK(())
     }
 }

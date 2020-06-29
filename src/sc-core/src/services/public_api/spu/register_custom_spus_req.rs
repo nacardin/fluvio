@@ -42,7 +42,7 @@ where
     let mut status = FlvStatus::default();
 
     // validate custom-spu request
-    if let Err(err) = validate_custom_spu_request(spec.id,&name, ctx.context()) {
+    if let Err(err) = validate_custom_spu_request(spec.id,&name, ctx.context()).await {
         status = err;
     }
 
@@ -57,7 +57,7 @@ where
 }
 
 /// Validate custom_spu requests (one at a time)
-fn validate_custom_spu_request(
+async fn validate_custom_spu_request(
     spu_id: i32,
     spu_name: &str,
     metadata: &Context,
@@ -67,7 +67,7 @@ fn validate_custom_spu_request(
     debug!("validating custom-spu: {}({})", spu_name, spu_id);
 
     // look-up SPU by name or id to check if already exists
-    if metadata.spus().spu(spu_name).is_some() || metadata.spus().get_by_id(spu_id).is_some() {
+    if metadata.spus().spu(spu_name).await.is_some() || metadata.spus().get_by_id(spu_id).await.is_some() {
         Err(FlvStatus::new(
             spu_name.to_owned(),
             FlvErrorCode::SpuAlreadyExists,

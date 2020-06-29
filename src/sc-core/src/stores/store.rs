@@ -5,14 +5,17 @@ use std::borrow::Borrow;
 use std::io::Error as IoError;
 use std::io::ErrorKind;
 use std::collections::BTreeMap;
-use std::sync::RwLockReadGuard;
-use std::sync::RwLockWriteGuard;
 
 
-use super::StoreSpec;
-use flv_util::SimpleConcurrentBTreeMap;
+use flv_future_aio::sync::RwLockReadGuard;
+use flv_future_aio::sync::RwLockWriteGuard;
+
+
+
+use super::SimpleConcurrentBTreeMap;
 use flv_metadata::core::K8ExtendedSpec;  
 use flv_metadata::core::Spec;
+use super::StoreSpec;
 
 use super::*;
 
@@ -33,27 +36,6 @@ where
     }
 }
 
-impl<S> ::std::cmp::PartialEq for LocalStore<S>
-where
-    S: StoreSpec + PartialEq,
-    <S as Spec>::Owner: K8ExtendedSpec,
-    S::Status: PartialEq ,
-{
-    fn eq(&self, other: &LocalStore<S>) -> bool {
-        for (key, val) in self.0.read().iter() {
-            let other_list = other.0.read();
-            let other_val = match other_list.get(key) {
-                Some(val) => val,
-                None => return false,
-            };
-            if val != other_val {
-                return false;
-            }
-        }
-        true
-    }
-}
-
 impl<S> LocalStore<S>
 where
     S: StoreSpec,
@@ -65,37 +47,37 @@ where
 
     /// read access
     #[inline(always)]
-    pub fn read(&self) -> RwLockReadGuard<BTreeMap<S::IndexKey,KVObject<S>>>
+    pub async fn read<'a>(&'a self) -> RwLockReadGuard<'a,BTreeMap<S::IndexKey,KVObject<S>>>
     {
-        self.0.read()
+        self.0.read().await
     }
 
     #[inline(always)]
-    pub fn write(&self) -> RwLockWriteGuard<BTreeMap<S::IndexKey,KVObject<S>>>
+    pub async fn write<'a>(&'a self) -> RwLockWriteGuard<'a,BTreeMap<S::IndexKey,KVObject<S>>>
     {
-        self.0.write()
+        self.0.write().await
     } 
     
-    pub fn insert(&self, value: KVObject<S>) -> Option<KVObject<S>> {
-        self.write().insert(value.key_owned(), value)
+    pub async fn insert(&self, value: KVObject<S>) -> Option<KVObject<S>> {
+        self.write().await.insert(value.key_owned(), value)
     }
 
 
-    pub fn for_each<F>(&self, func: F)
+    pub async fn for_each<F>(&self, func: F)
     where
         F: FnMut(&'_ KVObject<S>),
     {
-        self.read().values().for_each(func);
+        self.read().await.values().for_each(func);
     }
 
 
     /// get copy of the value ref by key
-    pub fn value<K: ?Sized>(&self, key: &K) -> Option<KVObject<S>>
+    pub async fn value<K: ?Sized>(&self, key: &K) -> Option<KVObject<S>>
     where
         S::IndexKey: Borrow<K>,
         K: Ord,
     {
-        match self.read().get(key) {
+        match self.read().await.get(key) {
             Some(value) => Some(value.clone()),
             None => None,
         }
@@ -103,24 +85,24 @@ where
 
 
     /// get copy of the spec ref by key
-    pub fn spec<K: ?Sized>(&self, key: &K) -> Option<S>
+    pub async fn spec<K: ?Sized>(&self, key: &K) -> Option<S>
     where
         S::IndexKey: Borrow<K>,
         K: Ord,
     {
-        match self.read().get(key) {
+        match self.read().await.get(key) {
             Some(value) => Some(value.spec.clone()),
             None => None,
         }
     }
 
-    pub fn find_and_do<K, F>(&self, key: &K, mut func: F) -> Option<()>
+    pub async fn find_and_do<K, F>(&self, key: &K, mut func: F) -> Option<()>
     where
         F: FnMut(&'_ KVObject<S>),
         K: Ord,
         S::IndexKey: Borrow<K>,
     {
-        if let Some(value) = self.read().get(key) {
+        if let Some(value) = self.read().await.get(key) {
             func(value);
             Some(())
         } else {
@@ -129,37 +111,38 @@ where
     }
 
     
-    pub fn contains_key<K: ?Sized>(&self, key: &K) -> bool
+    pub async fn contains_key<K: ?Sized>(&self, key: &K) -> bool
     where
         S::IndexKey: Borrow<K>,
         K: Ord,
     {
-        self.read().contains_key(key)
+        self.read().await.contains_key(key)
     }
 
-    pub fn remove<K: ?Sized>(&self, key: &K) -> Option<KVObject<S>>
+    pub async fn remove<K: ?Sized>(&self, key: &K) -> Option<KVObject<S>>
     where
         S::IndexKey: Borrow<K>,
         K: Ord,
     {
-        self.write().remove(key)
+        self.write().await.remove(key)
     }
 
-    pub fn count(&self) -> i32 {
-        self.read().len() as i32
+    pub async fn count(&self) -> i32 {
+        self.read().await.len() as i32
     }
 
     /// get copy of keys
-    pub fn clone_keys(&self) -> Vec<S::IndexKey> {
-        self.read().keys().cloned().collect()
+    pub async fn clone_keys(&self) -> Vec<S::IndexKey> {
+        self.read().await.keys().cloned().collect()
     }
 
-    pub fn clone_values(&self) -> Vec<KVObject<S>> {
-        self.read().values().cloned().collect()
+    pub async fn clone_values(&self) -> Vec<KVObject<S>> {
+        self.read().await.values().cloned().collect()
     }
 
-    pub fn clone_specs(&self) -> Vec<S> {
+    pub async fn clone_specs(&self) -> Vec<S> {
         self.read()
+            .await
             .values()
             .map(|kv| kv.spec.clone())
             .collect()
@@ -168,12 +151,12 @@ where
     
 
     /// update status
-    pub fn update_status<K: ?Sized>(&self, key: &K, status: S::Status) -> Result<(), IoError>
+    pub async fn update_status<K: ?Sized>(&self, key: &K, status: S::Status) -> Result<(), IoError>
     where
         S::IndexKey: Borrow<K>,
         K: Display + Ord,
     {
-        if let Some(old_kv) = self.write().get_mut(key) {
+        if let Some(old_kv) = self.write().await.get_mut(key) {
             old_kv.status = status;
             Ok(())
         } else {
@@ -191,11 +174,14 @@ where
     <S as Spec>::Owner: K8ExtendedSpec,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+
+        use flv_future_aio::task::run_block_on;
+        let len = run_block_on(async { self.read().await.len()});
         write!(
             f,
             "{} Store count: {}",
             S::LABEL,
-            self.read().len()
+            len
         )
     }
 }

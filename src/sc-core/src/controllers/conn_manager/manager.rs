@@ -108,8 +108,8 @@ impl ConnManager {
 
 
     /// SPU is valid if we have registered SPU in the store and if spu is offline
-    pub fn validate_spu(&self, spu_id: SpuId) -> bool {
-        self.spu_store.validate_spu_for_registered(spu_id)
+    pub async fn validate_spu(&self, spu_id: SpuId) -> bool {
+        self.spu_store.validate_spu_for_registered(spu_id).await
     }
 
     /// Register new sink
@@ -281,7 +281,7 @@ impl ConnManager {
     async fn refresh_spu(&self, spu_id: i32) -> Result<(), ScServerError> {
         debug!("Send SPU metadata({})", spu_id);
 
-        if let Some(spu) = self.spu_store.get_by_id(spu_id) {
+        if let Some(spu) = self.spu_store.get_by_id(spu_id).await {
             self.send_update_all_to_spu(&spu).await?;
         } else {
             return Err(ScServerError::UnknownSpu(spu_id));
@@ -292,8 +292,8 @@ impl ConnManager {
 
     /// send all changes to specific SPU
     async fn send_update_all_to_spu(&self, spu: &SpuKV) -> Result<(), ScServerError> {
-        let spu_specs = self.spu_store.clone_specs();
-        let replicas = self.partition_store.replica_for_spu(spu.id());
+        let spu_specs = self.spu_store.clone_specs().await;
+        let replicas = self.partition_store.replica_for_spu(spu.id()).await;
         let request = UpdateAllRequest::new(spu_specs, replicas);
 
         debug!(
@@ -314,7 +314,7 @@ impl ConnManager {
 
     /// send messages to all live SPU
     async fn send_msg_to_all_live_spus(&self, msgs: &Vec<SpuMsg>) {
-        let online_spus = self.spu_store.online_spus();
+        let online_spus = self.spu_store.online_spus().await;
         debug!(
             "trying to send SPU spec to active Spus: {}",
             online_spus.len()

@@ -250,7 +250,7 @@ impl PartitionReducer {
         Ok(())
     }
 
-    fn process_lrs_update_from_spu(
+    async fn process_lrs_update_from_spu(
         &self,
         lrs_req: UpdateLrsRequest,
         actions: &mut PartitionActions,
@@ -269,7 +269,7 @@ impl PartitionReducer {
                 actions
                     .partitions
                     .push(PartitionWSAction::UpdateStatus(part_status_kv));
-            })
+            }).await
             .is_none()
         {
             error!("update lrs faild, no replia: {}", lrs_req.id);
@@ -277,14 +277,14 @@ impl PartitionReducer {
     }
 
     /// perform election when spu goes offline
-    fn force_election_spu_off(&self, offline_spu: SpuKV, actions: &mut PartitionActions) {
+    async fn force_election_spu_off(&self, offline_spu: SpuKV, actions: &mut PartitionActions) {
         debug!(
             "start election when spu went offline: {}",
             offline_spu.key()
         );
         let offline_leader_spu_id = offline_spu.spec.id;
 
-        let spu_status = self.spu_store.online_status();
+        let spu_status = self.spu_store.online_status().await;
 
         let policy = SimplePolicy::new();
 
@@ -316,7 +316,7 @@ impl PartitionReducer {
                         .push(PartitionWSAction::UpdateStatus(part_kv_change));
                 }
             }
-        });
+        }).await;
     }
 
     /// perform election when spu become online

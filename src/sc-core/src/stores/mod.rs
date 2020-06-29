@@ -13,6 +13,7 @@ pub use kv_obj::*;
 pub use kv_context::*;
 pub use metadata::*;
 pub use filter::*;
+pub use concurrent_hashmap::*;
 
 
 mod metadata {

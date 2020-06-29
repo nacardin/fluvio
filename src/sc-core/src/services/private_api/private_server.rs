@@ -48,7 +48,7 @@ impl KfService<TcpStream> for ScInternalService {
                 debug!("registration req from spu '{}'", spu_id);
 
 
-                let register_res = if context.validate_spu(spu_id) {
+                let register_res = if context.validate_spu(spu_id).await {
                     debug!("SPU: {} validation succeed",spu_id);
                     RegisterSpuResponse::ok()
                 } else {

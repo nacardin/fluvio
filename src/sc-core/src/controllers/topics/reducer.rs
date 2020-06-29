@@ -211,8 +211,8 @@ impl TopicReducer {
     /// Compute next state for topic
     /// if state is different, apply actions
     ///
-    fn update_actions_next_state(&self, topic: &TopicKV, actions: &mut TopicActions) {
-        let next_state = topic.compute_next_state(self.spu_store(), self.partition_store());
+    async fn update_actions_next_state(&self, topic: &TopicKV, actions: &mut TopicActions) {
+        let next_state = topic.compute_next_state(self.spu_store(), self.partition_store()).await;
 
         debug!("topic: {} next state: {}", topic.key(), next_state);
         let mut updated_topic = topic.clone();

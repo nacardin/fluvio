@@ -134,7 +134,7 @@ where
                                 let actions = k8_event_stream_to_metadata_actions(
                                     Ok(auth_token_msgs),
                                     &self.metadata,
-                                );
+                                ).await;
                                 self.send_actions(actions).await;
                             }
                             Err(err) => error!("{}", err),
@@ -173,7 +173,7 @@ where
 
         debug!("UpdateAll {}", S::LABEL);
         // wait to receive all items before sending to channel
-        let actions = k8_events_to_metadata_actions(k8_items, &self.metadata);
+        let actions = k8_events_to_metadata_actions(k8_items, &self.metadata).await;
 
         self.send_actions(actions).await;
 

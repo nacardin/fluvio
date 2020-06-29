@@ -133,7 +133,7 @@ impl TopicKV {
     }
 
     /// based on our current state, compute what should be next state
-    pub fn compute_next_state(
+    pub async fn compute_next_state(
         &self,
         spu_store: &SpuLocalStore,
         partition_store: &PartitionLocalStore,
@@ -145,13 +145,13 @@ impl TopicKV {
                     self.validate_computed_topic_parameters(param)
                 }
                 TopicResolution::Pending | TopicResolution::InsufficientResources => {
-                    let mut next_state = self.generate_replica_map(spu_store, param);
+                    let mut next_state = self.generate_replica_map(spu_store, param).await;
                     if next_state.resolution == TopicResolution::Provisioned {
                         debug!(
                             "Topic: {} replica generate successfull, status is provisioned",
                             self.key()
                         );
-                        next_state.partitions = self.create_new_partitions(partition_store);
+                        next_state.partitions = self.create_new_partitions(partition_store).await;
                         next_state
                     } else {
                         next_state
@@ -164,7 +164,7 @@ impl TopicKV {
                     );
                     let mut next_state = self.same_next_state();
                     if next_state.resolution == TopicResolution::Provisioned {
-                        next_state.partitions = self.create_new_partitions(partition_store);
+                        next_state.partitions = self.create_new_partitions(partition_store).await;
                         next_state
                     } else {
                         next_state
@@ -181,7 +181,7 @@ impl TopicKV {
                     let mut next_state =
                         self.update_replica_map_for_assigned_topic(partition_map, spu_store);
                     if next_state.resolution == TopicResolution::Provisioned {
-                        next_state.partitions = self.create_new_partitions(partition_store);
+                        next_state.partitions = self.create_new_partitions(partition_store).await;
                         next_state
                     } else {
                         next_state
@@ -194,7 +194,7 @@ impl TopicKV {
                     );
                     let mut next_state = self.same_next_state();
                     if next_state.resolution == TopicResolution::Provisioned {
-                        next_state.partitions = self.create_new_partitions(partition_store);
+                        next_state.partitions = self.create_new_partitions(partition_store).await;
                         next_state
                     } else {
                         next_state
@@ -244,12 +244,12 @@ impl TopicKV {
     ///  * returns a replica map or a reason for the failure
     ///  * fatal error sare configuration errors and are not recovarable
     ///
-    pub fn generate_replica_map(
+    pub async fn generate_replica_map(
         &self,
         spus: &SpuLocalStore,
         param: &TopicReplicaParam,
     ) -> TopicNextState {
-        let spu_count = spus.count();
+        let spu_count = spus.count().await;
         if spu_count < param.replication_factor {
             trace!(
                 "topic '{}' - R-MAP needs {:?} online spus, found {:?}",
@@ -272,7 +272,7 @@ impl TopicKV {
     }
 
     /// create partition children if it doesn't exists
-    pub fn create_new_partitions(&self, partition_store: &PartitionLocalStore) -> Vec<PartitionKV> {
+    pub async fn create_new_partitions(&self, partition_store: &PartitionLocalStore) -> Vec<PartitionKV> {
         let parent_kv_ctx = self.kv_ctx.make_parent_ctx();
 
         self.status
@@ -281,7 +281,7 @@ impl TopicKV {
             .filter_map(|(idx, replicas)| {
                 let replica_key = ReplicaKey::new(self.key(), *idx);
                 debug!("Topic: {} creating partition: {}", self.key(), replica_key);
-                if partition_store.contains_key(&replica_key) {
+                if partition_store.contains_key(&replica_key).await {
                     None
                 } else {
                     Some(
@@ -328,34 +328,34 @@ impl TopicKV {
 ///
 /// Generate replica map for a specific topic
 ///
-pub fn generate_replica_map_for_topic(
+pub async fn generate_replica_map_for_topic(
     spus: &SpuLocalStore,
     param: &TopicReplicaParam,
     from_index: Option<i32>,
 ) -> ReplicaMap {
-    let in_rack_count = spus.spus_in_rack_count();
+    let in_rack_count = spus.spus_in_rack_count().await;
     let start_index = from_index.unwrap_or(-1);
 
     // generate partition map (with our without rack assignment)
     if param.ignore_rack_assignment || in_rack_count == 0 {
         generate_partitions_without_rack(&spus, &param, start_index)
     } else {
-        generate_partitions_with_rack_assignment(&spus, &param, start_index)
+        generate_partitions_with_rack_assignment(&spus, &param, start_index).await
     }
 }
 
 ///
 /// Generate partitions on spus that have been assigned to racks
 ///
-fn generate_partitions_with_rack_assignment(
+async fn generate_partitions_with_rack_assignment(
     spus: &SpuLocalStore,
     param: &TopicReplicaParam,
     start_index: i32,
 ) -> ReplicaMap {
     let mut partition_map = BTreeMap::new();
-    let rack_map = SpuLocalStore::live_spu_rack_map_sorted(&spus);
+    let rack_map = SpuLocalStore::live_spu_rack_map_sorted(&spus).await;
     let spu_list = SpuLocalStore::online_spus_in_rack(&rack_map);
-    let spu_cnt = spus.online_spu_count();
+    let spu_cnt = spus.online_spu_count().await;
 
     let s_idx = if start_index >= 0 {
         start_index

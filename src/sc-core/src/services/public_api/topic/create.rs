@@ -41,7 +41,7 @@ where
     debug!("api request: create topic '{}'", name);
 
     // validate topic request
-    let mut status = validate_topic_request(&name, &topic_spec, ctx.context());
+    let mut status = validate_topic_request(&name, &topic_spec, ctx.context()).await;
     if !dry_run {
         status = process_topic_request(ctx, name, topic_spec).await;
     }
@@ -52,7 +52,7 @@ where
 }
 
 /// Validate topic, takes advantage of the validation routines inside topic action workflow
-fn validate_topic_request(
+async fn validate_topic_request(
     name: &str,
     topic_spec: &TopicSpec,
     metadata: &Context,
@@ -60,7 +60,7 @@ fn validate_topic_request(
     debug!("validating topic: {}", name);
 
     // check if topic already exists
-    if metadata.topics().contains_key(name) {
+    if metadata.topics().contains_key(name).await {
         return FlvStatus::new(
             name.to_string(),
             FlvErrorCode::TopicAlreadyExists,
@@ -81,7 +81,7 @@ fn validate_topic_request(
                     Some(next_state.reason),
                 )
             } else {
-                let next_state = topic_kv.generate_replica_map(metadata.spus(), param);
+                let next_state = topic_kv.generate_replica_map(metadata.spus(), param).await;
                 trace!("validating, generate replica map topic: {:#?}", next_state);
                 if next_state.resolution.no_resource() {
                     FlvStatus::new(

@@ -67,8 +67,8 @@ where
 
     /// send out all metadata to client
     async fn update_all(&mut self) -> Result<(), KfSocketError> {
-        let spu_specs = self.context.spus().clone_specs();
-        let partitions = self.context.partitions().leaders();
+        let spu_specs = self.context.spus().clone_specs().await;
+        let partitions = self.context.partitions().leaders().await;
 
         let response = UpdateAllMetadataResponse::new(spu_specs, partitions);
 

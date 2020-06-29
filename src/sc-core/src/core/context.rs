@@ -88,15 +88,15 @@ impl Context {
 
     /// format metadata cache into a table string
     #[allow(dead_code)]
-    pub fn table_fmt(&self) -> String {
+    pub async fn table_fmt(&self) -> String {
         let mut table = String::new();
         let newline = format!("\n");
 
-        table.push_str(&self.spus.table_fmt());
+        table.push_str(&self.spus.table_fmt().await);
         table.push_str(&newline);
-        table.push_str(&self.topics.table_fmt());
+        table.push_str(&self.topics.table_fmt().await);
         table.push_str(&newline);
-        table.push_str(&self.partitions.table_fmt());
+        table.push_str(&self.partitions.table_fmt().await);
         table
     }
 }
