@@ -15,9 +15,12 @@ impl KeyFilter<str> for str {
 impl KeyFilter<str> for Vec<String> {
 
     fn filter(&self, value: &str) -> bool {
+        if self.len() == 0 {
+            return true;
+        }
         self.iter()
             .filter(|key| key.filter(value))
-            .count() == 0
+            .count() > 0
     }
 }
 
@@ -27,11 +30,18 @@ mod tests {
     use super::KeyFilter;
 
     #[test]
-    fn test_str() {
+    fn test_str_filter() {
 
         let value = "quick brown";
         assert!("quick".filter(value));
-        assert!(vec!["q".to_owned(),"b".to_owned()].filter(value));
+    }
+
+    #[test]
+    fn test_str_list_filter() {
+
+        let value = "quick brown";
+        assert!(vec![].filter(value));
+        assert!(vec!["quick".to_owned()].filter(value));
     }
 
 }

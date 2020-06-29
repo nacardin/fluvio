@@ -114,7 +114,7 @@ impl ConnManager {
 
     /// Register new sink
     /// true if successfully register
-    pub async fn register_sink(&self, spu_id: SpuId, sink: KfSink, param: ConnParams) {
+    pub async fn register_sink(&self, spu_id: SpuId, sink: KfSink, _param: ConnParams) {
         self.sinks.insert_sink(spu_id.clone(), sink);
     }
 

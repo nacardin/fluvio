@@ -12,7 +12,8 @@ pub async fn handle_fetch_topics_request(
     filters: Vec<String>,
     ctx: &Context,
 ) -> Result<ListResponse,Error> {
-    
+
+    debug!("retrieving topic list: {:#?}",filters);
     let topics: Vec<Metadata<TopicSpec>> = ctx
             .topics()
             .read()

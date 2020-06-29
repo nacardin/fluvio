@@ -10,7 +10,7 @@ use std::io::Error as IoError;
 use std::io::ErrorKind;
 use std::sync::Arc;
 
-use flv_util::socket_helpers::ServerAddress;
+
 use flv_types::SpuId;
 use flv_metadata::spu::*;
 use internal_api::messages::SpuMsg;
