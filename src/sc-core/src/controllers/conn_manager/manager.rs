@@ -108,7 +108,7 @@ impl ConnManager {
 
 
     /// SPU is valid if we have registered SPU in the store and if spu is offline
-    pub fn validate_spu(&self, spu_id: &SpuId) -> bool {
+    pub fn validate_spu(&self, spu_id: SpuId) -> bool {
         self.spu_store.validate_spu_for_registered(spu_id)
     }
 
@@ -231,8 +231,8 @@ impl ConnManager {
     // -----------------------------------
 
     /// grab connection socket and increment counters
-    pub fn get_mut_connection(&self, spu_id: &SpuId) -> Option<WriteGuard<SpuId, KfSink>> {
-        self.sinks.get_sink(spu_id)
+    pub fn get_mut_connection(&self, spu_id: SpuId) -> Option<WriteGuard<SpuId, KfSink>> {
+        self.sinks.get_sink(&spu_id)
     }
 
   
@@ -256,7 +256,7 @@ impl ConnManager {
                 message.request.decode_request(),
                 spu
             );
-            match self.send_msg(&spu, &message).await {
+            match self.send_msg(spu, &message).await {
                 Ok(status) => {
                     if !status {
                         trace!(
@@ -281,7 +281,7 @@ impl ConnManager {
     async fn refresh_spu(&self, spu_id: i32) -> Result<(), ScServerError> {
         debug!("Send SPU metadata({})", spu_id);
 
-        if let Some(spu) = self.spu_store.get_by_id(&spu_id) {
+        if let Some(spu) = self.spu_store.get_by_id(spu_id) {
             self.send_update_all_to_spu(&spu).await?;
         } else {
             return Err(ScServerError::UnknownSpu(spu_id));
@@ -351,7 +351,7 @@ impl ConnManager {
     /// this is a one way send
     async fn send_msg<'a, R>(
         &'a self,
-        spu_id: &'a SpuId,
+        spu_id: SpuId,
         req_msg: &'a RequestMessage<R>,
     ) -> Result<bool, ScServerError>
     where
@@ -368,7 +368,7 @@ impl ConnManager {
                 }
                 Err(err) => {
                     error!("spu client send failed");
-                    Err(ScServerError::SpuCommuncationError(*spu_id, err))
+                    Err(ScServerError::SpuCommuncationError(spu_id, err))
                 }
             }
         } else {

@@ -91,6 +91,21 @@ impl SpuSpec {
             port: private_ep.port,
         }
     }
+
+    pub fn update(&mut self,other: &Self) {
+        
+        if self.rack != other.rack {
+            self.rack = other.rack.clone();
+        }
+        if self.public_endpoint != other.public_endpoint {
+            self.public_endpoint = other.public_endpoint.clone();
+        }
+        if self.private_endpoint != other.private_endpoint {
+            self.private_endpoint = other.private_endpoint.clone();
+        }
+            
+        
+    }
 }
 
 

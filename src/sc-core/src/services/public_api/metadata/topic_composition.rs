@@ -80,9 +80,9 @@ pub async fn handle_topic_composition_request(
 
     // encode spus
     let mut spus = vec![];
-    for spu_id in &spu_ids {
+    for spu_id in spu_ids {
         let mut spu = FetchSpuResponse::default();
-        spu.spu_id = *spu_id;
+        spu.spu_id = spu_id;
 
         // if spu is found encode it, otherwise error
         if let Some(spu_metadata) = metadata.spus().get_by_id(spu_id) {
@@ -94,7 +94,7 @@ pub async fn handle_topic_composition_request(
                 spus.push(spu);
             } else {
                 // update spu with metadata and save
-                let ingress = spu_metadata.public_endpoint();
+                let ingress = spu_metadata.spec.public_endpoint;
                 if let Some(host) = ingress.host() {
                     spu.host = host;
                     spu.port = ingress.port;

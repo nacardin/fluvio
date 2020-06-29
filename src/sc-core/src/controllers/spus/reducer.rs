@@ -116,7 +116,7 @@ impl SpuReducer {
 
         // spec changed
         if new_spu.spec != old_spu.spec {
-            let _server_addr = new_spu.private_server_address();
+          
             actions
                 .conns
                 .push(ConnectionRequest::Spu(SpuSpecChange::Mod(
@@ -171,7 +171,7 @@ impl SpuReducer {
         debug!("processing conn request: {}", status);
         let spu_id = status.spu_id();
 
-        if let Some(spu) = self.0.get_by_id(&spu_id) {
+        if let Some(spu) = self.0.get_by_id(spu_id) {
             let mut spu_kv = spu.clone();
             match status {
                 SpuConnectionStatusChange::Off(_) => spu_kv.status.set_offline(),

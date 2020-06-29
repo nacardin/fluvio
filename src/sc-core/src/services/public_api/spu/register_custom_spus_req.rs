@@ -67,7 +67,7 @@ fn validate_custom_spu_request(
     debug!("validating custom-spu: {}({})", spu_name, spu_id);
 
     // look-up SPU by name or id to check if already exists
-    if metadata.spus().spu(spu_name).is_some() || metadata.spus().get_by_id(&spu_id).is_some() {
+    if metadata.spus().spu(spu_name).is_some() || metadata.spus().get_by_id(spu_id).is_some() {
         Err(FlvStatus::new(
             spu_name.to_owned(),
             FlvErrorCode::SpuAlreadyExists,

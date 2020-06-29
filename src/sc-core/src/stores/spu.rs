@@ -35,35 +35,14 @@ impl SpuKV {
     //
     // Accessors
     //
-    pub fn id(&self) -> &SpuId {
-        &self.spec.id
+    pub fn id(&self) -> SpuId {
+        self.spec.id
     }
 
-    pub fn name(&self) -> &String {
+    pub fn name(&self) -> &str {
         &self.key
     }
 
-    pub fn rack(&self) -> Option<&String> {
-        match &self.spec.rack {
-            Some(rack) => Some(rack),
-            None => None,
-        }
-    }
-
-    pub fn rack_clone(&self) -> Option<String> {
-        match &self.spec.rack {
-            Some(rack) => Some(rack.clone()),
-            None => None,
-        }
-    }
-
-    pub fn public_endpoint(&self) -> &IngressPort {
-        &self.spec.public_endpoint
-    }
-
-    pub fn private_endpoint(&self) -> &Endpoint {
-        &self.spec.private_endpoint
-    }
 
     pub fn resolution_label(&self) -> &'static str {
         self.status.resolution_label()
@@ -81,28 +60,7 @@ impl SpuKV {
         !self.spec.is_custom()
     }
 
-    pub fn private_server_address(&self) -> ServerAddress {
-        let private_ep = self.private_endpoint();
-        ServerAddress {
-            host: private_ep.host.clone(),
-            port: private_ep.port,
-        }
-    }
-
-    pub fn set_rack(&mut self, rack: Option<&String>) {
-        match rack {
-            Some(r) => self.spec.rack = Some(r.clone()),
-            None => self.spec.rack = None,
-        }
-    }
-
-    pub fn set_public_endpoint(&mut self, public_ep: IngressPort) {
-        self.spec.public_endpoint = public_ep;
-    }
-
-    pub fn set_private_endpoint(&mut self, private_ep: Endpoint) {
-        self.spec.private_endpoint = private_ep;
-    }
+    
 }
 
 /// used in the bulk add scenario
@@ -134,21 +92,14 @@ impl SpuLocalStore {
     /// update the spec
     pub fn update_spec(&self, name: &str, other_spu: &SpuKV) -> Result<(), IoError> {
         if let Some(spu) = self.write().get_mut(name) {
-            if spu.id() != other_spu.id() {
+
+            if spu.spec.id != other_spu.spec.id {
                 Err(IoError::new(
                     ErrorKind::InvalidData,
                     format!("spu '{}': id is immutable", name),
                 ))
             } else {
-                if spu.rack() != other_spu.rack() {
-                    spu.set_rack(other_spu.rack());
-                }
-                if spu.public_endpoint() != other_spu.public_endpoint() {
-                    spu.set_public_endpoint(other_spu.public_endpoint().clone());
-                }
-                if spu.private_endpoint() != other_spu.private_endpoint() {
-                    spu.set_private_endpoint(other_spu.private_endpoint().clone());
-                }
+                spu.spec.update(&other_spu.spec);
                 spu.set_ctx(other_spu.kv_ctx());
 
                 Ok(())
@@ -177,7 +128,7 @@ impl SpuLocalStore {
         let mut status = HashSet::new();
         for (_, spu) in self.read().iter() {
             if spu.status.is_online() {
-                status.insert(*spu.id());
+                status.insert(spu.id());
             }
         }
         status
@@ -208,7 +159,7 @@ impl SpuLocalStore {
             .values()
             .filter_map(|spu| {
                 if spu.status.is_online() {
-                    Some(*spu.id())
+                    Some(spu.id())
                 } else {
                     None
                 }
@@ -220,7 +171,7 @@ impl SpuLocalStore {
     pub fn spu_ids_for_replica(&self) -> Vec<i32> {
         self.read()
             .values()
-            .filter_map(|spu| Some(*spu.id()))
+            .filter_map(|spu| Some(spu.id()))
             .collect()
     }
 
@@ -251,14 +202,14 @@ impl SpuLocalStore {
     }
 
     pub fn spu(&self, name: &str) -> Option<SpuKV> {
-        match (*self.read()).get(name) {
+        match self.read().get(name) {
             Some(spu) => Some(spu.clone()),
             None => None,
         }
     }
 
-    pub fn get_by_id(&self, id: &i32) -> Option<SpuKV> {
-        for (_, spu) in (*self.read()).iter() {
+    pub fn get_by_id(&self, id: i32) -> Option<SpuKV> {
+        for (_, spu) in self.read().iter() {
             if spu.id() == id {
                 return Some(spu.clone());
             }
@@ -267,7 +218,7 @@ impl SpuLocalStore {
     }
 
     // check if spu can be registered
-    pub fn validate_spu_for_registered(&self, id: &SpuId) -> bool {
+    pub fn validate_spu_for_registered(&self, id: SpuId) -> bool {
         for (_, spu) in (self.read()).iter() {
             if spu.id() == id {
                 return true;
@@ -280,7 +231,7 @@ impl SpuLocalStore {
     pub fn is_conflict(&self, owner_uid: &str, start: i32, end_exclusive: i32) -> Option<i32> {
         for (_, spu) in (self.read()).iter() {
             if !spu.is_owned(owner_uid) {
-                let id = *spu.id();
+                let id = spu.id();
                 if id >= start && id < end_exclusive {
                     return Some(id);
                 }
@@ -314,7 +265,7 @@ impl SpuLocalStore {
         table.push_str(&hdr);
 
         for (name, spu) in self.read().iter() {
-            let rack = match spu.rack() {
+            let rack = match &spu.spec.rack {
                 Some(rack) => rack.clone(),
                 None => String::from(""),
             };
@@ -324,8 +275,8 @@ impl SpuLocalStore {
                 d = spu.id(),
                 s = spu.resolution_label(),
                 t = spu.type_label().clone(),
-                p = spu.public_endpoint(),
-                i = spu.private_endpoint(),
+                p = spu.spec.public_endpoint,
+                i = spu.spec.private_endpoint,
                 r = rack,
             );
             table.push_str(&row);
@@ -338,7 +289,7 @@ impl SpuLocalStore {
     pub fn spus_in_rack_count(&self) -> i32 {
         self.read()
             .values()
-            .filter_map(|spu| if spu.rack().is_some() { Some(1) } else { None })
+            .filter_map(|spu| if spu.spec.rack.is_some() { Some(1) } else { None })
             .sum()
     }
 
@@ -355,14 +306,14 @@ impl SpuLocalStore {
         let mut rack_spus: BTreeMap<String, Vec<i32>> = BTreeMap::new();
 
         for spu in spus.read().values() {
-            if let Some(rack) = spu.rack() {
+            if let Some(rack) = &spu.spec.rack {
                 let mut ids: Vec<i32>;
                 let mut ids_in_map = rack_spus.remove(rack);
                 if ids_in_map.is_some() {
                     ids = ids_in_map.as_mut().unwrap().to_vec();
-                    ids.push(*spu.id());
+                    ids.push(spu.id());
                 } else {
-                    ids = vec![*spu.id()];
+                    ids = vec![spu.id()];
                 }
                 ids.sort();
                 rack_spus.insert(rack.clone(), ids);
@@ -444,7 +395,7 @@ pub mod test {
     #[test]
     fn test_spu_status_updates_online_offline() {
         let mut test_spu: SpuKV = ("spu", 10, false, None).into();
-        assert_eq!(*test_spu.id(), 10);
+        assert_eq!(test_spu.id(), 10);
 
         test_spu.status.set_online();
         assert_eq!(test_spu.status.is_online(), true);

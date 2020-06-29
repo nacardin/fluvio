@@ -45,7 +45,7 @@ where
             debug!("api request: delete custom-spu with id '{}'", spu_id);
 
             // spu-id must exist
-            if let Some(spu) = &ctx.context().spus().get_by_id(&spu_id) {
+            if let Some(spu) = &ctx.context().spus().get_by_id(spu_id) {
                 unregister_custom_spu(ctx, spu).await?
             } else {
                 // spu does not exist
@@ -71,12 +71,12 @@ pub async fn unregister_custom_spu<C>(
 where
     C: MetadataClient,
 {
-    let spu_name = spu.name();
+    let spu_name = spu.name().to_owned();
 
     // must be Custom Spu
     if !spu.is_custom() {
         return Ok(FlvStatus::new(
-            spu_name.clone(),
+            spu_name,
             FlvErrorCode::SpuError,
             Some("expected 'Custom' spu, found 'Managed' spu".to_owned()),
         ));
@@ -87,7 +87,7 @@ where
         Some(ctx) => ctx,
         None => {
             return Ok(FlvStatus::new(
-                spu_name.clone(),
+                spu_name,
                 FlvErrorCode::SpuError,
                 Some("missing Kv context".to_owned()),
             ))
@@ -99,7 +99,7 @@ where
     match ctx.k8_client().delete_item::<SpuSpec, _>(&item).await {
         Ok(_) => Ok(FlvStatus::new_ok(spu_name.clone())),
         Err(err) => Ok(FlvStatus::new(
-            spu_name.clone(),
+            spu_name,
             FlvErrorCode::SpuError,
             Some(err.to_string()),
         )),

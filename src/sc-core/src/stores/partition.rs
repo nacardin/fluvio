@@ -71,10 +71,10 @@ impl PartitionLocalStore {
     }
 
     /// find all partitions that has spu in the replicas
-    pub fn partition_spec_for_spu(&self, target_spu: &i32) -> Vec<(ReplicaKey, PartitionSpec)> {
+    pub fn partition_spec_for_spu(&self, target_spu: i32) -> Vec<(ReplicaKey, PartitionSpec)> {
         let mut res = vec![];
         for (name, partition) in self.read().iter() {
-            if partition.spec.replicas.contains(target_spu) {
+            if partition.spec.replicas.contains(&target_spu) {
                 res.push((name.clone(), partition.spec.clone()));
             }
         }
@@ -107,7 +107,7 @@ impl PartitionLocalStore {
     }
 
     /// replica msg for target spu
-    pub fn replica_for_spu(&self, target_spu: &SpuId) -> Vec<Replica> {
+    pub fn replica_for_spu(&self, target_spu: SpuId) -> Vec<Replica> {
         let msgs: Vec<Replica> = self
             .partition_spec_for_spu(target_spu)
             .into_iter()
@@ -191,7 +191,7 @@ pub mod test {
         let partitions = PartitionLocalStore::default();
         partitions.bulk_add(vec![(("topic1", 0), vec![10, 11, 12])]);
 
-        let replica_msg = partitions.replica_for_spu(&10);
+        let replica_msg = partitions.replica_for_spu(10);
         assert_eq!(replica_msg.len(), 1);
     }
 }

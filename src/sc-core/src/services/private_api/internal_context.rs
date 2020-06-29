@@ -66,7 +66,7 @@ impl InternalContext {
             .await;
     }
 
-    pub fn validate_spu(&self, spu_id: &SpuId) -> bool {
+    pub fn validate_spu(&self, spu_id: SpuId) -> bool {
         self.conn_mgr.validate_spu(spu_id)
     }
 }
