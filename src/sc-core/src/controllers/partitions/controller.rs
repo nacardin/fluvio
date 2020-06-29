@@ -122,7 +122,7 @@ where
 
     async fn process_request(&mut self, requests: PartitionChangeRequest) {
         // process partition actions; generate Kvs actions and SPU msgs.
-        match self.reducer.process_requests(requests) {
+        match self.reducer.process_requests(requests).await {
             Ok(actions) => {
                 trace!("Partition actions: {}", actions);
 

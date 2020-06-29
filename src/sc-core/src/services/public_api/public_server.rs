@@ -87,10 +87,7 @@ where
                 request,
                 shared_sink.clone(),
                 end_event.clone(),
-                ctx.shared_context.clone()),
-            _ => {
-                log::warn!("not actual protocol");
-            }
+                ctx.shared_context.clone())
 
         );
 

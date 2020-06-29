@@ -82,7 +82,7 @@ impl TopicReducer {
         &self.partition_store
     }
 
-    pub fn process_requests(
+    pub async fn process_requests(
         &self,
         requests: TopicChangeRequest,
     ) -> Result<TopicActions, ScServerError> {
@@ -94,14 +94,14 @@ impl TopicReducer {
             TopicChangeRequest::Topic(topic_requests) => {
                 for topic_request in topic_requests.into_iter() {
                     match topic_request {
-                        LSChange::Add(topic) => self.add_topic_action_handler(topic, &mut actions),
+                        LSChange::Add(topic) => self.add_topic_action_handler(topic, &mut actions).await,
 
                         LSChange::Mod(new_topic, local_topic) => {
                             log_on_err!(self.mod_topic_action_handler(
                                 new_topic,
                                 local_topic,
                                 &mut actions,
-                            ));
+                            ).await);
                         }
 
                         LSChange::Delete(_) => {
@@ -113,12 +113,12 @@ impl TopicReducer {
 
             TopicChangeRequest::Spu(spu_requests) => {
                 for request in spu_requests.into_iter() {
-                    self.process_spu_kv(request, &mut actions);
+                    self.process_spu_kv(request, &mut actions).await;
                 }
             }
         }
 
-        trace!("\n{}", self.topic_store().table_fmt());
+        trace!("\n{}", self.topic_store().table_fmt().await);
 
         Ok(actions)
     }
@@ -133,12 +133,12 @@ impl TopicReducer {
     /// At this point, we only need to ensure that topic with init status can be moved
     /// to pending or error state
     ///
-    fn add_topic_action_handler(&self, topic: TopicKV, actions: &mut TopicActions) {
+    async fn add_topic_action_handler(&self, topic: TopicKV, actions: &mut TopicActions) {
         let name = topic.key();
 
         debug!("AddTopic({}) - {}", name, topic);
 
-        self.update_actions_next_state(&topic, actions);
+        self.update_actions_next_state(&topic, actions).await;
     }
 
     ///
@@ -150,7 +150,7 @@ impl TopicReducer {
     /// * update local cache (if chaged)
     /// * generate replica_map (if possible) and push partitions to KV store
     ///
-    fn mod_topic_action_handler(
+    async fn mod_topic_action_handler(
         &self,
         new_topic: TopicKV,
         old_topic: TopicKV,
@@ -169,19 +169,19 @@ impl TopicReducer {
 
         // if topic changed, update status & notify partitions
         if new_topic.status != old_topic.status {
-            self.update_actions_next_state(&new_topic, actions);
+            self.update_actions_next_state(&new_topic, actions).await;
         }
 
         Ok(())
     }
 
     /// process kv
-    fn process_spu_kv(&self, request: LSChange<SpuSpec>, actions: &mut TopicActions) {
+    async fn process_spu_kv(&self, request: LSChange<SpuSpec>, actions: &mut TopicActions) {
         match request {
             LSChange::Add(new_spu) => {
                 debug!("processing SPU add: {}", new_spu);
 
-                self.generate_replica_map_for_all_topics_handler(actions);
+                self.generate_replica_map_for_all_topics_handler(actions).await;
             }
 
             LSChange::Mod(_new_spu, _old_spu) => {
@@ -251,23 +251,24 @@ impl TopicReducer {
     /// * generate replica map
     /// * push push result to KV topic queue (if replica map generations succeeded)
     ///
-    fn generate_replica_map_for_all_topics_handler(&self, actions: &mut TopicActions) {
+    async fn generate_replica_map_for_all_topics_handler(&self, actions: &mut TopicActions) {
         debug!("updating replica maps for topics are in pending state");
 
         // loop through topics & generate replica map (if needed)
-        self.topic_store().for_each(|topic| {
+        for topic in self.topic_store().read().await.values() {
             if topic.status.need_replica_map_recal() {
                 let name = topic.key();
                 debug!("Generate R-MAP for: {:?}", name);
                 // topic status to collect modifications
-                self.update_actions_next_state(topic, actions);
+                self.update_actions_next_state(topic, actions).await;
             }
-        });
+        }
     }
 }
 
 #[cfg(test)]
 mod test2 {
+    use flv_future_aio::test_async;
     use flv_metadata::topic::{TopicResolution, TopicStatus};
     use flv_metadata::topic::PENDING_REASON;
     use flv_util::actions::Actions;
@@ -279,8 +280,8 @@ mod test2 {
     use super::super::TopicLSChange;
 
     // if topic are just created, it should transitioned to pending state if config are valid
-    #[test]
-    fn test_topic_reducer_init_to_pending() {
+    #[test_async]
+    async fn test_topic_reducer_init_to_pending() -> Result<(),()> {
         let topic_reducer = TopicReducer::default();
         let topic_requests: Actions<TopicLSChange> = vec![
             TopicLSChange::add(TopicKV::with_spec("topic1", (1, 1).into())),
@@ -290,6 +291,7 @@ mod test2 {
 
         let actions = topic_reducer
             .process_requests(TopicChangeRequest::Topic(topic_requests))
+            .await
             .expect("actions");
 
         // topic key/value store actions
@@ -307,6 +309,7 @@ mod test2 {
         ]
         .into();
         assert_eq!(actions.topics, expected_actions);
+        Ok(())
     }
 
     /*

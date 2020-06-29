@@ -179,7 +179,7 @@ impl TopicKV {
                 }
                 TopicResolution::Pending | TopicResolution::InsufficientResources => {
                     let mut next_state =
-                        self.update_replica_map_for_assigned_topic(partition_map, spu_store);
+                        self.update_replica_map_for_assigned_topic(partition_map, spu_store).await;
                     if next_state.resolution == TopicResolution::Provisioned {
                         next_state.partitions = self.create_new_partitions(partition_store).await;
                         next_state
@@ -261,7 +261,7 @@ impl TopicKV {
             let reason = format!("need {} more SPU", param.replication_factor - spu_count);
             TopicStatus::set_resolution_no_resource(reason).into()
         } else {
-            let replica_map = generate_replica_map_for_topic(spus, param, None);
+            let replica_map = generate_replica_map_for_topic(spus, param, None).await;
             if replica_map.len() > 0 {
                 (TopicStatus::next_resolution_provisoned(), replica_map).into()
             } else {
@@ -275,35 +275,33 @@ impl TopicKV {
     pub async fn create_new_partitions(&self, partition_store: &PartitionLocalStore) -> Vec<PartitionKV> {
         let parent_kv_ctx = self.kv_ctx.make_parent_ctx();
 
-        self.status
-            .replica_map
-            .iter()
-            .filter_map(|(idx, replicas)| {
-                let replica_key = ReplicaKey::new(self.key(), *idx);
-                debug!("Topic: {} creating partition: {}", self.key(), replica_key);
-                if partition_store.contains_key(&replica_key).await {
-                    None
-                } else {
-                    Some(
-                        PartitionKV::with_spec(replica_key, replicas.clone().into())
-                            .with_kv_ctx(parent_kv_ctx.clone()),
-                    )
-                }
-            })
-            .collect()
+        let mut partitions = vec![];
+        for (idx,replicas) in self.status.replica_map.iter() {
+            
+            let replica_key = ReplicaKey::new(self.key(), *idx);
+            debug!("Topic: {} creating partition: {}", self.key(), replica_key);
+            if !partition_store.contains_key(&replica_key).await {
+                
+                partitions.push(
+                    PartitionKV::with_spec(replica_key, replicas.clone().into())
+                        .with_kv_ctx(parent_kv_ctx.clone()),
+                )
+            }
+        }
+        partitions
     }
 
     ///
     /// Compare assigned SPUs versus local SPUs. If all assigned SPUs are live,
     /// update topic status to ok. otherwise, mark as waiting for live SPUs
     ///
-    pub fn update_replica_map_for_assigned_topic(
+    pub async fn update_replica_map_for_assigned_topic(
         &self,
         partition_maps: &PartitionMaps,
         spu_store: &SpuLocalStore,
     ) -> TopicNextState {
         let partition_map_spus = partition_maps.unique_spus_in_partition_map();
-        let spus_id = spu_store.spu_ids_for_replica();
+        let spus_id = spu_store.spu_ids_for_replica().await;
 
         // ensure spu existds
         for spu in &partition_map_spus {
@@ -338,7 +336,7 @@ pub async fn generate_replica_map_for_topic(
 
     // generate partition map (with our without rack assignment)
     if param.ignore_rack_assignment || in_rack_count == 0 {
-        generate_partitions_without_rack(&spus, &param, start_index)
+        generate_partitions_without_rack(&spus, &param, start_index).await
     } else {
         generate_partitions_with_rack_assignment(&spus, &param, start_index).await
     }
@@ -378,14 +376,14 @@ async fn generate_partitions_with_rack_assignment(
 ///
 /// Generate partitions without taking rack assignments into consideration
 ///
-fn generate_partitions_without_rack(
+async fn generate_partitions_without_rack(
     spus: &SpuLocalStore,
     param: &TopicReplicaParam,
     start_index: i32,
 ) -> ReplicaMap {
     let mut partition_map = BTreeMap::new();
-    let spu_cnt = spus.spu_used_for_replica();
-    let spu_ids = spus.spu_ids_for_replica();
+    let spu_cnt = spus.spu_used_for_replica().await;
+    let spu_ids = spus.spu_ids_for_replica().await;
 
     let s_idx = if start_index >= 0 {
         start_index
@@ -415,14 +413,14 @@ pub type TopicLocalStore = LocalStore<TopicSpec>;
 // -----------------------------------
 
 impl TopicLocalStore {
-    pub fn topic(&self, topic_name: &str) -> Option<TopicKV> {
-        match self.read().get(topic_name) {
+    pub async fn topic(&self, topic_name: &str) -> Option<TopicKV> {
+        match self.read().await.get(topic_name) {
             Some(topic) => Some(topic.clone()),
             None => None,
         }
     }
 
-    pub fn table_fmt(&self) -> String {
+    pub async fn table_fmt(&self) -> String {
         let mut table = String::new();
 
         let topic_hdr = format!(
@@ -438,7 +436,7 @@ impl TopicLocalStore {
         );
         table.push_str(&topic_hdr);
 
-        for (name, topic) in self.read().iter() {
+        for (name, topic) in self.read().await.iter() {
             let topic_row = format!(
                 "{n:<18}  {t:^8}  {p:^5}  {s:^5}  {g:<8}  {l:^14}  {m:^10}  {r}\n",
                 n = name.clone(),
@@ -464,6 +462,7 @@ impl TopicLocalStore {
 
 mod test {
     use flv_metadata::topic::{TopicResolution, TopicStatus};
+    use flv_future_aio::test_async;
 
     use super::{TopicKV, TopicLocalStore};
 
@@ -512,21 +511,22 @@ mod test {
         assert_eq!(topic1, topic2);
     }
 
-    #[test]
-    fn topic_list_insert() {
+    #[test_async]
+    async fn topic_list_insert() -> Result<(),()> {
         // create topics
         let topic1 = TopicKV::new("Topic-1", (1, 1, false).into(), TopicStatus::default());
         let topic2 = TopicKV::new("Topic-2", (2, 2, false).into(), TopicStatus::default());
 
         let topics = TopicLocalStore::default();
-        topics.insert(topic1);
-        topics.insert(topic2);
+        topics.insert(topic1).await;
+        topics.insert(topic2).await;
 
-        assert_eq!(topics.count(), 2);
+        assert_eq!(topics.count().await, 2);
+        Ok(())
     }
 
-    #[test]
-    fn test_topics_in_pending_state() {
+    #[test_async]
+    async fn test_topics_in_pending_state() -> Result<(),()> {
         let topics = TopicLocalStore::default();
 
         // resolution: Init
@@ -568,25 +568,26 @@ mod test {
             ),
         );
 
-        topics.insert(topic1);
-        topics.insert(topic2);
-        topics.insert(topic3);
-        topics.insert(topic4);
+        topics.insert(topic1).await;
+        topics.insert(topic2).await;
+        topics.insert(topic3).await;
+        topics.insert(topic4).await;
 
         let expected = vec![String::from("Topic-2"), String::from("Topic-4")];
         let mut pending_state_names: Vec<String> = vec![];
 
-        topics.for_each(|topic| {
+        for topic in topics.read().await.values() {
             if topic.status.need_replica_map_recal() {
                 pending_state_names.push(topic.key_owned());
             }
-        });
+        }
 
         assert_eq!(pending_state_names, expected);
+        Ok(())
     }
 
-    #[test]
-    fn test_update_topic_status_with_other_error_topic_not_found() {
+    #[test_async]
+    async fn test_update_topic_status_with_other_error_topic_not_found() -> Result<(),()> {
         let topics = TopicLocalStore::default();
 
         let topic1 = TopicKV::new("Topic-1", (1, 1, false).into(), TopicStatus::default());
@@ -603,18 +604,19 @@ mod test {
         );
 
         // test: update_status (returns error)
-        let res = topics.update_status(topic2.key(), topic2.status.clone());
+        let res = topics.update_status(topic2.key(), topic2.status.clone()).await;
         assert_eq!(
             format!("{}", res.unwrap_err()),
             "Topic 'Topic-2': not found, cannot update"
         );
+        Ok(())
     }
 
-    #[test]
-    fn test_update_topic_status_successful() {
+    #[test_async]
+    async fn test_update_topic_status_successful() -> Result<(),()> {
         let topics = TopicLocalStore::default();
         let topic1 = TopicKV::new("Topic-1", (2, 2, false).into(), TopicStatus::default());
-        topics.insert(topic1);
+        topics.insert(topic1).await;
 
         let updated_topic = TopicKV::new(
             "Topic-1",
@@ -627,13 +629,14 @@ mod test {
         );
 
         // run test
-        let res = topics.update_status(updated_topic.key(), updated_topic.status.clone());
+        let res = topics.update_status(updated_topic.key(), updated_topic.status.clone()).await;
         assert!(res.is_ok());
 
-        let topic = topics.topic("Topic-1");
+        let topic = topics.topic("Topic-1").await;
         assert_eq!(topic.is_some(), true);
 
         assert_eq!(topic.unwrap(), updated_topic);
+        Ok(())
     }
 }
 
@@ -645,11 +648,13 @@ pub mod replica_map_test {
 
     use std::collections::BTreeMap;
 
+    use flv_future_aio::test_async;
+
     use super::SpuLocalStore;
     use super::generate_replica_map_for_topic;
 
-    #[test]
-    fn generate_replica_map_for_topic_1x_replicas_no_rack() {
+    #[test_async]
+    async fn generate_replica_map_for_topic_1x_replicas_no_rack() -> Result<(),()> {
         let spus: SpuLocalStore = vec![
             (0, true, None),
             (1, true, None),
@@ -659,21 +664,22 @@ pub mod replica_map_test {
         ]
         .into();
 
-        assert_eq!(spus.online_spu_count(), 5);
+        assert_eq!(spus.online_spu_count().await, 5);
 
         // test 4 partitions, 1 replicas - index 8
         let param = (4, 1, false).into();
-        let map_1xi = generate_replica_map_for_topic(&spus, &param, Some(8));
+        let map_1xi = generate_replica_map_for_topic(&spus, &param, Some(8)).await;
         let mut map_1xi_expected = BTreeMap::new();
         map_1xi_expected.insert(0, vec![4]);
         map_1xi_expected.insert(1, vec![5000]);
         map_1xi_expected.insert(2, vec![0]);
         map_1xi_expected.insert(3, vec![1]);
         assert_eq!(map_1xi, map_1xi_expected);
+        Ok(())
     }
 
-    #[test]
-    fn generate_replica_map_for_topic_2x_replicas_no_rack() {
+    #[test_async]
+    async fn generate_replica_map_for_topic_2x_replicas_no_rack() -> Result<(),()> {
         let spus = vec![
             (0, true, None),
             (1, true, None),
@@ -685,17 +691,18 @@ pub mod replica_map_test {
 
         // test 4 partitions, 2 replicas - index 3
         let param = (4, 2, false).into();
-        let map_2xi = generate_replica_map_for_topic(&spus, &param, Some(3));
+        let map_2xi = generate_replica_map_for_topic(&spus, &param, Some(3)).await;
         let mut map_2xi_expected = BTreeMap::new();
         map_2xi_expected.insert(0, vec![3, 4]);
         map_2xi_expected.insert(1, vec![4, 0]);
         map_2xi_expected.insert(2, vec![0, 2]);
         map_2xi_expected.insert(3, vec![1, 3]);
         assert_eq!(map_2xi, map_2xi_expected);
+        Ok(())
     }
 
-    #[test]
-    fn generate_replica_map_for_topic_3x_replicas_no_rack() {
+    #[test_async]
+    async fn generate_replica_map_for_topic_3x_replicas_no_rack() -> Result<(),()> {
         let spus = vec![
             (0, true, None),
             (1, true, None),
@@ -707,7 +714,7 @@ pub mod replica_map_test {
 
         // test 21 partitions, 3 replicas - index 0
         let param = (21, 3, false).into();
-        let map_3x = generate_replica_map_for_topic(&spus, &param, Some(0));
+        let map_3x = generate_replica_map_for_topic(&spus, &param, Some(0)).await;
         let mut map_3x_expected = BTreeMap::new();
         map_3x_expected.insert(0, vec![0, 1, 2]);
         map_3x_expected.insert(1, vec![1, 2, 3]);
@@ -734,17 +741,18 @@ pub mod replica_map_test {
 
         // test 4 partitions, 3 replicas - index 12
         let param = (4, 3, false).into();
-        let map_3xi = generate_replica_map_for_topic(&spus, &param, Some(12));
+        let map_3xi = generate_replica_map_for_topic(&spus, &param, Some(12)).await;
         let mut map_3xi_expected = BTreeMap::new();
         map_3xi_expected.insert(0, vec![2, 0, 1]);
         map_3xi_expected.insert(1, vec![3, 1, 2]);
         map_3xi_expected.insert(2, vec![4, 2, 3]);
         map_3xi_expected.insert(3, vec![0, 1, 2]);
         assert_eq!(map_3xi, map_3xi_expected);
+        Ok(())
     }
 
-    #[test]
-    fn generate_replica_map_for_topic_4x_replicas_no_rack() {
+    #[test_async]
+    async fn generate_replica_map_for_topic_4x_replicas_no_rack() -> Result<(),()> {
         let spus = vec![
             (0, true, None),
             (1, true, None),
@@ -756,17 +764,18 @@ pub mod replica_map_test {
 
         // test 4 partitions, 4 replicas - index 10
         let param = (4, 4, false).into();
-        let map_4xi = generate_replica_map_for_topic(&spus, &param, Some(10));
+        let map_4xi = generate_replica_map_for_topic(&spus, &param, Some(10)).await;
         let mut map_4xi_expected = BTreeMap::new();
         map_4xi_expected.insert(0, vec![0, 1, 2, 3]);
         map_4xi_expected.insert(1, vec![1, 2, 3, 4]);
         map_4xi_expected.insert(2, vec![2, 3, 4, 0]);
         map_4xi_expected.insert(3, vec![3, 4, 0, 1]);
         assert_eq!(map_4xi, map_4xi_expected);
+        Ok(())
     }
 
-    #[test]
-    fn generate_replica_map_for_topic_5x_replicas_no_rack() {
+    #[test_async]
+    async fn generate_replica_map_for_topic_5x_replicas_no_rack() -> Result<(),()> {
         let spus = vec![
             (0, true, None),
             (1, true, None),
@@ -778,17 +787,18 @@ pub mod replica_map_test {
 
         // test 4 partitions, 5 replicas - index 14
         let param = (4, 5, false).into();
-        let map_5xi = generate_replica_map_for_topic(&spus, &param, Some(14));
+        let map_5xi = generate_replica_map_for_topic(&spus, &param, Some(14)).await;
         let mut map_5xi_expected = BTreeMap::new();
         map_5xi_expected.insert(0, vec![5002, 0, 1, 3, 4]);
         map_5xi_expected.insert(1, vec![0, 1, 3, 4, 5002]);
         map_5xi_expected.insert(2, vec![1, 3, 4, 5002, 0]);
         map_5xi_expected.insert(3, vec![3, 4, 5002, 0, 1]);
         assert_eq!(map_5xi, map_5xi_expected);
+        Ok(())
     }
 
-    #[test]
-    fn generate_replica_map_for_topic_6_part_3_rep_6_brk_3_rak() {
+    #[test_async]
+    async fn generate_replica_map_for_topic_6_part_3_rep_6_brk_3_rak() -> Result<(),()>{
         let r1 = String::from("r1");
         let r2 = String::from("r2");
         let r3 = String::from("r3");
@@ -805,7 +815,7 @@ pub mod replica_map_test {
 
         // Compute & compare with result
         let param = (6, 3, false).into();
-        let computed = generate_replica_map_for_topic(&spus, &param, Some(0));
+        let computed = generate_replica_map_for_topic(&spus, &param, Some(0)).await;
         let mut expected = BTreeMap::new();
         expected.insert(0, vec![3, 2, 0]);
         expected.insert(1, vec![2, 0, 4]);
@@ -815,10 +825,11 @@ pub mod replica_map_test {
         expected.insert(5, vec![5, 3, 2]);
 
         assert_eq!(computed, expected);
+        Ok(())
     }
 
-    #[test]
-    fn generate_replica_map_for_topic_12_part_4_rep_11_brk_4_rak() {
+    #[test_async]
+    async fn generate_replica_map_for_topic_12_part_4_rep_11_brk_4_rak() -> Result<(),()>{
         let r1 = String::from("r1");
         let r2 = String::from("r2");
         let r3 = String::from("r3");
@@ -842,7 +853,7 @@ pub mod replica_map_test {
 
         // Compute & compare with result
         let param = (12, 4, false).into();
-        let computed = generate_replica_map_for_topic(&spus, &param, Some(0));
+        let computed = generate_replica_map_for_topic(&spus, &param, Some(0)).await;
         let mut expected = BTreeMap::new();
         expected.insert(0, vec![0, 4, 8, 9]);
         expected.insert(1, vec![4, 8, 9, 1]);
@@ -858,10 +869,11 @@ pub mod replica_map_test {
         expected.insert(11, vec![11, 0, 4, 8]);
 
         assert_eq!(computed, expected);
+        Ok(())
     }
 
-    #[test]
-    fn generate_replica_map_for_topic_9_part_3_rep_9_brk_3_rak() {
+    #[test_async]
+    async fn generate_replica_map_for_topic_9_part_3_rep_9_brk_3_rak() -> Result<(),()> {
         let r1 = String::from("r1");
         let r2 = String::from("r2");
         let r3 = String::from("r3");
@@ -881,7 +893,7 @@ pub mod replica_map_test {
 
         // test 9 partitions, 3 replicas - index 0
         let param = (9, 3, false).into();
-        let computed = generate_replica_map_for_topic(&spus, &param, Some(0));
+        let computed = generate_replica_map_for_topic(&spus, &param, Some(0)).await;
         let mut expected = BTreeMap::new();
         expected.insert(0, vec![0, 4, 8]);
         expected.insert(1, vec![4, 8, 1]);
@@ -894,5 +906,6 @@ pub mod replica_map_test {
         expected.insert(8, vec![7, 0, 4]);
 
         assert_eq!(computed, expected);
+        Ok(())
     }
 }

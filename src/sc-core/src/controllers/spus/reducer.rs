@@ -27,7 +27,7 @@ impl SpuReducer {
         Self(store.into())
     }
 
-    pub fn process_requests(
+    pub async fn process_requests(
         &self,
         change_request: SpuChangeRequest,
     ) -> Result<SpuActions, ScServerError> {
@@ -58,7 +58,7 @@ impl SpuReducer {
             }
 
             SpuChangeRequest::Conn(conn_request) => {
-                self.conn_status_update(conn_request, &mut actions);
+                self.conn_status_update(conn_request, &mut actions).await;
             }
         }
 

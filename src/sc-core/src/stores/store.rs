@@ -32,7 +32,7 @@ where
     <S as Spec>::Owner: K8ExtendedSpec,
 {
     fn default() -> Self {
-        LocalStore(SimpleConcurrentBTreeMap::new())
+        Self(SimpleConcurrentBTreeMap::new())
     }
 }
 
@@ -41,6 +41,14 @@ where
     S: StoreSpec,
     <S as Spec>::Owner: K8ExtendedSpec,
 {
+    pub fn bulk_new(objects: Vec<KVObject<S>>) -> Self {
+        let mut map = BTreeMap::new();
+        for obj in objects {
+            map.insert(obj.key.clone(),obj);
+        }
+        Self(SimpleConcurrentBTreeMap::new_with_map(map))
+    }
+
     pub fn new_shared() -> Arc<Self> {
         Arc::new(Self::default())
     }
@@ -63,12 +71,6 @@ where
     }
 
 
-    pub async fn for_each<F>(&self, func: F)
-    where
-        F: FnMut(&'_ KVObject<S>),
-    {
-        self.read().await.values().for_each(func);
-    }
 
 
     /// get copy of the value ref by key

@@ -105,7 +105,7 @@ async fn validate_topic_request(
                 )
             } else {
                 let next_state =
-                    topic_kv.update_replica_map_for_assigned_topic(partition_map, metadata.spus());
+                    topic_kv.update_replica_map_for_assigned_topic(partition_map, metadata.spus()).await;
                 trace!("validating, assign replica map topic: {:#?}", next_state);
                 if next_state.resolution.is_invalid() {
                     FlvStatus::new(

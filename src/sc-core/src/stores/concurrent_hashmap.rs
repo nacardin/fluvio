@@ -52,7 +52,11 @@ impl <K,V> SimpleConcurrentBTreeMap<K,V>
     where K: Ord 
 {
     pub fn new() -> Self {
-        SimpleConcurrentBTreeMap(RwLock::new(BTreeMap::new()))
+        Self(RwLock::new(BTreeMap::new()))
+    }
+
+    pub fn new_with_map(map: BTreeMap<K,V>) -> Self {
+        Self(RwLock::new(map))
     }
 
     pub async fn read<'a>(&'a self) -> RwLockReadGuard<'a,BTreeMap<K, V>> {

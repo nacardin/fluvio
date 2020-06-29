@@ -25,7 +25,7 @@ where
    
     debug!("api request: delete topic '{}'", topic_name);
 
-    let status = if let Some(topic) = ctx.context().topics().topic(&topic_name) {
+    let status = if let Some(topic) = ctx.context().topics().topic(&topic_name).await {
         if let Some(item_ctx) = &topic.kv_ctx().item_ctx {
             let item = item_ctx.as_input();
             if let Err(err) = ctx.k8_client().delete_item::<TopicSpec, _>(&item).await {

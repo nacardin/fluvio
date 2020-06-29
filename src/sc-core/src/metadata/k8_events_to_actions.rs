@@ -344,7 +344,7 @@ pub mod test {
 
         let topic_store = TopicLocalStore::default();
         let old_kv = k8_obj_to_kv_obj(old_topic).expect("conversion");
-        topic_store.insert(old_kv.clone());
+        topic_store.insert(old_kv.clone()).await;
 
         let kv_actions = k8_events_to_metadata_actions(topics, &topic_store).await;
 
@@ -370,7 +370,7 @@ pub mod test {
         let topic_store = TopicLocalStore::default();
         let topic_kv =
             k8_obj_to_kv_obj(K8Topic::new("topic1", TopicSpec::default())).expect("work");
-        topic_store.insert(topic_kv);
+        topic_store.insert(topic_kv).await;
 
         let kv_actions = k8_events_to_metadata_actions(topics, &topic_store).await;
 

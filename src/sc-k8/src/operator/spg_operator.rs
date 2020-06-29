@@ -112,7 +112,7 @@ impl SpgOperator {
         let spg_spec = &spu_group.spec;
 
         // ensure we don't have conflict with existing spu group
-        if let Some(conflict_id) = spu_group.is_conflict_with(&self.spu_store) {
+        if let Some(conflict_id) = spu_group.is_conflict_with(&self.spu_store).await {
             warn!(
                 "spg group: {} is conflict with existing id: {}",
                 spg_name, conflict_id

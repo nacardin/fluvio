@@ -109,7 +109,7 @@ where
     /// process requests related to SPU management
     async fn process_request(&mut self, request: SpuChangeRequest) {
         // process SPU action; update context with new actions
-        match self.spu_reducer.process_requests(request) {
+        match self.spu_reducer.process_requests(request).await {
             Ok(actions) => {
                 debug!("SPU Controller apply actions: {}", actions);
                 // send actions to kv

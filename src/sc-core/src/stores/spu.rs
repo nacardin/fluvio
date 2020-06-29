@@ -650,6 +650,6 @@ pub mod test {
 
         assert_eq!(rack_map, expected_map);
         assert_eq!(spu_list, expected_list);
-        OK(())
+        Ok(())
     }
 }

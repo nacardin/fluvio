@@ -95,7 +95,7 @@ where
 
     /// process requests related to SPU management
     async fn process_request(&mut self, request: TopicChangeRequest) {
-        match self.reducer.process_requests(request) {
+        match self.reducer.process_requests(request).await {
             Ok(actions) => {
                 trace!("Topic actions: {}", actions);
                 if actions.topics.count() > 0 {

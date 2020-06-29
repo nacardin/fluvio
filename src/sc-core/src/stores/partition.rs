@@ -163,13 +163,13 @@ impl PartitionLocalStore {
         table
     }
 
-    pub fn bulk_add<S>(&self, partitions: Vec<((S, i32), Vec<i32>)>)
+    pub async fn bulk_add<S>(&self, partitions: Vec<((S, i32), Vec<i32>)>)
     where
         S: Into<String>,
     {
         for (replica_key, replicas) in partitions.into_iter() {
             let partition: PartitionKV = (replica_key, replicas).into();
-            self.insert(partition);
+            self.insert(partition).await;
         }
     }
 }
@@ -179,9 +179,8 @@ where
     S: Into<String>,
 {
     fn from(partitions: Vec<((S, i32), Vec<i32>)>) -> Self {
-        let store = Self::default();
-        store.bulk_add(partitions);
-        store
+        let elements = partitions.into_iter().map(|(replica_key,replicas)| (replica_key,replicas).into()).collect();
+        Self::bulk_new(elements)
     }
 }
 
@@ -193,9 +192,7 @@ pub mod test {
 
     #[test_async]
     async fn test_partitions_to_replica_msgs() -> Result<(),()> {
-        let partitions = PartitionLocalStore::default();
-        partitions.bulk_add(vec![(("topic1", 0), vec![10, 11, 12])]);
-
+        let partitions: PartitionLocalStore = vec![(("topic1", 0),vec![10, 11, 12])].into();
         let replica_msg = partitions.replica_for_spu(10).await;
         assert_eq!(replica_msg.len(), 1);
         Ok(())

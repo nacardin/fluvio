@@ -94,7 +94,7 @@ impl PartitionReducer {
     ///
     /// Process Partition Actions - dispatch to ADD/MOD/DEL handlers
     ///
-    pub fn process_requests(
+    pub async fn process_requests(
         &self,
         requests: PartitionChangeRequest,
     ) -> Result<PartitionActions, ScServerError> {
@@ -130,10 +130,10 @@ impl PartitionReducer {
                     match spu_request {
                         LSChange::Mod(new_spu, old_spu) => {
                             if old_spu.status.is_online() && new_spu.status.is_offline() {
-                                self.force_election_spu_off(new_spu, &mut actions);
+                                self.force_election_spu_off(new_spu, &mut actions).await;
                             } else {
                                 if old_spu.status.is_offline() && new_spu.status.is_online() {
-                                    self.force_election_spu_on(new_spu, &mut actions);
+                                    self.force_election_spu_on(new_spu, &mut actions).await;
                                 }
                             }
                         }
@@ -142,7 +142,7 @@ impl PartitionReducer {
                 }
             }
             PartitionChangeRequest::LrsUpdate(lrs_status) => {
-                self.process_lrs_update_from_spu(lrs_status, &mut actions);
+                self.process_lrs_update_from_spu(lrs_status, &mut actions).await;
             }
         }
 
@@ -289,7 +289,7 @@ impl PartitionReducer {
         let policy = SimplePolicy::new();
 
         // go thru each partitions whose leader matches offline spu.
-        self.partition_store.for_each(|partition_kv| {
+        for partition_kv in self.partition_store.read().await.values()  {
             // find partition who's leader is same as offline spu
             if partition_kv.spec.leader == offline_leader_spu_id {
                 // find suitable leader
@@ -316,18 +316,18 @@ impl PartitionReducer {
                         .push(PartitionWSAction::UpdateStatus(part_kv_change));
                 }
             }
-        }).await;
+        }
     }
 
     /// perform election when spu become online
-    fn force_election_spu_on(&self, online_spu: SpuKV, actions: &mut PartitionActions) {
+    async fn force_election_spu_on(&self, online_spu: SpuKV, actions: &mut PartitionActions) {
         debug!("start election spu went online: {}", online_spu.key());
         let online_leader_spu_id = online_spu.spec.id;
 
         let policy = SimplePolicy::new();
         // go thru each partitions which are not online and try to promote given online spu
 
-        self.partition_store.for_each(|partition_kv| {
+        for partition_kv in self.partition_store.read().await.values() {
             if partition_kv.status.is_offline() {
                 // we only care about partition who is follower since, leader will set partition status when it start up
                 if partition_kv.spec.leader != online_leader_spu_id {
@@ -354,7 +354,7 @@ impl PartitionReducer {
                     }
                 }
             }
-        });
+        }
     }
 }
 
@@ -389,6 +389,7 @@ impl ElectionPolicy for SimplePolicy {
 
 #[cfg(test)]
 pub mod test {
+    use flv_future_aio::test_async;
     use flv_util::actions::Actions;
 
     use super::PartitionReducer;
@@ -396,8 +397,8 @@ pub mod test {
     use super::PartitionWSAction;
     use super::super::PartitionLSChange;
 
-    #[test]
-    fn test_process_partition_actions_without_partitions() {
+    #[test_async]
+    async fn test_process_partition_actions_without_partitions() -> Result<(),()> {
         // utils::init_logger();
 
         let partition_reducer = PartitionReducer::default();
@@ -412,6 +413,7 @@ pub mod test {
         // Run Test
         let _actions = partition_reducer
             .process_requests(PartitionChangeRequest::Partition(partition_requests))
+            .await
             .expect("actions");
 
         // partitions
@@ -440,6 +442,7 @@ pub mod test {
             expected_msgs_for_select_spus
         );
         */
+        Ok(())
     }
 
     /*

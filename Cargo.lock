@@ -786,6 +786,7 @@ dependencies = [
 name = "flv-sc-k8"
 version = "0.3.1"
 dependencies = [
+ "async-trait",
  "flv-future-aio",
  "flv-metadata",
  "flv-sc-core",
