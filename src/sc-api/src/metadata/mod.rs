@@ -2,13 +2,12 @@ mod update_all;
 mod replica;
 mod update_replica;
 mod update_spu;
-mod topic_composition;
+
 
 pub use update_all::*;
 pub use replica::*;
 pub use update_replica::*;
 pub use update_spu::*;
-pub use topic_composition::*;
 pub use request::*;
 
 mod request {
@@ -29,12 +28,12 @@ mod request {
     use super::*;
 
     #[derive(Decode, Encode, Debug)]
-    pub struct UpdateMetadataRequest {
+    pub struct WatchMetadataRequest {
         /// number of milliseconds between refresh
         pub re_sync_period_ms: u16
     }
 
-    impl Default for UpdateMetadataRequest {
+    impl Default for WatchMetadataRequest {
         fn default() -> Self {
             Self {
                 re_sync_period_ms: 6000     // 60 seconds
@@ -42,25 +41,25 @@ mod request {
         }
     }
 
-    impl Request for UpdateMetadataRequest {
-        const API_KEY: u16 = AdminPublicApiKey::UpdateMetadata as u16;
-        type Response = UpdateMetadataResponse;
+    impl Request for WatchMetadataRequest {
+        const API_KEY: u16 = AdminPublicApiKey::WatchMetadata as u16;
+        type Response = WatchMetadataResponse;
     }
 
     #[derive(Debug)]
-    pub enum UpdateMetadataResponse {
+    pub enum WatchMetadataResponse {
         All(UpdateAllMetadataResponse),
         Replica(UpdateReplicaResponse),
         SPU(UpdateSpuResponse),
     }
 
-    impl Default for UpdateMetadataResponse {
+    impl Default for WatchMetadataResponse {
         fn default() -> Self {
             Self::All(UpdateAllMetadataResponse::default())
         }
     }
 
-    impl Encoder for UpdateMetadataResponse {
+    impl Encoder for WatchMetadataResponse {
         fn write_size(&self, version: Version) -> usize {
             let type_size = (0 as u8).write_size(version);
             type_size
@@ -110,7 +109,7 @@ mod request {
         }
     }
 
-    impl Decoder for UpdateMetadataResponse {
+    impl Decoder for WatchMetadataResponse {
         fn decode<T>(&mut self, src: &mut T, version: Version) -> Result<(), Error>
         where
             T: Buf,

@@ -83,7 +83,7 @@ where
                 shared_sink,
                 "list handler"
             ),
-            AdminPublicRequest::UpdateMetadataRequest(request) => super::metadata::ClientMetadataController::handle_metadata_update(
+            AdminPublicRequest::WatchMetadataRequest(request) => super::metadata::ClientMetadataController::handle_metadata_update(
                 request,
                 shared_sink.clone(),
                 end_event.clone(),

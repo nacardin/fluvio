@@ -18,9 +18,7 @@ pub enum AdminPublicApiKey {
     Create = 1001,
     Delete = 1002,
     List = 1003,
-
-    TopicComposition = 2000,
-    UpdateMetadata = 2001,
+    WatchMetadata = 2000
 }
 
 impl Default for AdminPublicApiKey {

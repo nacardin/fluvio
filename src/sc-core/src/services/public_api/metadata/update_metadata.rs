@@ -25,7 +25,7 @@ use crate::core::SharedContext;
 pub struct ClientMetadataController<S> {
     response_sink: InnerExclusiveKfSink<S>,
     context: SharedContext,
-    metadata_request: UpdateMetadataRequest,
+    metadata_request: WatchMetadataRequest,
     header: RequestHeader,
     end_event: Arc<Event>,
 }
@@ -35,7 +35,7 @@ where
     S: AsyncWrite + AsyncRead + Unpin + Send + ZeroCopyWrite + 'static,
 {
     pub fn handle_metadata_update(
-        request: RequestMessage<UpdateMetadataRequest>,
+        request: RequestMessage<WatchMetadataRequest>,
         response_sink: InnerExclusiveKfSink<S>,
         end_event: Arc<Event>,
         context: SharedContext,

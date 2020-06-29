@@ -32,8 +32,7 @@ pub enum AdminPublicRequest {
     CreateRequest(RequestMessage<CreateRequest>),
     DeleteRequest(RequestMessage<DeleteRequest>),
     ListRequest(RequestMessage<ListRequest>),
-    TopicCompositionRequest(RequestMessage<TopicCompositionRequest>),
-    UpdateMetadataRequest(RequestMessage<UpdateMetadataRequest>),
+    WatchMetadataRequest(RequestMessage<WatchMetadataRequest>),
 }
 
 impl Default for AdminPublicRequest {
@@ -59,10 +58,7 @@ impl KfRequestMessage for AdminPublicRequest {
             AdminPublicApiKey::Create => api_decode!(Self, CreateRequest, src, header),
             AdminPublicApiKey::Delete => api_decode!(Self, DeleteRequest, src, header),
             AdminPublicApiKey::List => api_decode!(Self, ListRequest, src,header),
-            AdminPublicApiKey::TopicComposition => {
-                api_decode!(Self, TopicCompositionRequest, src, header)
-            }
-            AdminPublicApiKey::UpdateMetadata => api_decode!(Self, UpdateMetadataRequest, src, header),
+            AdminPublicApiKey::WatchMetadata => api_decode!(Self, WatchMetadataRequest, src, header),
         }
     }
 }
