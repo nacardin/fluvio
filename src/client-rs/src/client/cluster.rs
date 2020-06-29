@@ -40,7 +40,7 @@ impl ClusterClient {
         AdminClient::new(self.create_serial_client().await)
     }
 
-
+    /// create new producer for topic/partition
     pub async fn producer(
         &mut self,
         topic: &str,
@@ -51,6 +51,8 @@ impl ClusterClient {
 
     }
 
+
+    /// create new consumer for topic/partition
     pub async fn consumer(
         &mut self,
         topic: &str,
@@ -59,6 +61,12 @@ impl ClusterClient {
 
         Ok(Consumer::new(self.create_serial_client().await, topic, partition))
 
+    }
+
+    pub async fn start_metadata_watch(
+        &mut self
+    ) {
+        
     }
 }
 
