@@ -17,7 +17,7 @@ use crate::ClientError;
 use super::config::ConfigFile;
 use super::tls::TlsConfig;
 
-/// configuration to cluster
+/// public configuration for the cluster
 pub struct ClusterConfig {
     addr: String,
     tls: Option<TlsConfig>,
@@ -61,8 +61,9 @@ impl ClusterConfig {
             Some(tls) => TryFrom::try_from(tls)?,
         };
         let config = ClientConfig::new(self.addr, connector);
-        let client = config.connect().await?;
-        debug!("connected to sc: {}", client.config().addr());
-        Ok(ClusterClient::new(client))
+        let inner_client = config.connect().await?;
+        debug!("connected to cluster at: {}", inner_client.config().addr());
+        let cluster = ClusterClient::new(inner_client);
+        Ok(cluster)
     }
 }
