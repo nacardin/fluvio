@@ -10,13 +10,13 @@ use super::*;
 
 /// Gate way to Sc
 /// All other clients are constructed from here
-pub struct ScClient {
+pub struct ClusterClient {
     socket: AllMultiplexerSocket,
     config: ClientConfig,
     versions: Versions
 }
 
-impl ScClient {
+impl ClusterClient {
     pub(crate) fn new(client: RawClient) -> Self {
 
         let (socket, config, versions) = client.split();

@@ -1,7 +1,7 @@
 mod config;
 mod tls;
-mod sc;
+mod cluster;
 
 pub use config::*;
 pub use tls::*;
-pub use sc::*;
+pub use cluster::*;

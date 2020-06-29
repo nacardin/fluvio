@@ -55,7 +55,7 @@ impl ClusterConfig {
         
     }
 
-    pub async fn connect(self) -> Result<ScClient, ClientError> {
+    pub async fn connect(self) -> Result<ClusterClient, ClientError> {
         let connector = match self.tls {
             None => AllDomainConnector::default_tcp(),
             Some(tls) => TryFrom::try_from(tls)?,
@@ -63,6 +63,6 @@ impl ClusterConfig {
         let config = ClientConfig::new(self.addr, connector);
         let client = config.connect().await?;
         debug!("connected to sc: {}", client.config().addr());
-        Ok(ScClient::new(client))
+        Ok(ClusterClient::new(client))
     }
 }
