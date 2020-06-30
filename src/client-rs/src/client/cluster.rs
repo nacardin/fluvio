@@ -1,6 +1,9 @@
 
+use log::debug;
+use log::trace;
 
 use kf_socket::AllMultiplexerSocket;
+
 use crate::admin::AdminClient;
 use crate::Producer;
 use crate::Consumer;
@@ -63,9 +66,28 @@ impl ClusterClient {
 
     }
 
+    /// start watch on metadata
+    /// first, it get current metadata then wait for update
     pub async fn start_metadata_watch(
         &mut self
-    ) {
+    ) -> Result<(), ClientError> {
+
+        use std::time::Duration;
+
+        use kf_protocol::api::RequestMessage;
+        use flv_api_sc::metadata::WatchMetadataRequest;
+
+        let req_msg = RequestMessage::new_request(WatchMetadataRequest::default());
+
+        let mut metadata_async_response = self.socket.send_with_async_response(req_msg, 10).await?;        
+
+        let full_metadata = metadata_async_response.next_timeout(Duration::from_secs(5)).await?;
+
+        debug!("receives full metadata");
+
+        trace!("metadata: {:#?}",full_metadata);
+        
+        Ok(())
         
     }
 }
