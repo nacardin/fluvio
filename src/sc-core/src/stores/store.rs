@@ -6,18 +6,25 @@ use std::io::Error as IoError;
 use std::io::ErrorKind;
 use std::collections::BTreeMap;
 
-
 use flv_future_aio::sync::RwLockReadGuard;
 use flv_future_aio::sync::RwLockWriteGuard;
 
-
-
 use super::SimpleConcurrentBTreeMap;
-use flv_metadata::core::K8ExtendedSpec;  
+use flv_metadata::core::K8ExtendedSpec;
 use flv_metadata::core::Spec;
 use super::StoreSpec;
 
 use super::*;
+
+pub enum CheckExist
+{
+    // doesn't exist
+    None,
+    // exists, but same value
+    Same,
+    // exists, but different
+    Different
+}
 
 /// Local state in memory
 #[derive(Debug)]
@@ -44,7 +51,7 @@ where
     pub fn bulk_new(objects: Vec<KVObject<S>>) -> Self {
         let mut map = BTreeMap::new();
         for obj in objects {
-            map.insert(obj.key.clone(),obj);
+            map.insert(obj.key.clone(), obj);
         }
         Self(SimpleConcurrentBTreeMap::new_with_map(map))
     }
@@ -55,26 +62,22 @@ where
 
     /// read access
     #[inline(always)]
-    pub async fn read<'a>(&'a self) -> RwLockReadGuard<'a,BTreeMap<S::IndexKey,KVObject<S>>>
-    {
+    pub async fn read<'a>(&'a self) -> RwLockReadGuard<'a, BTreeMap<S::IndexKey, KVObject<S>>> {
         self.0.read().await
     }
 
     #[inline(always)]
-    pub async fn write<'a>(&'a self) -> RwLockWriteGuard<'a,BTreeMap<S::IndexKey,KVObject<S>>>
-    {
+    pub async fn write<'a>(&'a self) -> RwLockWriteGuard<'a, BTreeMap<S::IndexKey, KVObject<S>>> {
         self.0.write().await
-    } 
-    
+    }
+
     pub async fn insert(&self, value: KVObject<S>) -> Option<KVObject<S>> {
         self.write().await.insert(value.key_owned(), value)
     }
 
-    pub  fn try_insert(&self, value: KVObject<S>) -> Option<KVObject<S>> {
+    pub fn try_insert(&self, value: KVObject<S>) -> Option<KVObject<S>> {
         self.0.try_write().unwrap().insert(value.key_owned(), value)
     }
-
-
 
 
     /// get copy of the value ref by key
@@ -88,8 +91,6 @@ where
             None => None,
         }
     }
-    
-
 
     /// get copy of the spec ref by key
     pub async fn spec<K: ?Sized>(&self, key: &K) -> Option<S>
@@ -117,7 +118,6 @@ where
         }
     }
 
-    
     pub async fn contains_key<K: ?Sized>(&self, key: &K) -> bool
     where
         S::IndexKey: Borrow<K>,
@@ -155,8 +155,6 @@ where
             .collect()
     }
 
-    
-
     /// update status
     pub async fn update_status<K: ?Sized>(&self, key: &K, status: S::Status) -> Result<(), IoError>
     where
@@ -181,14 +179,31 @@ where
     <S as Spec>::Owner: K8ExtendedSpec,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-
         use flv_future_aio::task::run_block_on;
-        let len = run_block_on(async { self.read().await.len()});
-        write!(
-            f,
-            "{} Store count: {}",
-            S::LABEL,
-            len
-        )
+        let len = run_block_on(async { self.read().await.len() });
+        write!(f, "{} Store count: {}", S::LABEL, len)
     }
 }
+
+impl<S> LocalStore<S>
+where
+    S: StoreSpec + PartialEq,
+    S::Status: PartialEq,
+    <S as Spec>::Owner: K8ExtendedSpec
+{
+
+    /// check store for entry, there are 3 possibilities (None,Same,Different)
+    /// little bit efficient than cloning get
+    pub async fn check(&self, value: &KVObject<S>) -> CheckExist {
+        if let Some(old_value) = self.read().await.get(value.key()) {
+            if old_value == value {
+                CheckExist::Same
+            } else {
+                CheckExist::Different
+            }
+        } else {
+            CheckExist::None
+        }
+    }
+}
+

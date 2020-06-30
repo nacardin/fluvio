@@ -26,7 +26,7 @@ use crate::core::common::LSChange;
 use crate::ScServerError;
 
 ///
-/// Translate incoming k8 items into KVInputAction against MemStore which contains local state
+/// Translate full metadata items from KVInputAction against MemStore which contains local state
 /// It only generates KVInputAction if incoming k8 object is different from memstore
 ///
 ///
@@ -44,7 +44,7 @@ where
     S::K8Spec: Into<S>,
 {
     let (mut add_cnt, mut mod_cnt, mut del_cnt, mut skip_cnt) = (0, 0, 0, 0);
-    let mut local_names = local_store.clone_keys().await;
+    let local_names = local_store.clone_keys().await;
     let all = local_store.count().await;
 
     
@@ -55,33 +55,27 @@ where
         trace!("converting kv: {:#?}",k8_obj);
         match k8_obj_to_kv_obj(k8_obj) {
             Ok(new_kv_value) => {
-               // local_store.try_insert(new_kv_value.clone());
                 debug!("try insert succeed");
-                let key = new_kv_value.key();
-             //   let read_guard = local_store.read().await;
-                if let Some(old_value) = local_store.value(key).await {
-                    // object exists
-                    if old_value == new_kv_value {
-                        skip_cnt += 1; //nothing changed
-                    } else {
-                        // diff
+                match local_store.check(&new_kv_value).await {
+                    CheckExist::Same => {
+                        skip_cnt += 1
+                    },
+                    CheckExist::Different => {
                         mod_cnt += 1;
                         debug!("replacing existing {}:{} to local store", S::LABEL, new_kv_value.key());
-                      //  drop(old_value);
+                        if let Some(old_value) = local_store.insert(new_kv_value.clone()).await {
+                            // there should be always old value since we are only one writing
+                            actions.push(LSChange::update(new_kv_value.clone(), old_value));
+                        }
+                    },
+                    CheckExist::None => {
+                        add_cnt += 1;
+                        debug!("adding new {}:{} to local store", S::LABEL, new_kv_value.key());
                         local_store.insert(new_kv_value.clone()).await;
-                      //  assert!(false);
-                        actions.push(LSChange::update(new_kv_value.clone(), old_value.clone()));
+                        actions.push(LSChange::add(new_kv_value));
                     }
-
-                    local_names.retain(|n| n != key);
-                } else {
-                  //  drop(read_guard);
-                    // object doesn't exisit
-                    add_cnt += 1;
-                    debug!("adding new {}:{} to local store", S::LABEL, new_kv_value.key());
-                    local_store.insert(new_kv_value.clone()).await;
-                    actions.push(LSChange::add(new_kv_value));
                 }
+               
             }
             Err(err) => {
                 error!("{}", err);
@@ -90,7 +84,6 @@ where
         }
     }
 
-   // assert!(false);
     // loop through the remaining names and generate delete actions
     for name in local_names.into_iter() {
         if local_store.contains_key(&name).await {
@@ -118,13 +111,15 @@ where
         skip_cnt
     );
 
+    trace!("actions: {:#?}",actions);
+
     actions
 }
 
 ///
-/// Translates K8 events into metadata action.
+/// Translates watch events into metadata action.
 ///
-pub async fn k8_event_stream_to_metadata_actions<S, E>(
+pub async fn k8_watch_events_to_metadata_actions<S, E>(
     stream: TokenStreamResult<S::K8Spec, E>,
     local_store: &LocalStore<S>,
 ) -> Actions<LSChange<S>>
@@ -289,7 +284,7 @@ pub mod test {
     use crate::stores::topic::*;
 
     use super::k8_events_to_metadata_actions;
-    use super::k8_event_stream_to_metadata_actions;
+    use super::k8_watch_events_to_metadata_actions;
     use super::k8_obj_to_kv_obj;
 
     type TopicList = K8List<TopicSpec>;
@@ -407,7 +402,7 @@ pub mod test {
 
         let topic_store = TopicLocalStore::default();
 
-        let kv_actions = k8_event_stream_to_metadata_actions::<_, DoNothingError>(
+        let kv_actions = k8_watch_events_to_metadata_actions::<_, DoNothingError>(
             as_token_stream_result(watches),
             &topic_store,
         ).await;

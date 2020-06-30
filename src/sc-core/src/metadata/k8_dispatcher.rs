@@ -39,7 +39,7 @@ use crate::core::common::LSChange;
 use crate::core::WSChangeChannel;
 
 use super::k8_events_to_actions::k8_events_to_metadata_actions;
-use super::k8_events_to_actions::k8_event_stream_to_metadata_actions;
+use super::k8_events_to_actions::k8_watch_events_to_metadata_actions;
 
 /// Sends out Local State Changes by comparing against Cluster state stored in local K8 where SC is running
 /// Similar to Kubernetes Shared Informer
@@ -131,7 +131,7 @@ where
                     if let Some(result) = k8_result {
                         match result {
                             Ok(auth_token_msgs) => {
-                                let actions = k8_event_stream_to_metadata_actions(
+                                let actions = k8_watch_events_to_metadata_actions(
                                     Ok(auth_token_msgs),
                                     &self.metadata,
                                 ).await;
