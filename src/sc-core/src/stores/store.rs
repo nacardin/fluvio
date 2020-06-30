@@ -70,6 +70,10 @@ where
         self.write().await.insert(value.key_owned(), value)
     }
 
+    pub  fn try_insert(&self, value: KVObject<S>) -> Option<KVObject<S>> {
+        self.0.try_write().unwrap().insert(value.key_owned(), value)
+    }
+
 
 
 
@@ -84,6 +88,7 @@ where
             None => None,
         }
     }
+    
 
 
     /// get copy of the spec ref by key

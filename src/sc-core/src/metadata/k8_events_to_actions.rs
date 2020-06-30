@@ -46,29 +46,39 @@ where
     let (mut add_cnt, mut mod_cnt, mut del_cnt, mut skip_cnt) = (0, 0, 0, 0);
     let mut local_names = local_store.clone_keys().await;
     let all = local_store.count().await;
+
+    
     let mut actions: Actions<LSChange<S>> = Actions::default();
 
     // loop through items and generate add/mod actions
     for k8_obj in k8_tokens.items {
+        trace!("converting kv: {:#?}",k8_obj);
         match k8_obj_to_kv_obj(k8_obj) {
             Ok(new_kv_value) => {
+               // local_store.try_insert(new_kv_value.clone());
+                debug!("try insert succeed");
                 let key = new_kv_value.key();
-                if let Some(old_value) = local_store.read().await.get(key) {
+             //   let read_guard = local_store.read().await;
+                if let Some(old_value) = local_store.value(key).await {
                     // object exists
-                    if *old_value == new_kv_value {
+                    if old_value == new_kv_value {
                         skip_cnt += 1; //nothing changed
                     } else {
                         // diff
                         mod_cnt += 1;
-                        debug!("adding {}:{} to local store", S::LABEL, new_kv_value.key());
+                        debug!("replacing existing {}:{} to local store", S::LABEL, new_kv_value.key());
+                      //  drop(old_value);
                         local_store.insert(new_kv_value.clone()).await;
+                      //  assert!(false);
                         actions.push(LSChange::update(new_kv_value.clone(), old_value.clone()));
                     }
 
                     local_names.retain(|n| n != key);
                 } else {
+                  //  drop(read_guard);
                     // object doesn't exisit
                     add_cnt += 1;
+                    debug!("adding new {}:{} to local store", S::LABEL, new_kv_value.key());
                     local_store.insert(new_kv_value.clone()).await;
                     actions.push(LSChange::add(new_kv_value));
                 }
@@ -80,6 +90,7 @@ where
         }
     }
 
+   // assert!(false);
     // loop through the remaining names and generate delete actions
     for name in local_names.into_iter() {
         if local_store.contains_key(&name).await {
@@ -143,7 +154,7 @@ where
                             if let Some(old_value) = local_store.insert(new_kv_value.clone()).await {
                                 // some old value, check if same as new one, if they are same, no need for action
                                 warn!(
-                                    "detected exist value: {:#?} which sould not exists",
+                                    "detected exist value: {:#?} which should not exists",
                                     old_value
                                 );
                                 if old_value == new_kv_value {
@@ -251,7 +262,6 @@ where
     S::K8Spec: Into<S>,
     
 {
-    trace!("converting k8: {:#?}", k8_obj.spec);
     S::convert_from_k8(k8_obj)
         .map(|val| {
             trace!("converted val: {:#?}", val.spec);
@@ -293,6 +303,7 @@ pub mod test {
             .items
             .push(K8Topic::new("topic1", TopicSpec::default()));
 
+       
         let topic_store = TopicLocalStore::default();
 
         let kv_actions = k8_events_to_metadata_actions(topics, &topic_store).await;
@@ -346,8 +357,9 @@ pub mod test {
         let old_kv = k8_obj_to_kv_obj(old_topic).expect("conversion");
         topic_store.insert(old_kv.clone()).await;
 
+       
         let kv_actions = k8_events_to_metadata_actions(topics, &topic_store).await;
-
+     //   assert!(false);
         assert_eq!(kv_actions.count(), 1);
         let action = kv_actions.iter().next().expect("first");
         match action {

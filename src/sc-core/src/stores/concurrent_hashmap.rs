@@ -67,6 +67,10 @@ impl <K,V> SimpleConcurrentBTreeMap<K,V>
         self.0.write().await
     }
 
+    pub fn try_write(&self) -> Option<RwLockWriteGuard<BTreeMap<K,V>>> {
+        self.0.try_write()
+    }
+
     pub async fn insert(&self, key: K, value: V) -> Option<V> {
         let mut lock = self.write().await;
         lock.insert(key, value)
