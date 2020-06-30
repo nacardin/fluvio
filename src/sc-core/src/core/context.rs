@@ -12,7 +12,7 @@ use crate::config::ScConfig;
 use crate::stores::spu::*;
 use crate::stores::partition::*;
 use crate::stores::topic::*;
-use crate::stores::spg::SpuGroupLocalStore;
+use crate::stores::spg::*;
 use crate::controllers::ClientNotification;
 
 pub type SharedContext = Arc<Context>;
@@ -20,10 +20,10 @@ pub type SharedContext = Arc<Context>;
 #[derive(Debug)]
 pub struct Context {
     client_channel: Channel<ClientNotification>,
-    spus: SharedSpuLocalStore,
-    partitions: Arc<PartitionLocalStore>,
-    topics: Arc<TopicLocalStore>,
-    spgs: Arc<SpuGroupLocalStore>,
+    spus: Arc<K8SpuLocalStore>,
+    partitions: Arc<K8PartitionLocalStore>,
+    topics: Arc<K8TopicLocalStore>,
+    spgs: Arc<K8SpuGroupLocalStore>,
     config: ScConfig,
 }
 
@@ -50,25 +50,25 @@ impl Context {
     }
 
     /// reference to spus
-    pub fn spus(&self) -> &SharedSpuLocalStore {
+    pub fn spus(&self) -> &Arc<K8SpuLocalStore> {
         &self.spus
     }
 
-    pub fn owned_spus(&self) -> SharedSpuLocalStore {
+    pub fn owned_spus(&self) -> Arc<K8SpuLocalStore> {
         self.spus().clone()
     }
 
     /// reference to partitions
-    pub fn partitions(&self) -> &Arc<PartitionLocalStore> {
+    pub fn partitions(&self) -> &Arc<K8PartitionLocalStore> {
         &self.partitions
     }
 
     /// reference to topics
-    pub fn topics(&self) -> &Arc<TopicLocalStore> {
+    pub fn topics(&self) -> &Arc<K8TopicLocalStore> {
         &self.topics
     }
 
-    pub fn spgs(&self) -> &Arc<SpuGroupLocalStore> {
+    pub fn spgs(&self) -> &Arc<K8SpuGroupLocalStore> {
         &self.spgs
     }
 

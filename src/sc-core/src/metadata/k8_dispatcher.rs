@@ -30,12 +30,13 @@ use flv_metadata::k8::metadata::K8Watch;
 use flv_metadata::k8::metadata::Spec as K8Spec;
 use flv_metadata::core::K8ExtendedSpec;
 use flv_metadata::core::Spec;   
+use flv_metadata::k8::metadata::ObjectMeta;
 use k8_metadata_client::MetadataClient;
 use k8_metadata_client::SharedClient;
 
 use crate::core::common::new_channel;
 use crate::stores::*;
-use crate::core::common::LSChange;
+use crate::stores::actions::*;
 use crate::core::WSChangeChannel;
 
 use super::k8_events_to_actions::k8_events_to_metadata_actions;
@@ -45,20 +46,20 @@ use super::k8_events_to_actions::k8_watch_events_to_metadata_actions;
 /// Similar to Kubernetes Shared Informer
 pub struct K8ClusterStateDispatcher<S, C>
 where
-    S: StoreSpec,
+    S: K8ExtendedSpec,
     <S as Spec>::Owner: K8ExtendedSpec,
     S::Status: PartialEq,
     S::IndexKey: Debug,
 {
     client: SharedClient<C>,
-    metadata: Arc<LocalStore<S>>,
-    senders: Vec<Sender<Actions<LSChange<S>>>>,
+    metadata: Arc<LocalStore<S,ObjectMeta>>,
+    senders: Vec<Sender<Actions<LSChange<S,ObjectMeta>>>>,
     namespace: String,
 }
 
 impl<S, C> K8ClusterStateDispatcher<S, C>
 where
-    S: StoreSpec + PartialEq  + Sync + Send + 'static,
+    S: K8ExtendedSpec + PartialEq  + Sync + Send + 'static,
     <S as Spec>::Owner: K8ExtendedSpec,
     S::Status: PartialEq  + Sync + Send + 'static,
     S::IndexKey: Display  + Sync + Send + 'static,

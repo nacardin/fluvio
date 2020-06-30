@@ -742,6 +742,7 @@ dependencies = [
 name = "flv-metadata"
 version = "2.0.0"
 dependencies = [
+ "flv-future-aio",
  "flv-types",
  "flv-util 0.2.1",
  "k8-obj-app",

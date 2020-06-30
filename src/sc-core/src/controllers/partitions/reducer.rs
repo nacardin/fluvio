@@ -3,12 +3,15 @@
 //!
 //! Partition metadata information on cached in the local Controller.
 //!
+use std::sync::Arc;
+
 use log::trace;
 use log::debug;
 use log::error;
 use log::warn;
 
 use flv_types::log_on_err;
+use flv_metadata::k8::metadata::ObjectMeta;
 use flv_metadata::partition::PartitionSpec;
 use flv_metadata::partition::PartitionResolution;
 use flv_metadata::partition::PartitionStatus;
@@ -19,8 +22,8 @@ use internal_api::UpdateLrsRequest;
 
 use crate::controllers::conn_manager::ConnectionRequest;
 use crate::controllers::conn_manager::PartitionSpecChange;
-use crate::core::common::LSChange;
-use crate::core::common::WSAction;
+use crate::stores::actions::LSChange;
+use crate::stores::actions::WSAction;
 use crate::stores::partition::*;
 use crate::stores::spu::*;
 use crate::ScServerError;
@@ -28,7 +31,7 @@ use crate::ScServerError;
 
 use super::*;
 
-type PartitionWSAction = WSAction<PartitionSpec>;
+type PartitionWSAction = WSAction<PartitionSpec,ObjectMeta>;
 
 /// Given This is a generated partition from TopicController, It will try to allocate assign replicas
 /// to live SPU.
@@ -66,8 +69,8 @@ type PartitionWSAction = WSAction<PartitionSpec>;
 /// have different leader because Topic0-0 already is using spu 0.
 #[derive(Debug)]
 pub struct PartitionReducer {
-    partition_store: SharedPartitionStore,
-    spu_store: SharedSpuLocalStore,
+    partition_store: Arc<K8PartitionLocalStore>,
+    spu_store: Arc<K8SpuLocalStore>,
 }
 
 impl Default for PartitionReducer {
@@ -82,8 +85,8 @@ impl Default for PartitionReducer {
 impl PartitionReducer {
     pub fn new<A, B>(partition_store: A, spu_store: B) -> Self
     where
-        A: Into<SharedPartitionStore>,
-        B: Into<SharedSpuLocalStore>,
+        A: Into<Arc<K8PartitionLocalStore>>,
+        B: Into<Arc<K8SpuLocalStore>>,
     {
         Self {
             partition_store: partition_store.into(),
@@ -151,7 +154,7 @@ impl PartitionReducer {
 
     fn add_partition_action_handler(
         &self,
-        mut partition: PartitionKV,
+        mut partition: PartitionMetadata<ObjectMeta>,
         actions: &mut PartitionActions,
     ) -> Result<(), ScServerError> {
         debug!(
@@ -188,8 +191,8 @@ impl PartitionReducer {
     ///
     fn mod_partition_action_handler(
         &self,
-        new_partition: PartitionKV,
-        old_partition: PartitionKV,
+        new_partition: K8PartitionMd,
+        old_partition: K8PartitionMd,
         actions: &mut PartitionActions,
     ) -> Result<(), ScServerError> {
         trace!("mod partition {:#?}", new_partition);
@@ -227,7 +230,7 @@ impl PartitionReducer {
     ///
     fn del_partition_action_handler(
         &self,
-        partition: PartitionKV,
+        partition: K8PartitionMd,
         _actions: &mut PartitionActions,
     ) -> Result<(), ScServerError> {
         debug!("DelPartition({}) - remove from metadata", partition.key());
@@ -277,7 +280,7 @@ impl PartitionReducer {
     }
 
     /// perform election when spu goes offline
-    async fn force_election_spu_off(&self, offline_spu: SpuKV, actions: &mut PartitionActions) {
+    async fn force_election_spu_off(&self, offline_spu: K8SpuMetadata, actions: &mut PartitionActions) {
         debug!(
             "start election when spu went offline: {}",
             offline_spu.key()
@@ -320,7 +323,7 @@ impl PartitionReducer {
     }
 
     /// perform election when spu become online
-    async fn force_election_spu_on(&self, online_spu: SpuKV, actions: &mut PartitionActions) {
+    async fn force_election_spu_on(&self, online_spu: K8SpuMetadata, actions: &mut PartitionActions) {
         debug!("start election spu went online: {}", online_spu.key());
         let online_leader_spu_id = online_spu.spec.id;
 

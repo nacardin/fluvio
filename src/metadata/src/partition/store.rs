@@ -10,24 +10,27 @@ use log::debug;
 
 use internal_api::messages::Replica;
 use flv_metadata::partition::ReplicaKey;
+use flv_metadata::k8::metadata::ObjectMeta;
 use flv_metadata::partition::{PartitionSpec, PartitionStatus};
 use flv_types::SpuId;
 use sc_api::metadata::*;
 
 use super::*;
 
-pub type SharedPartitionStore = Arc<PartitionLocalStore>;
+pub type SharedPartitionStore<C> = Arc<PartitionLocalStore<C>>;
 
-// -----------------------------------
-// Data Structures
-// -----------------------------------
-pub type PartitionKV = MetadataStoreObject<PartitionSpec>;
+
+pub type PartitionMetadata<C> = MetadataStoreObject<PartitionSpec,C>;
+pub type K8PartitionMd = PartitionMetadata<ObjectMeta>;
+pub type DefaultPartitionMd = PartitionMetadata<String>;
+pub type PartitionLocalStore<C> = LocalStore<PartitionSpec,C>;
+pub type K8PartitionLocalStore = PartitionLocalStore<ObjectMeta>;
 
 // -----------------------------------
 // Partition - Implementation
 // -----------------------------------
 
-impl PartitionKV {
+impl <C>PartitionMetadata<C> {
     /// create new partiton with replica map.
     /// first element of replicas is leader
     pub fn with_replicas(key: ReplicaKey, replicas: Vec<SpuId>) -> Self {
@@ -36,7 +39,7 @@ impl PartitionKV {
     }
 }
 
-impl<S> From<((S, i32), Vec<i32>)> for PartitionKV
+impl<S,C> From<((S, i32), Vec<i32>)> for PartitionMetadata<C>
 where
     S: Into<String>,
 {
@@ -46,19 +49,18 @@ where
     }
 }
 
-pub type PartitionLocalStore = LocalStore<PartitionSpec>;
 
 // -----------------------------------
 // Partitions - Implementation
 // -----------------------------------
 
-impl PartitionLocalStore {
+impl <C>PartitionLocalStore<C> {
     pub async fn names(&self) -> Vec<ReplicaKey> {
         self.read().await.keys().cloned().collect()
     }
 
-    pub async fn topic_partitions(&self, topic: &str) -> Vec<PartitionKV> {
-        let mut res: Vec<PartitionKV> = Vec::default();
+    pub async fn topic_partitions(&self, topic: &str) -> Vec<PartitionMetadata<C>> {
+        let mut res: Vec<PartitionMetadata<C>> = Vec::default();
         for (name, partition) in self.read().await.iter() {
             if name.topic == topic {
                 res.push(partition.clone());
@@ -168,13 +170,13 @@ impl PartitionLocalStore {
         S: Into<String>,
     {
         for (replica_key, replicas) in partitions.into_iter() {
-            let partition: PartitionKV = (replica_key, replicas).into();
+            let partition: PartitionMetadata<C> = (replica_key, replicas).into();
             self.insert(partition).await;
         }
     }
 }
 
-impl<S> From<Vec<((S, i32), Vec<i32>)>> for PartitionLocalStore
+impl<C,S> From<Vec<((S, i32), Vec<i32>)>> for PartitionLocalStore<C>
 where
     S: Into<String>,
 {

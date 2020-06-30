@@ -9,11 +9,9 @@ use std::collections::BTreeMap;
 use flv_future_aio::sync::RwLockReadGuard;
 use flv_future_aio::sync::RwLockWriteGuard;
 
-use super::SimpleConcurrentBTreeMap;
-use flv_metadata::core::K8ExtendedSpec;
-use flv_metadata::core::Spec;
-use super::StoreSpec;
 
+use crate::core::Spec;
+use super::SimpleConcurrentBTreeMap;
 use super::*;
 
 pub enum CheckExist {
@@ -27,27 +25,24 @@ pub enum CheckExist {
 
 /// Local state in memory
 #[derive(Debug)]
-pub struct LocalStore<S>(SimpleConcurrentBTreeMap<S::IndexKey, MetadataStoreObject<S>>)
+pub struct LocalStore<S,C>(SimpleConcurrentBTreeMap<S::IndexKey, MetadataStoreObject<S,C>>)
 where
-    S: StoreSpec,
-    <S as Spec>::Owner: K8ExtendedSpec;
+    S: Spec;
 
-impl<S> Default for LocalStore<S>
+impl<S,C> Default for LocalStore<S,C>
 where
-    S: StoreSpec,
-    <S as Spec>::Owner: K8ExtendedSpec,
+    S: Spec,
 {
     fn default() -> Self {
         Self(SimpleConcurrentBTreeMap::new())
     }
 }
 
-impl<S> LocalStore<S>
+impl<S,C> LocalStore<S,C>
 where
-    S: StoreSpec,
-    <S as Spec>::Owner: K8ExtendedSpec,
+    S: Spec,
 {
-    pub fn bulk_new(objects: Vec<MetadataStoreObject<S>>) -> Self {
+    pub fn bulk_new(objects: Vec<MetadataStoreObject<S,C>>) -> Self {
         let mut map = BTreeMap::new();
         for obj in objects {
             map.insert(obj.key.clone(), obj);
@@ -63,27 +58,27 @@ where
     #[inline(always)]
     pub async fn read<'a>(
         &'a self,
-    ) -> RwLockReadGuard<'a, BTreeMap<S::IndexKey, MetadataStoreObject<S>>> {
+    ) -> RwLockReadGuard<'a, BTreeMap<S::IndexKey, MetadataStoreObject<S,C>>> {
         self.0.read().await
     }
 
     #[inline(always)]
     pub async fn write<'a>(
         &'a self,
-    ) -> RwLockWriteGuard<'a, BTreeMap<S::IndexKey, MetadataStoreObject<S>>> {
+    ) -> RwLockWriteGuard<'a, BTreeMap<S::IndexKey, MetadataStoreObject<S,C>>> {
         self.0.write().await
     }
 
-    pub async fn insert(&self, value: MetadataStoreObject<S>) -> Option<MetadataStoreObject<S>> {
+    pub async fn insert(&self, value: MetadataStoreObject<S,C>) -> Option<MetadataStoreObject<S,C>> {
         self.write().await.insert(value.key_owned(), value)
     }
 
-    pub fn try_insert(&self, value: MetadataStoreObject<S>) -> Option<MetadataStoreObject<S>> {
+    pub fn try_insert(&self, value: MetadataStoreObject<S,C>) -> Option<MetadataStoreObject<S,C>> {
         self.0.try_write().unwrap().insert(value.key_owned(), value)
     }
 
     /// get copy of the value ref by key
-    pub async fn value<K: ?Sized>(&self, key: &K) -> Option<MetadataStoreObject<S>>
+    pub async fn value<K: ?Sized>(&self, key: &K) -> Option<MetadataStoreObject<S,C>>
     where
         S::IndexKey: Borrow<K>,
         K: Ord,
@@ -108,7 +103,7 @@ where
 
     pub async fn find_and_do<K, F>(&self, key: &K, mut func: F) -> Option<()>
     where
-        F: FnMut(&'_ MetadataStoreObject<S>),
+        F: FnMut(&'_ MetadataStoreObject<S,C>),
         K: Ord,
         S::IndexKey: Borrow<K>,
     {
@@ -128,7 +123,7 @@ where
         self.read().await.contains_key(key)
     }
 
-    pub async fn remove<K: ?Sized>(&self, key: &K) -> Option<MetadataStoreObject<S>>
+    pub async fn remove<K: ?Sized>(&self, key: &K) -> Option<MetadataStoreObject<S,C>>
     where
         S::IndexKey: Borrow<K>,
         K: Ord,
@@ -145,7 +140,7 @@ where
         self.read().await.keys().cloned().collect()
     }
 
-    pub async fn clone_values(&self) -> Vec<MetadataStoreObject<S>> {
+    pub async fn clone_values(&self) -> Vec<MetadataStoreObject<S,C>> {
         self.read().await.values().cloned().collect()
     }
 
@@ -175,10 +170,9 @@ where
     }
 }
 
-impl<S> Display for LocalStore<S>
+impl<S,C> Display for LocalStore<S,C>
 where
-    S: StoreSpec,
-    <S as Spec>::Owner: K8ExtendedSpec,
+    S: Spec
 {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         use flv_future_aio::task::run_block_on;
@@ -187,15 +181,14 @@ where
     }
 }
 
-impl<S> LocalStore<S>
+impl<S,C> LocalStore<S,C>
 where
-    S: StoreSpec + PartialEq,
-    S::Status: PartialEq,
-    <S as Spec>::Owner: K8ExtendedSpec,
+    S: Spec + PartialEq,
+    S::Status: PartialEq
 {
     /// check store for entry, there are 3 possibilities (None,Same,Different)
     /// little bit efficient than cloning get
-    pub async fn check(&self, value: &MetadataStoreObject<S>) -> CheckExist {
+    pub async fn check(&self, value: &MetadataStoreObject<S,C>) -> CheckExist {
         if let Some(old_value) = self.read().await.get(value.key()) {
             if old_value == value {
                 CheckExist::Same

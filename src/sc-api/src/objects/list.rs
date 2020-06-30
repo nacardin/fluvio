@@ -79,6 +79,36 @@ pub struct Metadata<S>
     pub status: S::Status
 }
 
+
+impl<S,C> Into<Metadata<S>> for MetadataStoreObject<S,C>
+where
+    S: Spec,
+    S::IndexKey: Into<String>,
+{
+    fn into(self) -> Metadata<S> {
+        Metadata {
+            name: self.key.into(),
+            spec: self.spec,
+            status: self.status,
+        }
+    }
+}
+
+impl<S,C> Into<Metadata<S>> for &MetadataStoreObject<S,C>
+where
+    S: Spec,
+    S::IndexKey: Into<String>,
+{
+    fn into(self) -> Metadata<S> {
+        Metadata {
+            name: self.key.clone().into(),
+            spec: self.spec.clone(),
+            status: self.status.clone(),
+        }
+    }
+}
+
+
 // later this can be written using procedure macro
 mod encoding {
 

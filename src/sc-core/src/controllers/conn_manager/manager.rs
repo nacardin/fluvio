@@ -71,8 +71,8 @@ pub type SharedConnManager = Arc<ConnManager>;
 /// Unlikely controller, it doesn't have own independent task lifecyle (maybe should?)
 #[derive(Debug)]
 pub struct ConnManager {
-    spu_store: SharedSpuLocalStore,
-    partition_store: SharedPartitionStore,
+    spu_store: Arc<K8SpuLocalStore>,
+    partition_store: Arc<K8PartitionLocalStore>,
     sinks: SinkPool<SpuId>,
     client_sender: Sender<ClientNotification>
 }
@@ -92,8 +92,8 @@ impl ConnManager {
 
     /// internal connection manager constructor
     pub fn new(
-        spu_store: SharedSpuLocalStore, 
-        partition_store: SharedPartitionStore,
+        spu_store: Arc<K8SpuLocalStore>, 
+        partition_store: Arc<K8PartitionLocalStore>,
         client_sender: Sender<ClientNotification>
     ) -> Self {
         ConnManager {
@@ -291,7 +291,7 @@ impl ConnManager {
     }
 
     /// send all changes to specific SPU
-    async fn send_update_all_to_spu(&self, spu: &SpuKV) -> Result<(), ScServerError> {
+    async fn send_update_all_to_spu(&self, spu: &K8SpuMetadata) -> Result<(), ScServerError> {
         let spu_specs = self.spu_store.clone_specs().await;
         let replicas = self.partition_store.replica_for_spu(spu.id()).await;
         let request = UpdateAllRequest::new(spu_specs, replicas);
@@ -332,7 +332,7 @@ impl ConnManager {
     /// Send Update SPU message Request to an Spu
     async fn send_update_spu_msg_request<'a>(
         &'a self,
-        spu: &'a SpuKV,
+        spu: &'a K8SpuMetadata,
         spu_msgs: Vec<SpuMsg>,
     ) -> Result<(), ScServerError> {
         trace!("{:#?}", spu_msgs);

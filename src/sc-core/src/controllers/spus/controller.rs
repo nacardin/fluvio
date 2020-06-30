@@ -14,13 +14,14 @@ use futures::stream::StreamExt;
 use flv_future_aio::task::spawn;
 use flv_util::actions::Actions;
 use flv_metadata::spu::SpuSpec;
+use flv_metadata::k8::metadata::ObjectMeta;
 use flv_types::log_on_err;
 
 use crate::core::WSUpdateService;
 use crate::controllers::conn_manager::SharedConnManager;
 use crate::controllers::conn_manager::SpuConnectionStatusChange;
 use crate::core::SharedContext;
-use crate::core::common::LSChange;
+use crate::stores::actions::LSChange;
 use crate::core::WSChangeChannel;
 
 use super::reducer::SpuReducer;
@@ -32,7 +33,7 @@ pub struct SpuController<W> {
     conn_manager: SharedConnManager,
     ws_service: W,
     spu_reducer: SpuReducer,
-    lc_receiver: Receiver<Actions<LSChange<SpuSpec>>>,
+    lc_receiver: Receiver<Actions<LSChange<SpuSpec,ObjectMeta>>>,
     conn_receiver: Receiver<SpuConnectionStatusChange>,
     conn_sender: Sender<SpuConnectionStatusChange>,
 }

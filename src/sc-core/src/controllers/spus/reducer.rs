@@ -3,12 +3,12 @@
 //!
 //! Spu metadata information cached locally.
 //!
+use std::sync::Arc;
 
 use log::{debug, trace};
 use flv_types::log_on_err;
 
-use crate::core::common::LSChange;
-use crate::core::common::WSAction;
+use crate::stores::actions::*;
 use crate::controllers::conn_manager::*;
 use crate::ScServerError;
 use crate::stores::spu::*;
@@ -17,12 +17,12 @@ use super::*;
 
 /// SpuReducer is responsible for updating state for SPU
 #[derive(Debug)]
-pub struct SpuReducer(SharedSpuLocalStore);
+pub struct SpuReducer(Arc<K8SpuLocalStore>);
 
 impl SpuReducer {
     pub fn new<A>(store: A) -> Self
     where
-        A: Into<SharedSpuLocalStore>,
+        A: Into<Arc<K8SpuLocalStore>>,
     {
         Self(store.into())
     }
@@ -70,7 +70,7 @@ impl SpuReducer {
     ///
     fn add_spu_action_handler(
         &self,
-        mut spu: SpuKV,
+        mut spu: K8SpuMetadata,
         actions: &mut SpuActions,
     ) -> Result<(), ScServerError> {
         debug!("AddSpu({})", spu.key());
@@ -106,8 +106,8 @@ impl SpuReducer {
     ///
     fn mod_spu_action_handler(
         &self,
-        new_spu: SpuKV,
-        old_spu: SpuKV,
+        new_spu: K8SpuMetadata,
+        old_spu: K8SpuMetadata,
         actions: &mut SpuActions,
     ) -> Result<(), ScServerError> {
         let spu_id = new_spu.spec.id;
@@ -150,7 +150,7 @@ impl SpuReducer {
     ///
     fn del_spu_action_handler(
         &self,
-        spu: SpuKV,
+        spu: K8SpuMetadata,
         actions: &mut SpuActions,
     ) -> Result<(), ScServerError> {
         let _spu_id = spu.id();

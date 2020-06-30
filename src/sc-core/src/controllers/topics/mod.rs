@@ -9,12 +9,13 @@ pub use common::*;
 mod common {
 
     use ::flv_metadata::topic::TopicSpec;
-    use crate::core::common::LSChange;
-    use crate::core::common::WSAction;
+    use flv_metadata::k8::metadata::ObjectMeta;
+    use crate::stores::actions::*;
+
 
     use crate::metadata::K8ClusterStateDispatcher;
 
     pub type K8TopicChangeDispatcher<C> = K8ClusterStateDispatcher<TopicSpec, C>;
-    pub type TopicWSAction = WSAction<TopicSpec>;
-    pub type TopicLSChange = LSChange<TopicSpec>;
+    pub type TopicWSAction = WSAction<TopicSpec,ObjectMeta>;
+    pub type TopicLSChange = LSChange<TopicSpec,ObjectMeta>;
 }

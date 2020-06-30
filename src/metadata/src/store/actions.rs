@@ -2,27 +2,25 @@ use std::fmt::Debug;
 use std::fmt::Display;
 use std::fmt;
 
-use flv_metadata::core::K8ExtendedSpec;
-use flv_metadata::core::Spec;
-use crate::stores::*;
+
+use crate::core::*;
+use crate::store::*;
 
 /// Represents changes in Local State
 #[derive(Debug, PartialEq, Clone)]
-pub enum LSChange<S>
+pub enum LSChange<S,C>
 where
-    S: StoreSpec,
-    <S as Spec>::Owner: K8ExtendedSpec,
+    S: Spec,
     S::Status: PartialEq,
 {
-    Add(MetadataStoreObject<S>),
-    Mod(MetadataStoreObject<S>, MetadataStoreObject<S>), // new, old
-    Delete(MetadataStoreObject<S>),
+    Add(MetadataStoreObject<S,C>),
+    Mod(MetadataStoreObject<S,C>, MetadataStoreObject<S,C>), // new, old
+    Delete(MetadataStoreObject<S,C>),
 }
 
-impl<S> fmt::Display for LSChange<S>
+impl<S,C> fmt::Display for LSChange<S,C>
 where
-    S: StoreSpec,
-    <S as Spec>::Owner: K8ExtendedSpec,
+    S: Spec,
     S::IndexKey: Display,
     S::Status: PartialEq,
 {
@@ -35,39 +33,37 @@ where
     }
 }
 
-impl<S> LSChange<S>
+impl<S,C> LSChange<S,C>
 where
-    S: StoreSpec,
-    <S as Spec>::Owner: K8ExtendedSpec,
+    S: Spec,
     S::Status: PartialEq,
 {
     pub fn add<K>(value: K) -> Self
     where
-        K: Into<MetadataStoreObject<S>>,
+        K: Into<MetadataStoreObject<S,C>>,
     {
         LSChange::Add(value.into())
     }
 
-    pub fn update(new: MetadataStoreObject<S>, old: MetadataStoreObject<S>) -> Self {
+    pub fn update(new: MetadataStoreObject<S,C>, old: MetadataStoreObject<S,C>) -> Self {
         LSChange::Mod(new, old)
     }
 
-    pub fn delete(value: MetadataStoreObject<S>) -> Self {
+    pub fn delete(value: MetadataStoreObject<S,C>) -> Self {
         LSChange::Delete(value)
     }
 }
 
 /// Actions to update World States
 #[derive(Debug, PartialEq, Clone)]
-pub enum WSAction<S>
+pub enum WSAction<S,C>
 where
-    S: StoreSpec,
-    <S as Spec>::Owner: K8ExtendedSpec,
+    S: Spec,
     S::IndexKey: PartialEq,
     S::Status: PartialEq,
 {
-    Add(MetadataStoreObject<S>),
-    UpdateStatus(MetadataStoreObject<S>),
-    UpdateSpec(MetadataStoreObject<S>),
+    Add(MetadataStoreObject<S,C>),
+    UpdateStatus(MetadataStoreObject<S,C>),
+    UpdateSpec(MetadataStoreObject<S,C>),
     Delete(S::IndexKey),
 }

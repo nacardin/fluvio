@@ -6,10 +6,10 @@
 use std::fmt;
 
 use flv_metadata::spu::SpuSpec;
-
+use flv_metadata::k8::metadata::ObjectMeta;
 use flv_util::actions::Actions;
 
-use crate::core::common::WSAction;
+use crate::stores::actions::WSAction;
 use crate::controllers::conn_manager::SpuConnectionStatusChange;
 use crate::controllers::conn_manager::ConnectionRequest;
 
@@ -32,7 +32,7 @@ impl fmt::Display for SpuChangeRequest {
 
 #[derive(Debug, Default)]
 pub struct SpuActions {
-    pub spus: Actions<WSAction<SpuSpec>>,
+    pub spus: Actions<WSAction<SpuSpec,ObjectMeta>>,
     pub conns: Actions<ConnectionRequest>,
 }
 

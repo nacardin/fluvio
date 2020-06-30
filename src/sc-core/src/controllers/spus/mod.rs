@@ -9,11 +9,12 @@ pub use common::*;
 mod common {
 
     use ::flv_metadata::spu::SpuSpec;
-    use crate::core::common::LSChange;
+    use flv_metadata::k8::metadata::ObjectMeta;
+    use crate::stores::actions::LSChange;
 
     use crate::metadata::K8ClusterStateDispatcher;
 
     pub type K8SpuChangeDispatcher<C> = K8ClusterStateDispatcher<SpuSpec, C>;
 
-    pub type SpuLSChange = LSChange<SpuSpec>;
+    pub type SpuLSChange = LSChange<SpuSpec,ObjectMeta>;
 }

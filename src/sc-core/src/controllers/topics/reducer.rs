@@ -17,12 +17,13 @@ use std::io::ErrorKind;
 use log::{debug, trace};
 use flv_types::log_on_err;
 use flv_metadata::spu::SpuSpec;
+use flv_metadata::k8::metadata::ObjectMeta;
 
 use crate::stores::topic::*;
 use crate::stores::partition::*;
 use crate::stores::spu::*;
 use crate::controllers::partitions::PartitionWSAction;
-use crate::core::common::LSChange;
+use crate::stores::actions::*;
 use crate::ScServerError;
 
 use super::*;
@@ -42,9 +43,9 @@ use super::*;
 /// Actually replica assignment is done by Partition controller.
 #[derive(Debug)]
 pub struct TopicReducer {
-    topic_store: Arc<TopicLocalStore>,
-    spu_store: Arc<SpuLocalStore>,
-    partition_store: Arc<PartitionLocalStore>,
+    topic_store: Arc<K8TopicLocalStore>,
+    spu_store: Arc<K8SpuLocalStore>,
+    partition_store: Arc<K8PartitionLocalStore>,
 }
 
 impl Default for TopicReducer {
@@ -60,9 +61,9 @@ impl Default for TopicReducer {
 impl TopicReducer {
     pub fn new<A, B, C>(topic_store: A, spu_store: B, partition_store: C) -> Self
     where
-        A: Into<Arc<TopicLocalStore>>,
-        B: Into<Arc<SpuLocalStore>>,
-        C: Into<Arc<PartitionLocalStore>>,
+        A: Into<Arc<K8TopicLocalStore>>,
+        B: Into<Arc<K8SpuLocalStore>>,
+        C: Into<Arc<K8PartitionLocalStore>>,
     {
         Self {
             topic_store: topic_store.into(),
@@ -70,15 +71,15 @@ impl TopicReducer {
             partition_store: partition_store.into(),
         }
     }
-    fn topic_store(&self) -> &TopicLocalStore {
+    fn topic_store(&self) -> &K8TopicLocalStore {
         &self.topic_store
     }
 
-    fn spu_store(&self) -> &SpuLocalStore {
+    fn spu_store(&self) -> &K8SpuLocalStore {
         &self.spu_store
     }
 
-    fn partition_store(&self) -> &PartitionLocalStore {
+    fn partition_store(&self) -> &K8PartitionLocalStore {
         &self.partition_store
     }
 
@@ -133,7 +134,7 @@ impl TopicReducer {
     /// At this point, we only need to ensure that topic with init status can be moved
     /// to pending or error state
     ///
-    async fn add_topic_action_handler(&self, topic: TopicKV, actions: &mut TopicActions) {
+    async fn add_topic_action_handler(&self, topic: K8TopicMd, actions: &mut TopicActions) {
         let name = topic.key();
 
         debug!("AddTopic({}) - {}", name, topic);
@@ -152,8 +153,8 @@ impl TopicReducer {
     ///
     async fn mod_topic_action_handler(
         &self,
-        new_topic: TopicKV,
-        old_topic: TopicKV,
+        new_topic: K8TopicMd,
+        old_topic: K8TopicMd,
         actions: &mut TopicActions,
     ) -> Result<(), IoError> {
         let name = new_topic.key();
@@ -176,7 +177,7 @@ impl TopicReducer {
     }
 
     /// process kv
-    async fn process_spu_kv(&self, request: LSChange<SpuSpec>, actions: &mut TopicActions) {
+    async fn process_spu_kv(&self, request: LSChange<SpuSpec,ObjectMeta>, actions: &mut TopicActions) {
         match request {
             LSChange::Add(new_spu) => {
                 debug!("processing SPU add: {}", new_spu);
@@ -211,7 +212,7 @@ impl TopicReducer {
     /// Compute next state for topic
     /// if state is different, apply actions
     ///
-    async fn update_actions_next_state(&self, topic: &TopicKV, actions: &mut TopicActions) {
+    async fn update_actions_next_state(&self, topic: &K8TopicMd, actions: &mut TopicActions) {
         let next_state = topic.compute_next_state(self.spu_store(), self.partition_store()).await;
 
         debug!("topic: {} next state: {}", topic.key(), next_state);
@@ -273,10 +274,7 @@ mod test2 {
     use flv_metadata::topic::PENDING_REASON;
     use flv_util::actions::Actions;
 
-    use super::TopicReducer;
-    use super::TopicChangeRequest;
-    use super::TopicWSAction;
-    use super::TopicKV;
+    use super::*;
     use super::super::TopicLSChange;
 
     // if topic are just created, it should transitioned to pending state if config are valid
@@ -284,8 +282,8 @@ mod test2 {
     async fn test_topic_reducer_init_to_pending() -> Result<(),()> {
         let topic_reducer = TopicReducer::default();
         let topic_requests: Actions<TopicLSChange> = vec![
-            TopicLSChange::add(TopicKV::with_spec("topic1", (1, 1).into())),
-            TopicLSChange::add(TopicKV::with_spec("topic2", (2, 2).into())),
+            TopicLSChange::add(K8TopicMd::with_spec("topic1", (1, 1).into())),
+            TopicLSChange::add(K8TopicMd::with_spec("topic2", (2, 2).into())),
         ]
         .into();
 
@@ -296,12 +294,12 @@ mod test2 {
 
         // topic key/value store actions
         let expected_actions: Actions<TopicWSAction> = vec![
-            TopicWSAction::UpdateStatus(TopicKV::new(
+            TopicWSAction::UpdateStatus(K8TopicMd::new(
                 "topic1",
                 (1, 1).into(),
                 TopicStatus::new(TopicResolution::Pending, vec![], PENDING_REASON),
             )),
-            TopicWSAction::UpdateStatus(TopicKV::new(
+            TopicWSAction::UpdateStatus(K8TopicMd::new(
                 "topic2",
                 (2, 2).into(),
                 TopicStatus::new(TopicResolution::Pending, vec![], PENDING_REASON),

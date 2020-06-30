@@ -1,10 +1,12 @@
-#![feature(drain_filter)]
+#![feature(drain_filter,specialization)]
+
 pub mod spu;
 pub mod topic;
 pub mod partition;
 pub mod api;
 pub mod spg;
 pub mod core;
+pub mod store;
 
 #[cfg(feature = "k8")]
 pub mod k8 {
