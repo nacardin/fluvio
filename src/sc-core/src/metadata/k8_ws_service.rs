@@ -54,15 +54,14 @@ where
         self.0.clone()
     }
 
-    pub async fn add<S>(&self, value: KVObject<S>) -> Result<(), C::MetadataClientError>
+    pub async fn add<S>(&self, value: MetadataStoreObject<S>) -> Result<(), C::MetadataClientError>
     where
-        S: StoreSpec  + Into<<S as K8ExtendedSpec>::K8Spec>,
+        S: StoreSpec + Into<<S as K8ExtendedSpec>::K8Spec>,
         <S as Spec>::Owner: K8ExtendedSpec,
-        S::Status:  PartialEq,
+        S::Status: PartialEq,
         S::IndexKey: Display,
-        <S as K8ExtendedSpec>::K8Spec: DeserializeOwned + Serialize  + Send,
-        <<S as K8ExtendedSpec>::K8Spec as K8Spec>::Status:
-         DeserializeOwned + Serialize  + Send,
+        <S as K8ExtendedSpec>::K8Spec: DeserializeOwned + Serialize + Send,
+        <<S as K8ExtendedSpec>::K8Spec as K8Spec>::Status: DeserializeOwned + Serialize + Send,
     {
         debug!("Adding: {}:{}", S::LABEL, value.key());
         trace!("adding KV {:#?} to k8 kv", value);
@@ -83,7 +82,9 @@ where
             let new_k8 = InputK8Obj::new(
                 k8_spec,
                 parent_metadata
-                    .make_child_input_metadata::<<<S as Spec>::Owner as K8ExtendedSpec>::K8Spec>(item_name),
+                    .make_child_input_metadata::<<<S as Spec>::Owner as K8ExtendedSpec>::K8Spec>(
+                        item_name,
+                    ),
             );
 
             self.0.apply(new_k8).await.map(|_| ())
@@ -97,15 +98,18 @@ where
     }
 
     /// only update the status
-    async fn update_status<S>(&self, value: KVObject<S>) -> Result<(), C::MetadataClientError>
+    async fn update_status<S>(
+        &self,
+        value: MetadataStoreObject<S>,
+    ) -> Result<(), C::MetadataClientError>
     where
-        S: StoreSpec ,
+        S: StoreSpec,
         S::IndexKey: Display,
         <S as Spec>::Owner: K8ExtendedSpec,
         S::Status: Display + Into<<<S as K8ExtendedSpec>::K8Spec as K8Spec>::Status>,
-        <S as K8ExtendedSpec>::K8Spec:  Serialize + DeserializeOwned + Send + Sync,
+        <S as K8ExtendedSpec>::K8Spec: Serialize + DeserializeOwned + Send + Sync,
         <<S as K8ExtendedSpec>::K8Spec as K8Spec>::Status:
-             Serialize + DeserializeOwned + Send + Sync,
+            Serialize + DeserializeOwned + Send + Sync,
     {
         debug!(
             "K8 Update Status: {} key: {} value: {}",
@@ -115,7 +119,8 @@ where
         );
         trace!("status update: {:#?}", value.status);
 
-        let k8_status: <<S as K8ExtendedSpec>::K8Spec as K8Spec>::Status = value.status().clone().into();
+        let k8_status: <<S as K8ExtendedSpec>::K8Spec as K8Spec>::Status =
+            value.status().clone().into();
 
         if let Some(ref kv_ctx) = value.kv_ctx().item_ctx {
             let k8_input: UpdateK8ObjStatus<S::K8Spec> = UpdateK8ObjStatus {
@@ -137,15 +142,17 @@ where
     }
 
     /// update both spec and status
-    pub async fn update_spec<S>(&self, value: KVObject<S>) -> Result<(), C::MetadataClientError>
+    pub async fn update_spec<S>(
+        &self,
+        value: MetadataStoreObject<S>,
+    ) -> Result<(), C::MetadataClientError>
     where
-        S: StoreSpec  + Into<<S as K8ExtendedSpec>::K8Spec>,
+        S: StoreSpec + Into<<S as K8ExtendedSpec>::K8Spec>,
         <S as Spec>::Owner: K8ExtendedSpec,
-        S::IndexKey:   Display,
-        S::Status:  Into<<<S as K8ExtendedSpec>::K8Spec as K8Spec>::Status>,
-        <S as K8ExtendedSpec>::K8Spec:  Serialize + DeserializeOwned  + Send,
-        <<S as K8ExtendedSpec>::K8Spec as K8Spec>::Status:
-             Serialize + DeserializeOwned  + Send,
+        S::IndexKey: Display,
+        S::Status: Into<<<S as K8ExtendedSpec>::K8Spec as K8Spec>::Status>,
+        <S as K8ExtendedSpec>::K8Spec: Serialize + DeserializeOwned + Send,
+        <<S as K8ExtendedSpec>::K8Spec as K8Spec>::Status: Serialize + DeserializeOwned + Send,
     {
         debug!("K8 Update Spec: {} key: {}", S::LABEL, value.key());
         trace!("K8 Update Spec: {:#?}", value);
@@ -174,13 +181,13 @@ where
 
     async fn inner_process<S>(&self, action: WSAction<S>) -> Result<(), ScServerError>
     where
-        S: StoreSpec  + Into<<S as K8ExtendedSpec>::K8Spec>,
-        S::IndexKey: Display ,
+        S: StoreSpec + Into<<S as K8ExtendedSpec>::K8Spec>,
+        S::IndexKey: Display,
         <S as Spec>::Owner: K8ExtendedSpec,
         S::Status: PartialEq + Display,
-        <S as K8ExtendedSpec>::K8Spec:  Serialize + DeserializeOwned + Send + Sync,
+        <S as K8ExtendedSpec>::K8Spec: Serialize + DeserializeOwned + Send + Sync,
         <<S as K8ExtendedSpec>::K8Spec as K8Spec>::Status:
-            From<S::Status>  + Serialize + DeserializeOwned + Send + Sync,
+            From<S::Status> + Serialize + DeserializeOwned + Send + Sync,
     {
         match action {
             WSAction::Add(value) => log_on_err!(self.add(value).await),

@@ -16,15 +16,12 @@ use sc_api::metadata::*;
 
 use super::*;
 
-
 pub type SharedPartitionStore = Arc<PartitionLocalStore>;
-
-
 
 // -----------------------------------
 // Data Structures
 // -----------------------------------
-pub type PartitionKV = KVObject<PartitionSpec>;
+pub type PartitionKV = MetadataStoreObject<PartitionSpec>;
 
 // -----------------------------------
 // Partition - Implementation
@@ -71,7 +68,10 @@ impl PartitionLocalStore {
     }
 
     /// find all partitions that has spu in the replicas
-    pub async fn partition_spec_for_spu(&self, target_spu: i32) -> Vec<(ReplicaKey, PartitionSpec)> {
+    pub async fn partition_spec_for_spu(
+        &self,
+        target_spu: i32,
+    ) -> Vec<(ReplicaKey, PartitionSpec)> {
         let mut res = vec![];
         for (name, partition) in self.read().await.iter() {
             if partition.spec.replicas.contains(&target_spu) {
@@ -126,16 +126,16 @@ impl PartitionLocalStore {
         msgs
     }
 
-
     pub async fn leaders(&self) -> Vec<ReplicaLeader> {
-    
         self.read()
             .await
             .iter()
-            .map(|(key, value)| ReplicaLeader { id: key.clone(), leader: value.spec.leader })
+            .map(|(key, value)| ReplicaLeader {
+                id: key.clone(),
+                leader: value.spec.leader,
+            })
             .collect()
     }
-
 
     pub async fn table_fmt(&self) -> String {
         let mut table = String::new();
@@ -179,7 +179,10 @@ where
     S: Into<String>,
 {
     fn from(partitions: Vec<((S, i32), Vec<i32>)>) -> Self {
-        let elements = partitions.into_iter().map(|(replica_key,replicas)| (replica_key,replicas).into()).collect();
+        let elements = partitions
+            .into_iter()
+            .map(|(replica_key, replicas)| (replica_key, replicas).into())
+            .collect();
         Self::bulk_new(elements)
     }
 }
@@ -191,8 +194,8 @@ pub mod test {
     use super::PartitionLocalStore;
 
     #[test_async]
-    async fn test_partitions_to_replica_msgs() -> Result<(),()> {
-        let partitions: PartitionLocalStore = vec![(("topic1", 0),vec![10, 11, 12])].into();
+    async fn test_partitions_to_replica_msgs() -> Result<(), ()> {
+        let partitions: PartitionLocalStore = vec![(("topic1", 0), vec![10, 11, 12])].into();
         let replica_msg = partitions.replica_for_spu(10).await;
         assert_eq!(replica_msg.len(), 1);
         Ok(())

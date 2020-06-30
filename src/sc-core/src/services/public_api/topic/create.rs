@@ -37,7 +37,6 @@ pub async fn handle_create_topics_request<C>(
 where
     C: MetadataClient,
 {
-  
     debug!("api request: create topic '{}'", name);
 
     // validate topic request
@@ -104,8 +103,9 @@ async fn validate_topic_request(
                     Some(next_state.reason),
                 )
             } else {
-                let next_state =
-                    topic_kv.update_replica_map_for_assigned_topic(partition_map, metadata.spus()).await;
+                let next_state = topic_kv
+                    .update_replica_map_for_assigned_topic(partition_map, metadata.spus())
+                    .await;
                 trace!("validating, assign replica map topic: {:#?}", next_state);
                 if next_state.resolution.is_invalid() {
                     FlvStatus::new(
@@ -147,7 +147,7 @@ where
     C: MetadataClient,
 {
     let meta = ObjectMeta::new(name.clone(), ctx.namespace.clone());
-    let kv_ctx = KvContext::default().with_ctx(meta);
+    let kv_ctx = MetadataContext::default().with_ctx(meta);
     let topic_kv = TopicKV::new_with_context(name, topic, kv_ctx);
 
     ctx.k8_ws().add(topic_kv).await

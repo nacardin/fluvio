@@ -7,12 +7,12 @@
 use flv_metadata::k8::metadata::ObjectMeta;
 
 #[derive(Debug, PartialEq, Clone)]
-pub struct KvContext {
+pub struct MetadataContext {
     pub item_ctx: Option<ObjectMeta>,
     pub parent_ctx: Option<ObjectMeta>,
 }
 
-impl KvContext {
+impl MetadataContext {
     pub fn with_ctx(mut self, ctx: ObjectMeta) -> Self {
         self.item_ctx = Some(ctx);
         self
@@ -23,18 +23,18 @@ impl KvContext {
         self
     }
 
-    pub fn make_parent_ctx(&self) -> KvContext {
+    pub fn make_parent_ctx(&self) -> MetadataContext {
         if self.item_ctx.is_some() {
-            KvContext::default().with_parent_ctx(self.item_ctx.as_ref().unwrap().clone())
+            MetadataContext::default().with_parent_ctx(self.item_ctx.as_ref().unwrap().clone())
         } else {
-            KvContext::default()
+            MetadataContext::default()
         }
     }
 }
 
-impl ::std::default::Default for KvContext {
+impl ::std::default::Default for MetadataContext {
     fn default() -> Self {
-        KvContext {
+        MetadataContext {
             item_ctx: None,
             parent_ctx: None,
         }

@@ -2,8 +2,8 @@ use std::fmt::Debug;
 use std::fmt::Display;
 use std::fmt;
 
-use flv_metadata::core::K8ExtendedSpec; 
-use flv_metadata::core::Spec; 
+use flv_metadata::core::K8ExtendedSpec;
+use flv_metadata::core::Spec;
 use crate::stores::*;
 
 /// Represents changes in Local State
@@ -14,9 +14,9 @@ where
     <S as Spec>::Owner: K8ExtendedSpec,
     S::Status: PartialEq,
 {
-    Add(KVObject<S>),
-    Mod(KVObject<S>, KVObject<S>), // new, old
-    Delete(KVObject<S>),
+    Add(MetadataStoreObject<S>),
+    Mod(MetadataStoreObject<S>, MetadataStoreObject<S>), // new, old
+    Delete(MetadataStoreObject<S>),
 }
 
 impl<S> fmt::Display for LSChange<S>
@@ -24,7 +24,7 @@ where
     S: StoreSpec,
     <S as Spec>::Owner: K8ExtendedSpec,
     S::IndexKey: Display,
-    S::Status:  PartialEq,
+    S::Status: PartialEq,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
@@ -43,16 +43,16 @@ where
 {
     pub fn add<K>(value: K) -> Self
     where
-        K: Into<KVObject<S>>,
+        K: Into<MetadataStoreObject<S>>,
     {
         LSChange::Add(value.into())
     }
 
-    pub fn update(new: KVObject<S>, old: KVObject<S>) -> Self {
+    pub fn update(new: MetadataStoreObject<S>, old: MetadataStoreObject<S>) -> Self {
         LSChange::Mod(new, old)
     }
 
-    pub fn delete(value: KVObject<S>) -> Self {
+    pub fn delete(value: MetadataStoreObject<S>) -> Self {
         LSChange::Delete(value)
     }
 }
@@ -64,10 +64,10 @@ where
     S: StoreSpec,
     <S as Spec>::Owner: K8ExtendedSpec,
     S::IndexKey: PartialEq,
-    S::Status:  PartialEq,
+    S::Status: PartialEq,
 {
-    Add(KVObject<S>),
-    UpdateStatus(KVObject<S>), 
-    UpdateSpec(KVObject<S>),  
+    Add(MetadataStoreObject<S>),
+    UpdateStatus(MetadataStoreObject<S>),
+    UpdateSpec(MetadataStoreObject<S>),
     Delete(S::IndexKey),
 }

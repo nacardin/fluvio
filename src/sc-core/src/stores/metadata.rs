@@ -12,7 +12,7 @@ use super::*;
 // -----------------------------------
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct KVObject<S>
+pub struct MetadataStoreObject<S>
 where
     S: StoreSpec,
     <S as Spec>::Owner: K8ExtendedSpec,
@@ -20,10 +20,10 @@ where
     pub spec: S,
     pub status: S::Status,
     pub key: S::IndexKey,
-    pub kv_ctx: KvContext,
+    pub kv_ctx: MetadataContext,
 }
 
-impl<S> KVObject<S>
+impl<S> MetadataStoreObject<S>
 where
     S: StoreSpec,
     <S as Spec>::Owner: K8ExtendedSpec,
@@ -36,11 +36,11 @@ where
             key: key.into(),
             spec,
             status,
-            kv_ctx: KvContext::default(),
+            kv_ctx: MetadataContext::default(),
         }
     }
 
-    pub fn new_with_context<J>(key: J, spec: S, kv_ctx: KvContext) -> Self
+    pub fn new_with_context<J>(key: J, spec: S, kv_ctx: MetadataContext) -> Self
     where
         J: Into<S::IndexKey>,
     {
@@ -59,7 +59,7 @@ where
         Self::new(key.into(), spec, S::Status::default())
     }
 
-    pub fn with_kv_ctx(mut self, kv_ctx: KvContext) -> Self {
+    pub fn with_kv_ctx(mut self, kv_ctx: MetadataContext) -> Self {
         self.kv_ctx = kv_ctx;
         self
     }
@@ -83,15 +83,15 @@ where
         &self.status
     }
 
-    pub fn kv_ctx(&self) -> &KvContext {
+    pub fn kv_ctx(&self) -> &MetadataContext {
         &self.kv_ctx
     }
 
-    pub fn set_ctx(&mut self, new_ctx: &KvContext) {
+    pub fn set_ctx(&mut self, new_ctx: &MetadataContext) {
         self.kv_ctx = new_ctx.clone();
     }
 
-    pub fn parts(self) -> (S::IndexKey, S, KvContext) {
+    pub fn parts(self) -> (S::IndexKey, S, MetadataContext) {
         (self.key, self.spec, self.kv_ctx)
     }
 
@@ -103,7 +103,7 @@ where
     }
 }
 
-impl<S> fmt::Display for KVObject<S>
+impl<S> fmt::Display for MetadataStoreObject<S>
 where
     S: StoreSpec,
     <S as Spec>::Owner: K8ExtendedSpec,
@@ -114,7 +114,7 @@ where
     }
 }
 
-impl<S> Into<(S::IndexKey, S, S::Status)> for KVObject<S>
+impl<S> Into<(S::IndexKey, S, S::Status)> for MetadataStoreObject<S>
 where
     S: StoreSpec,
     <S as Spec>::Owner: K8ExtendedSpec,
@@ -124,33 +124,32 @@ where
     }
 }
 
-impl<S> Into<Metadata<S>> for KVObject<S>
-    where S: StoreSpec,
+impl<S> Into<Metadata<S>> for MetadataStoreObject<S>
+where
+    S: StoreSpec,
     <S as Spec>::Owner: K8ExtendedSpec,
-    S::IndexKey: Into<String>
- {
-
+    S::IndexKey: Into<String>,
+{
     fn into(self) -> Metadata<S> {
         Metadata {
             name: self.key.into(),
             spec: self.spec,
-            status: self.status
+            status: self.status,
         }
     }
 }
 
-
-impl<S> Into<Metadata<S>> for &KVObject<S>
-    where S: StoreSpec,
+impl<S> Into<Metadata<S>> for &MetadataStoreObject<S>
+where
+    S: StoreSpec,
     <S as Spec>::Owner: K8ExtendedSpec,
-    S::IndexKey: Into<String>
- {
-
+    S::IndexKey: Into<String>,
+{
     fn into(self) -> Metadata<S> {
         Metadata {
             name: self.key.clone().into(),
             spec: self.spec.clone(),
-            status: self.status.clone()
+            status: self.status.clone(),
         }
     }
 }

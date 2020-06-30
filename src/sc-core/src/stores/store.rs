@@ -16,19 +16,18 @@ use super::StoreSpec;
 
 use super::*;
 
-pub enum CheckExist
-{
+pub enum CheckExist {
     // doesn't exist
     None,
     // exists, but same value
     Same,
     // exists, but different
-    Different
+    Different,
 }
 
 /// Local state in memory
 #[derive(Debug)]
-pub struct LocalStore<S>(SimpleConcurrentBTreeMap<S::IndexKey, KVObject<S>>)
+pub struct LocalStore<S>(SimpleConcurrentBTreeMap<S::IndexKey, MetadataStoreObject<S>>)
 where
     S: StoreSpec,
     <S as Spec>::Owner: K8ExtendedSpec;
@@ -48,7 +47,7 @@ where
     S: StoreSpec,
     <S as Spec>::Owner: K8ExtendedSpec,
 {
-    pub fn bulk_new(objects: Vec<KVObject<S>>) -> Self {
+    pub fn bulk_new(objects: Vec<MetadataStoreObject<S>>) -> Self {
         let mut map = BTreeMap::new();
         for obj in objects {
             map.insert(obj.key.clone(), obj);
@@ -62,26 +61,29 @@ where
 
     /// read access
     #[inline(always)]
-    pub async fn read<'a>(&'a self) -> RwLockReadGuard<'a, BTreeMap<S::IndexKey, KVObject<S>>> {
+    pub async fn read<'a>(
+        &'a self,
+    ) -> RwLockReadGuard<'a, BTreeMap<S::IndexKey, MetadataStoreObject<S>>> {
         self.0.read().await
     }
 
     #[inline(always)]
-    pub async fn write<'a>(&'a self) -> RwLockWriteGuard<'a, BTreeMap<S::IndexKey, KVObject<S>>> {
+    pub async fn write<'a>(
+        &'a self,
+    ) -> RwLockWriteGuard<'a, BTreeMap<S::IndexKey, MetadataStoreObject<S>>> {
         self.0.write().await
     }
 
-    pub async fn insert(&self, value: KVObject<S>) -> Option<KVObject<S>> {
+    pub async fn insert(&self, value: MetadataStoreObject<S>) -> Option<MetadataStoreObject<S>> {
         self.write().await.insert(value.key_owned(), value)
     }
 
-    pub fn try_insert(&self, value: KVObject<S>) -> Option<KVObject<S>> {
+    pub fn try_insert(&self, value: MetadataStoreObject<S>) -> Option<MetadataStoreObject<S>> {
         self.0.try_write().unwrap().insert(value.key_owned(), value)
     }
 
-
     /// get copy of the value ref by key
-    pub async fn value<K: ?Sized>(&self, key: &K) -> Option<KVObject<S>>
+    pub async fn value<K: ?Sized>(&self, key: &K) -> Option<MetadataStoreObject<S>>
     where
         S::IndexKey: Borrow<K>,
         K: Ord,
@@ -106,7 +108,7 @@ where
 
     pub async fn find_and_do<K, F>(&self, key: &K, mut func: F) -> Option<()>
     where
-        F: FnMut(&'_ KVObject<S>),
+        F: FnMut(&'_ MetadataStoreObject<S>),
         K: Ord,
         S::IndexKey: Borrow<K>,
     {
@@ -126,7 +128,7 @@ where
         self.read().await.contains_key(key)
     }
 
-    pub async fn remove<K: ?Sized>(&self, key: &K) -> Option<KVObject<S>>
+    pub async fn remove<K: ?Sized>(&self, key: &K) -> Option<MetadataStoreObject<S>>
     where
         S::IndexKey: Borrow<K>,
         K: Ord,
@@ -143,7 +145,7 @@ where
         self.read().await.keys().cloned().collect()
     }
 
-    pub async fn clone_values(&self) -> Vec<KVObject<S>> {
+    pub async fn clone_values(&self) -> Vec<MetadataStoreObject<S>> {
         self.read().await.values().cloned().collect()
     }
 
@@ -189,12 +191,11 @@ impl<S> LocalStore<S>
 where
     S: StoreSpec + PartialEq,
     S::Status: PartialEq,
-    <S as Spec>::Owner: K8ExtendedSpec
+    <S as Spec>::Owner: K8ExtendedSpec,
 {
-
     /// check store for entry, there are 3 possibilities (None,Same,Different)
     /// little bit efficient than cloning get
-    pub async fn check(&self, value: &KVObject<S>) -> CheckExist {
+    pub async fn check(&self, value: &MetadataStoreObject<S>) -> CheckExist {
         if let Some(old_value) = self.read().await.get(value.key()) {
             if old_value == value {
                 CheckExist::Same
@@ -206,4 +207,3 @@ where
         }
     }
 }
-

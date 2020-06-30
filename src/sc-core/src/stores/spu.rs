@@ -10,22 +10,18 @@ use std::io::Error as IoError;
 use std::io::ErrorKind;
 use std::sync::Arc;
 
-
 use flv_types::SpuId;
 use flv_metadata::spu::*;
 use internal_api::messages::SpuMsg;
 
-
 use super::*;
 
-
 pub type SharedSpuLocalStore = Arc<SpuLocalStore>;
-
 
 // -----------------------------------
 // Data Structures
 // -----------------------------------
-pub type SpuKV = KVObject<SpuSpec>;
+pub type SpuKV = MetadataStoreObject<SpuSpec>;
 
 // -----------------------------------
 // Spu - Implementation
@@ -43,7 +39,6 @@ impl SpuKV {
         &self.key
     }
 
-
     pub fn resolution_label(&self) -> &'static str {
         self.status.resolution_label()
     }
@@ -59,8 +54,6 @@ impl SpuKV {
     pub fn is_managed(&self) -> bool {
         !self.spec.is_custom()
     }
-
-    
 }
 
 /// used in the bulk add scenario
@@ -92,7 +85,6 @@ impl SpuLocalStore {
     /// update the spec
     pub async fn update_spec(&self, name: &str, other_spu: &SpuKV) -> Result<(), IoError> {
         if let Some(spu) = self.write().await.get_mut(name) {
-
             if spu.spec.id != other_spu.spec.id {
                 Err(IoError::new(
                     ErrorKind::InvalidData,
@@ -111,8 +103,6 @@ impl SpuLocalStore {
             ))
         }
     }
-
-    
 
     // build hashmap of online
     pub async fn online_status(&self) -> HashSet<SpuId> {
@@ -224,7 +214,12 @@ impl SpuLocalStore {
     }
 
     // check if given range is conflict with any of the range
-    pub async fn is_conflict(&self, owner_uid: &str, start: i32, end_exclusive: i32) -> Option<i32> {
+    pub async fn is_conflict(
+        &self,
+        owner_uid: &str,
+        start: i32,
+        end_exclusive: i32,
+    ) -> Option<i32> {
         for (_, spu) in self.read().await.iter() {
             if !spu.is_owned(owner_uid) {
                 let id = spu.id();
@@ -286,7 +281,13 @@ impl SpuLocalStore {
         self.read()
             .await
             .values()
-            .filter_map(|spu| if spu.spec.rack.is_some() { Some(1) } else { None })
+            .filter_map(|spu| {
+                if spu.spec.rack.is_some() {
+                    Some(1)
+                } else {
+                    None
+                }
+            })
             .sum()
     }
 
@@ -352,14 +353,15 @@ impl SpuLocalStore {
     }
 }
 
-
-
 impl From<Vec<(i32, bool, Option<String>)>> for SpuLocalStore {
     fn from(spus: Vec<(i32, bool, Option<String>)>) -> Self {
-        let elements = spus.into_iter().map(|(spu_id,online,rack)| {
-            let spu_key = format!("spu-{}", spu_id);
-            (spu_key, spu_id, online, rack).into()
-        }).collect();
+        let elements = spus
+            .into_iter()
+            .map(|(spu_id, online, rack)| {
+                let spu_key = format!("spu-{}", spu_id);
+                (spu_key, spu_id, online, rack).into()
+            })
+            .collect();
         Self::bulk_new(elements)
     }
 }
@@ -376,7 +378,7 @@ pub mod test {
     use super::{SpuKV, SpuLocalStore};
 
     #[test_async]
-    async fn test_spu_inquiry_online_offline_count() -> Result<(),()> {
+    async fn test_spu_inquiry_online_offline_count() -> Result<(), ()> {
         let online_spu: SpuKV = ("spu-0", 0, true, None).into();
         let offline_spu: SpuKV = ("spu-1", 1, false, None).into();
         let no_status_spu: SpuKV = ("spu-2", 5001, false, None).into();
@@ -408,7 +410,7 @@ pub mod test {
     }
 
     #[test_async]
-    async fn test_delete_spu_from_local_cache() -> Result<(),()> {
+    async fn test_delete_spu_from_local_cache() -> Result<(), ()> {
         let online_spu: SpuKV = ("spu-0", 0, true, None).into();
         let offline_spu: SpuKV = ("spu-1", 1, false, None).into();
 
@@ -427,7 +429,7 @@ pub mod test {
     }
 
     #[test_async]
-    async fn test_update_spu_spec_in_local_cache() -> Result<(),()> {
+    async fn test_update_spu_spec_in_local_cache() -> Result<(), ()> {
         let spu_0 = ("spu-0", 0, false, None).into();
         let spu_1 = ("spu-1", 1, false, None).into();
 
@@ -451,7 +453,7 @@ pub mod test {
     }
 
     #[test_async]
-    async fn test_update_spu_status_in_local_cache() -> Result<(),()> {
+    async fn test_update_spu_status_in_local_cache() -> Result<(), ()> {
         let online: SpuKV = ("spu-0", 0, true, None).into();
         let offline: SpuKV = ("spu-1", 1, false, None).into();
         let offline2: SpuKV = ("spu-3", 2, false, None).into();
@@ -492,7 +494,7 @@ pub mod test {
     }
 
     #[test_async]
-    async fn rack_map_test_racks_3_spus_6_unbalanced() -> Result<(),()> {
+    async fn rack_map_test_racks_3_spus_6_unbalanced() -> Result<(), ()> {
         let r1 = String::from("r1");
         let r2 = String::from("r2");
         let r3 = String::from("r3");
@@ -527,7 +529,7 @@ pub mod test {
     }
 
     #[test_async]
-    async fn rack_map_test_racks_5_spus_10_unbalanced() -> Result<(),()> {
+    async fn rack_map_test_racks_5_spus_10_unbalanced() -> Result<(), ()> {
         let r1 = String::from("r1");
         let r2 = String::from("r2");
         let r3 = String::from("r3");
@@ -568,7 +570,7 @@ pub mod test {
     }
 
     #[test_async]
-    async fn rack_map_test_racks_4_spus_10_unbalanced() -> Result<(),()> {
+    async fn rack_map_test_racks_4_spus_10_unbalanced() -> Result<(), ()> {
         let r1 = String::from("r1");
         let r2 = String::from("r2");
         let r3 = String::from("r3");
@@ -607,7 +609,7 @@ pub mod test {
     }
 
     #[test_async]
-    async fn rack_map_test_racks_4_spus_12_full() -> Result<(),()> {
+    async fn rack_map_test_racks_4_spus_12_full() -> Result<(), ()> {
         let r1 = String::from("r1");
         let r2 = String::from("r2");
         let r3 = String::from("r3");

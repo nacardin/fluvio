@@ -20,7 +20,6 @@ use flv_metadata::core::Spec;
 use k8_obj_metadata::Spec as K8Spec;
 use k8_metadata_client::*;
 
-
 use crate::stores::*;
 use crate::core::common::LSChange;
 use crate::ScServerError;
@@ -35,9 +34,9 @@ pub async fn k8_events_to_metadata_actions<S>(
     local_store: &LocalStore<S>,
 ) -> Actions<LSChange<S>>
 where
-    S: StoreSpec + PartialEq ,
+    S: StoreSpec + PartialEq,
     <S as Spec>::Owner: K8ExtendedSpec,
-    S::Status:  PartialEq,
+    S::Status: PartialEq,
     <S::IndexKey as TryFrom<String>>::Error: Debug,
     S::IndexKey: TryFrom<String> + Display,
     <<S as K8ExtendedSpec>::K8Spec as K8Spec>::Status: Into<S::Status>,
@@ -47,12 +46,11 @@ where
     let mut local_names = local_store.clone_keys().await;
     let all = local_store.count().await;
 
-    
     let mut actions: Actions<LSChange<S>> = Actions::default();
 
     // loop through items and generate add/mod actions
     for k8_obj in k8_tokens.items {
-        trace!("converting kv: {:#?}",k8_obj);
+        trace!("converting kv: {:#?}", k8_obj);
         match k8_obj_to_kv_obj(k8_obj) {
             Ok(new_kv_value) => {
                 debug!("try insert succeed");
@@ -61,25 +59,32 @@ where
                         skip_cnt += 1;
                         let key = new_kv_value.key();
                         local_names.retain(|n| n != key);
-                    },
+                    }
                     CheckExist::Different => {
                         mod_cnt += 1;
-                        debug!("replacing existing {}:{} to local store", S::LABEL, new_kv_value.key());
+                        debug!(
+                            "replacing existing {}:{} to local store",
+                            S::LABEL,
+                            new_kv_value.key()
+                        );
                         if let Some(old_value) = local_store.insert(new_kv_value.clone()).await {
                             // there should be always old value since we are only one writing
                             actions.push(LSChange::update(new_kv_value.clone(), old_value));
                         }
                         let key = new_kv_value.key();
                         local_names.retain(|n| n != key);
-                    },
+                    }
                     CheckExist::None => {
                         add_cnt += 1;
-                        debug!("adding new {}:{} to local store", S::LABEL, new_kv_value.key());
+                        debug!(
+                            "adding new {}:{} to local store",
+                            S::LABEL,
+                            new_kv_value.key()
+                        );
                         local_store.insert(new_kv_value.clone()).await;
                         actions.push(LSChange::add(new_kv_value));
                     }
                 }
-               
             }
             Err(err) => {
                 error!("{}", err);
@@ -115,7 +120,7 @@ where
         skip_cnt
     );
 
-    trace!("actions: {:#?}",actions);
+    trace!("actions: {:#?}", actions);
 
     actions
 }
@@ -128,10 +133,10 @@ pub async fn k8_watch_events_to_metadata_actions<S, E>(
     local_store: &LocalStore<S>,
 ) -> Actions<LSChange<S>>
 where
-    S: StoreSpec + PartialEq ,
+    S: StoreSpec + PartialEq,
     S::IndexKey: Display,
     <S as Spec>::Owner: K8ExtendedSpec,
-    S::Status:  PartialEq,
+    S::Status: PartialEq,
     E: MetadataClientError,
     <S::IndexKey as TryFrom<String>>::Error: Debug,
     S::IndexKey: TryFrom<String> + Display,
@@ -146,11 +151,13 @@ where
         match token {
             Ok(watch_obj) => match watch_obj {
                 K8Watch::ADDED(k8_obj) => {
-                    let converted: Result<KVObject<S>, ScServerError> = k8_obj_to_kv_obj(k8_obj); // help out compiler
+                    let converted: Result<MetadataStoreObject<S>, ScServerError> =
+                        k8_obj_to_kv_obj(k8_obj); // help out compiler
                     match converted {
                         Ok(new_kv_value) => {
                             trace!("KV ({}): push ADD action", new_kv_value.key());
-                            if let Some(old_value) = local_store.insert(new_kv_value.clone()).await {
+                            if let Some(old_value) = local_store.insert(new_kv_value.clone()).await
+                            {
                                 // some old value, check if same as new one, if they are same, no need for action
                                 warn!(
                                     "detected exist value: {:#?} which should not exists",
@@ -178,10 +185,12 @@ where
                     }
                 }
                 K8Watch::MODIFIED(k8_obj) => {
-                    let converted: Result<KVObject<S>, ScServerError> = k8_obj_to_kv_obj(k8_obj); // help out compiler
+                    let converted: Result<MetadataStoreObject<S>, ScServerError> =
+                        k8_obj_to_kv_obj(k8_obj); // help out compiler
                     match converted {
                         Ok(new_kv_value) => {
-                            if let Some(old_value) = local_store.insert(new_kv_value.clone()).await {
+                            if let Some(old_value) = local_store.insert(new_kv_value.clone()).await
+                            {
                                 if old_value == new_kv_value {
                                     // this is unexpected,
                                     warn!(
@@ -251,7 +260,7 @@ where
 ///
 /// Translates K8 object into Internal metadata object
 ///
-fn k8_obj_to_kv_obj<S>(k8_obj: K8Obj<S::K8Spec>) -> Result<KVObject<S>, ScServerError>
+fn k8_obj_to_kv_obj<S>(k8_obj: K8Obj<S::K8Spec>) -> Result<MetadataStoreObject<S>, ScServerError>
 where
     S: StoreSpec,
     <S as Spec>::Owner: K8ExtendedSpec,
@@ -259,7 +268,6 @@ where
     S::IndexKey: TryFrom<String> + Display,
     <<S as K8ExtendedSpec>::K8Spec as K8Spec>::Status: Into<S::Status>,
     S::K8Spec: Into<S>,
-    
 {
     S::convert_from_k8(k8_obj)
         .map(|val| {
@@ -296,13 +304,12 @@ pub mod test {
     type K8TopicWatch = K8Watch<TopicSpec>;
 
     #[test_async]
-    async fn test_check_items_against_empty() -> Result<(),()> {
+    async fn test_check_items_against_empty() -> Result<(), ()> {
         let mut topics = TopicList::new();
         topics
             .items
             .push(K8Topic::new("topic1", TopicSpec::default()));
 
-       
         let topic_store = TopicLocalStore::default();
 
         let kv_actions = k8_events_to_metadata_actions(topics, &topic_store).await;
@@ -325,7 +332,7 @@ pub mod test {
     }
 
     #[test_async]
-    async fn test_check_items_against_same() -> Result<(),()> {
+    async fn test_check_items_against_same() -> Result<(), ()> {
         let mut topics = TopicList::new();
         topics
             .items
@@ -343,7 +350,7 @@ pub mod test {
     }
 
     #[test_async]
-    async fn test_items_generate_modify() -> Result<(),()> {
+    async fn test_items_generate_modify() -> Result<(), ()> {
         let mut status = TopicStatus::default();
         status.resolution = TopicResolution::Provisioned;
         let new_topic = K8Topic::new("topic1", TopicSpec::default()).set_status(status);
@@ -356,9 +363,8 @@ pub mod test {
         let old_kv = k8_obj_to_kv_obj(old_topic).expect("conversion");
         topic_store.insert(old_kv.clone()).await;
 
-       
         let kv_actions = k8_events_to_metadata_actions(topics, &topic_store).await;
-     //   assert!(false);
+        //   assert!(false);
         assert_eq!(kv_actions.count(), 1);
         let action = kv_actions.iter().next().expect("first");
         match action {
@@ -370,12 +376,12 @@ pub mod test {
             }
             _ => assert!(false),
         }
-        
+
         Ok(())
     }
 
     #[test_async]
-    async fn test_items_delete() -> Result<(),()> {
+    async fn test_items_delete() -> Result<(), ()> {
         let topics = TopicList::new();
 
         let topic_store = TopicLocalStore::default();
@@ -397,7 +403,7 @@ pub mod test {
     }
 
     #[test_async]
-    async fn test_watch_add_actions() -> Result<(),()>{
+    async fn test_watch_add_actions() -> Result<(), ()> {
         let new_topic =
             K8Topic::new("topic1", TopicSpec::default()).set_status(TopicStatus::default());
 
@@ -409,7 +415,8 @@ pub mod test {
         let kv_actions = k8_watch_events_to_metadata_actions::<_, DoNothingError>(
             as_token_stream_result(watches),
             &topic_store,
-        ).await;
+        )
+        .await;
 
         assert_eq!(kv_actions.count(), 1);
         let action = kv_actions.iter().next().expect("first");

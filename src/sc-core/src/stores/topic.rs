@@ -13,7 +13,6 @@
 use std::collections::BTreeMap;
 use std::fmt;
 
-
 use log::trace;
 use log::debug;
 use log::warn;
@@ -24,11 +23,9 @@ use flv_types::ReplicaMap;
 use flv_metadata::topic::*;
 use flv_metadata::partition::ReplicaKey;
 
-
 use super::partition::*;
 use super::spu::*;
 use super::*;
-
 
 /// values for next state
 #[derive(Default, Debug)]
@@ -83,7 +80,7 @@ impl From<((TopicResolution, String), Vec<PartitionKV>)> for TopicNextState {
 // -----------------------------------
 // Data Structures
 // -----------------------------------
-pub type TopicKV = KVObject<TopicSpec>;
+pub type TopicKV = MetadataStoreObject<TopicSpec>;
 
 // -----------------------------------
 // Topic - Traits
@@ -178,8 +175,9 @@ impl TopicKV {
                     self.validate_assigned_topic_parameters(partition_map)
                 }
                 TopicResolution::Pending | TopicResolution::InsufficientResources => {
-                    let mut next_state =
-                        self.update_replica_map_for_assigned_topic(partition_map, spu_store).await;
+                    let mut next_state = self
+                        .update_replica_map_for_assigned_topic(partition_map, spu_store)
+                        .await;
                     if next_state.resolution == TopicResolution::Provisioned {
                         next_state.partitions = self.create_new_partitions(partition_store).await;
                         next_state
@@ -272,16 +270,17 @@ impl TopicKV {
     }
 
     /// create partition children if it doesn't exists
-    pub async fn create_new_partitions(&self, partition_store: &PartitionLocalStore) -> Vec<PartitionKV> {
+    pub async fn create_new_partitions(
+        &self,
+        partition_store: &PartitionLocalStore,
+    ) -> Vec<PartitionKV> {
         let parent_kv_ctx = self.kv_ctx.make_parent_ctx();
 
         let mut partitions = vec![];
-        for (idx,replicas) in self.status.replica_map.iter() {
-            
+        for (idx, replicas) in self.status.replica_map.iter() {
             let replica_key = ReplicaKey::new(self.key(), *idx);
             debug!("Topic: {} creating partition: {}", self.key(), replica_key);
             if !partition_store.contains_key(&replica_key).await {
-                
                 partitions.push(
                     PartitionKV::with_spec(replica_key, replicas.clone().into())
                         .with_kv_ctx(parent_kv_ctx.clone()),
@@ -512,7 +511,7 @@ mod test {
     }
 
     #[test_async]
-    async fn topic_list_insert() -> Result<(),()> {
+    async fn topic_list_insert() -> Result<(), ()> {
         // create topics
         let topic1 = TopicKV::new("Topic-1", (1, 1, false).into(), TopicStatus::default());
         let topic2 = TopicKV::new("Topic-2", (2, 2, false).into(), TopicStatus::default());
@@ -526,7 +525,7 @@ mod test {
     }
 
     #[test_async]
-    async fn test_topics_in_pending_state() -> Result<(),()> {
+    async fn test_topics_in_pending_state() -> Result<(), ()> {
         let topics = TopicLocalStore::default();
 
         // resolution: Init
@@ -587,7 +586,7 @@ mod test {
     }
 
     #[test_async]
-    async fn test_update_topic_status_with_other_error_topic_not_found() -> Result<(),()> {
+    async fn test_update_topic_status_with_other_error_topic_not_found() -> Result<(), ()> {
         let topics = TopicLocalStore::default();
 
         let topic1 = TopicKV::new("Topic-1", (1, 1, false).into(), TopicStatus::default());
@@ -604,7 +603,9 @@ mod test {
         );
 
         // test: update_status (returns error)
-        let res = topics.update_status(topic2.key(), topic2.status.clone()).await;
+        let res = topics
+            .update_status(topic2.key(), topic2.status.clone())
+            .await;
         assert_eq!(
             format!("{}", res.unwrap_err()),
             "Topic 'Topic-2': not found, cannot update"
@@ -613,7 +614,7 @@ mod test {
     }
 
     #[test_async]
-    async fn test_update_topic_status_successful() -> Result<(),()> {
+    async fn test_update_topic_status_successful() -> Result<(), ()> {
         let topics = TopicLocalStore::default();
         let topic1 = TopicKV::new("Topic-1", (2, 2, false).into(), TopicStatus::default());
         topics.insert(topic1).await;
@@ -629,7 +630,9 @@ mod test {
         );
 
         // run test
-        let res = topics.update_status(updated_topic.key(), updated_topic.status.clone()).await;
+        let res = topics
+            .update_status(updated_topic.key(), updated_topic.status.clone())
+            .await;
         assert!(res.is_ok());
 
         let topic = topics.topic("Topic-1").await;
@@ -654,7 +657,7 @@ pub mod replica_map_test {
     use super::generate_replica_map_for_topic;
 
     #[test_async]
-    async fn generate_replica_map_for_topic_1x_replicas_no_rack() -> Result<(),()> {
+    async fn generate_replica_map_for_topic_1x_replicas_no_rack() -> Result<(), ()> {
         let spus: SpuLocalStore = vec![
             (0, true, None),
             (1, true, None),
@@ -679,7 +682,7 @@ pub mod replica_map_test {
     }
 
     #[test_async]
-    async fn generate_replica_map_for_topic_2x_replicas_no_rack() -> Result<(),()> {
+    async fn generate_replica_map_for_topic_2x_replicas_no_rack() -> Result<(), ()> {
         let spus = vec![
             (0, true, None),
             (1, true, None),
@@ -702,7 +705,7 @@ pub mod replica_map_test {
     }
 
     #[test_async]
-    async fn generate_replica_map_for_topic_3x_replicas_no_rack() -> Result<(),()> {
+    async fn generate_replica_map_for_topic_3x_replicas_no_rack() -> Result<(), ()> {
         let spus = vec![
             (0, true, None),
             (1, true, None),
@@ -752,7 +755,7 @@ pub mod replica_map_test {
     }
 
     #[test_async]
-    async fn generate_replica_map_for_topic_4x_replicas_no_rack() -> Result<(),()> {
+    async fn generate_replica_map_for_topic_4x_replicas_no_rack() -> Result<(), ()> {
         let spus = vec![
             (0, true, None),
             (1, true, None),
@@ -775,7 +778,7 @@ pub mod replica_map_test {
     }
 
     #[test_async]
-    async fn generate_replica_map_for_topic_5x_replicas_no_rack() -> Result<(),()> {
+    async fn generate_replica_map_for_topic_5x_replicas_no_rack() -> Result<(), ()> {
         let spus = vec![
             (0, true, None),
             (1, true, None),
@@ -798,7 +801,7 @@ pub mod replica_map_test {
     }
 
     #[test_async]
-    async fn generate_replica_map_for_topic_6_part_3_rep_6_brk_3_rak() -> Result<(),()>{
+    async fn generate_replica_map_for_topic_6_part_3_rep_6_brk_3_rak() -> Result<(), ()> {
         let r1 = String::from("r1");
         let r2 = String::from("r2");
         let r3 = String::from("r3");
@@ -829,7 +832,7 @@ pub mod replica_map_test {
     }
 
     #[test_async]
-    async fn generate_replica_map_for_topic_12_part_4_rep_11_brk_4_rak() -> Result<(),()>{
+    async fn generate_replica_map_for_topic_12_part_4_rep_11_brk_4_rak() -> Result<(), ()> {
         let r1 = String::from("r1");
         let r2 = String::from("r2");
         let r3 = String::from("r3");
@@ -873,7 +876,7 @@ pub mod replica_map_test {
     }
 
     #[test_async]
-    async fn generate_replica_map_for_topic_9_part_3_rep_9_brk_3_rak() -> Result<(),()> {
+    async fn generate_replica_map_for_topic_9_part_3_rep_9_brk_3_rak() -> Result<(), ()> {
         let r1 = String::from("r1");
         let r2 = String::from("r2");
         let r3 = String::from("r3");
