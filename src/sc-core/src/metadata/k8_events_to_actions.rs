@@ -44,7 +44,7 @@ where
     S::K8Spec: Into<S>,
 {
     let (mut add_cnt, mut mod_cnt, mut del_cnt, mut skip_cnt) = (0, 0, 0, 0);
-    let local_names = local_store.clone_keys().await;
+    let mut local_names = local_store.clone_keys().await;
     let all = local_store.count().await;
 
     
@@ -58,7 +58,9 @@ where
                 debug!("try insert succeed");
                 match local_store.check(&new_kv_value).await {
                     CheckExist::Same => {
-                        skip_cnt += 1
+                        skip_cnt += 1;
+                        let key = new_kv_value.key();
+                        local_names.retain(|n| n != key);
                     },
                     CheckExist::Different => {
                         mod_cnt += 1;
@@ -67,6 +69,8 @@ where
                             // there should be always old value since we are only one writing
                             actions.push(LSChange::update(new_kv_value.clone(), old_value));
                         }
+                        let key = new_kv_value.key();
+                        local_names.retain(|n| n != key);
                     },
                     CheckExist::None => {
                         add_cnt += 1;
