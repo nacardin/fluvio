@@ -4,19 +4,19 @@ pub mod spu;
 pub mod topic;
 pub mod spg;
 mod store;
-mod kv_obj;
-mod kv_context;
+mod metadata;
+mod context;
 mod filter;
 
 pub use store::*;
-pub use kv_obj::*;
-pub use kv_context::*;
 pub use metadata::*;
+pub use context::*;
+pub use basic::*;
 pub use filter::*;
 pub use concurrent_hashmap::*;
 
 
-mod metadata {
+mod basic {
 
     use std::io::Error as IoError;
     use std::convert::TryFrom;
