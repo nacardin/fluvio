@@ -27,11 +27,13 @@ pub enum CheckExist {
 #[derive(Debug)]
 pub struct LocalStore<S,C>(SimpleConcurrentBTreeMap<S::IndexKey, MetadataStoreObject<S,C>>)
 where
-    S: Spec;
+    S: Spec,
+    C: Clone + Debug;
 
 impl<S,C> Default for LocalStore<S,C>
 where
     S: Spec,
+    C: Clone + Debug
 {
     fn default() -> Self {
         Self(SimpleConcurrentBTreeMap::new())
@@ -41,6 +43,7 @@ where
 impl<S,C> LocalStore<S,C>
 where
     S: Spec,
+    C: Clone + Debug
 {
     pub fn bulk_new(objects: Vec<MetadataStoreObject<S,C>>) -> Self {
         let mut map = BTreeMap::new();
@@ -172,7 +175,8 @@ where
 
 impl<S,C> Display for LocalStore<S,C>
 where
-    S: Spec
+    S: Spec,
+    C: Clone + Debug
 {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         use flv_future_aio::task::run_block_on;
@@ -184,7 +188,8 @@ where
 impl<S,C> LocalStore<S,C>
 where
     S: Spec + PartialEq,
-    S::Status: PartialEq
+    S::Status: PartialEq,
+    C: Clone + Debug + PartialEq
 {
     /// check store for entry, there are 3 possibilities (None,Same,Different)
     /// little bit efficient than cloning get

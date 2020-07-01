@@ -6,6 +6,7 @@
 use std::collections::BTreeMap;
 use std::collections::HashSet;
 use std::iter::FromIterator;
+use std::fmt::Debug;
 use std::io::Error as IoError;
 use std::io::ErrorKind;
 use std::sync::Arc;
@@ -13,18 +14,13 @@ use std::sync::Arc;
 use flv_types::SpuId;
 use crate::spu::*;
 use crate::store::*;
-use internal_api::messages::SpuMsg;
-use crate::k8::metadata::ObjectMeta;
 
-use super::*;
 
 pub type SharedSpuLocalStore<C> = Arc<SpuLocalStore<C>>;
 
 pub type SpuMetadata<C> = MetadataStoreObject<SpuSpec,C>;
 
-// helper types
-pub type K8SpuMetadata = SpuMetadata<ObjectMeta>;
-pub type K8SpuLocalStore = SpuLocalStore<ObjectMeta>;
+
 pub type DefaultSpuMd = SpuMetadata<String>;
 pub type DefaultSpuStore = SpuLocalStore<String>;
 
@@ -33,7 +29,9 @@ pub type DefaultSpuStore = SpuLocalStore<String>;
 // Spu - Implementation
 // -----------------------------------
 
-impl <C>SpuMetadata<C> {
+impl <C>SpuMetadata<C>
+    where C: Clone + Debug
+ {
     //
     // Accessors
     //
@@ -66,6 +64,7 @@ impl <C>SpuMetadata<C> {
 impl<C,J> From<(J, i32, bool, Option<String>)> for SpuMetadata<C>
 where
     J: Into<String>,
+    C: Clone + Debug + Default
 {
     fn from(spu: (J, i32, bool, Option<String>)) -> Self {
         let mut spec = SpuSpec::default();
@@ -87,7 +86,9 @@ pub type SpuLocalStore<C> = LocalStore<SpuSpec,C>;
 // Spus - Implementation
 // -----------------------------------
 
-impl <C>SpuLocalStore<C> {
+impl <C>SpuLocalStore<C> 
+    where C: Clone + Debug
+{
     /// update the spec
     pub async fn update_spec(&self, name: &str, other_spu: &SpuMetadata<C>) -> Result<(), IoError> {
         if let Some(spu) = self.write().await.get_mut(name) {
@@ -98,7 +99,7 @@ impl <C>SpuLocalStore<C> {
                 ))
             } else {
                 spu.spec.update(&other_spu.spec);
-                spu.set_ctx(other_spu.kv_ctx());
+                spu.set_ctx(other_spu.ctx().clone());
 
                 Ok(())
             }
@@ -222,10 +223,12 @@ impl <C>SpuLocalStore<C> {
     // check if given range is conflict with any of the range
     pub async fn is_conflict(
         &self,
-        owner_uid: &str,
+        owner_uid: &C,
         start: i32,
         end_exclusive: i32,
-    ) -> Option<i32> {
+    ) -> Option<i32>
+        where C: PartialEq + AsRef<C>
+     {
         for (_, spu) in self.read().await.iter() {
             if !spu.is_owned(owner_uid) {
                 let id = spu.id();
@@ -349,17 +352,11 @@ impl <C>SpuLocalStore<C> {
         spus
     }
 
-    /// Encode all online SPUs to SPU Messages
-    pub async fn all_spus_to_spu_msgs(&self) -> Vec<SpuMsg> {
-        self.clone_specs()
-            .await
-            .into_iter()
-            .map(|spu_spec| SpuMsg::update(spu_spec.into()))
-            .collect()
-    }
 }
 
-impl <C>From<Vec<(i32, bool, Option<String>)>> for SpuLocalStore<C> {
+impl <C>From<Vec<(i32, bool, Option<String>)>> for SpuLocalStore<C> 
+    where C: Clone + Debug + Default
+{
     fn from(spus: Vec<(i32, bool, Option<String>)>) -> Self {
         let elements = spus
             .into_iter()
@@ -378,7 +375,7 @@ impl <C>From<Vec<(i32, bool, Option<String>)>> for SpuLocalStore<C> {
 
 #[cfg(test)]
 pub mod test {
-    use flv_metadata::spu::{SpuSpec, SpuStatus};
+    use crate::spu::{SpuSpec, SpuStatus};
     use flv_future_aio::test_async;
 
     use super::DefaultSpuMd;

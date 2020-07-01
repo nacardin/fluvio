@@ -1,5 +1,6 @@
 use std::fmt;
 use std::fmt::Display;
+use std::fmt::Debug;
 
 use crate::core::*;
 
@@ -11,7 +12,7 @@ use crate::core::*;
 pub struct MetadataStoreObject<S,C>
 where
     S: Spec,
-    C: Clone
+    C: Clone + Debug
 {
     pub spec: S,
     pub status: S::Status,
@@ -22,7 +23,7 @@ where
 impl<S,C> MetadataStoreObject<S,C>
 where
     S: Spec,
-    C: Clone
+    C: Clone + Debug
 {
     pub fn new<J>(key: J, spec: S, status: S::Status) -> Self
     where
@@ -51,7 +52,7 @@ where
 
     pub fn with_spec<J>(key: J, spec: S) -> Self
     where
-        J: Into<S::IndexKey>,
+        J: Into<S::IndexKey>, C: Default
     {
         Self::new(key.into(), spec, S::Status::default())
     }
@@ -84,6 +85,10 @@ where
         &self.ctx
     }
 
+    pub fn ctx_owned(&self) -> MetadataContext<C> {
+        self.ctx.clone()
+    }
+
     pub fn set_ctx(&mut self, ctx: MetadataContext<C>) {
         self.ctx = ctx;
     }
@@ -93,10 +98,11 @@ where
     }
 
     pub fn is_owned<U>(&self, uid: U) -> bool 
-        where U: AsRef<C>
+        where U: AsRef<C>,
+            C: PartialEq
     {
 
-        match &self.context.owner() {
+        match self.ctx().owner() {
             Some(parent) => parent == uid.as_ref(),
             None => false,
         }
@@ -107,6 +113,7 @@ impl<S,C> fmt::Display for MetadataStoreObject<S,C>
 where
     S: Spec,
     S::IndexKey: Display,
+    C: Clone + Debug
 {
     default fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "KV {} key: {}", S::LABEL, self.key())
@@ -116,7 +123,7 @@ where
 impl<S,C> Into<(S::IndexKey, S, S::Status)> for MetadataStoreObject<S,C>
 where
     S: Spec,
-    <S as Spec>::Owner: K8ExtendedSpec,
+    C: Clone + Debug
 {
     fn into(self) -> (S::IndexKey, S, S::Status) {
         (self.key, self.spec, self.status)

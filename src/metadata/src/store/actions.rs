@@ -12,6 +12,7 @@ pub enum LSChange<S,C>
 where
     S: Spec,
     S::Status: PartialEq,
+    C: Clone + Debug
 {
     Add(MetadataStoreObject<S,C>),
     Mod(MetadataStoreObject<S,C>, MetadataStoreObject<S,C>), // new, old
@@ -23,6 +24,7 @@ where
     S: Spec,
     S::IndexKey: Display,
     S::Status: PartialEq,
+    C: Clone + Debug
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
@@ -37,6 +39,7 @@ impl<S,C> LSChange<S,C>
 where
     S: Spec,
     S::Status: PartialEq,
+    C: Clone + Debug
 {
     pub fn add<K>(value: K) -> Self
     where
@@ -61,6 +64,7 @@ where
     S: Spec,
     S::IndexKey: PartialEq,
     S::Status: PartialEq,
+    C: Clone + Debug
 {
     Add(MetadataStoreObject<S,C>),
     UpdateStatus(MetadataStoreObject<S,C>),

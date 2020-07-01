@@ -8,6 +8,7 @@ use flv_metadata::topic::TopicSpec;
 use flv_metadata::spu::SpuSpec;
 use flv_metadata::spu::CustomSpuSpec;
 use flv_metadata::spg::SpuGroupSpec;
+use flv_metadata::store::*;
 use crate::AdminPublicApiKey;
 use crate::AdminRequest;
 
@@ -84,6 +85,7 @@ impl<S,C> Into<Metadata<S>> for MetadataStoreObject<S,C>
 where
     S: Spec,
     S::IndexKey: Into<String>,
+    C: Clone + Debug
 {
     fn into(self) -> Metadata<S> {
         Metadata {
@@ -98,6 +100,7 @@ impl<S,C> Into<Metadata<S>> for &MetadataStoreObject<S,C>
 where
     S: Spec,
     S::IndexKey: Into<String>,
+    C: Clone + Debug
 {
     fn into(self) -> Metadata<S> {
         Metadata {

@@ -7,7 +7,7 @@ mod context {
 
     pub trait MetadataItem: Clone + Default {}
 
-    #[derive(Default)]
+    #[derive(Default,Debug,Clone,PartialEq)]
     pub struct MetadataContext<C> {
         item: C,
         owner: Option<C>
@@ -107,10 +107,18 @@ pub use k8::*;
 #[cfg(feature = "k8")]
 mod k8 {
 
+    use std::io::Error as IoError;
+    use std::io::ErrorKind;
+    use std::convert::TryFrom;
+    use std::convert::TryInto;
+    use std::fmt::Display;
+    use std::fmt::Debug;
+
     use k8_obj_metadata::Spec as K8Spec;
     use k8_obj_metadata::Status as K8Status;
     use crate::k8::metadata::ObjectMeta;
     use crate::k8::metadata::K8Obj;
+    use crate::store::MetadataStoreObject;
     use super::*;
 
     pub trait K8ExtendedSpec: Spec
@@ -135,7 +143,7 @@ mod k8 {
                     let local_spec = k8_obj.spec.into();
                     let local_status = k8_obj.status.into();
 
-                    let ctx: MetadataContext<Self,ObjectMeta> = k8_obj.metadata.into();
+                    let ctx: MetadataContext<ObjectMeta> = k8_obj.metadata.into();
                     let loca_kv =
                         MetadataStoreObject::new(key, local_spec, local_status).with_context(ctx);
 
