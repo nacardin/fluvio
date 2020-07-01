@@ -5,6 +5,7 @@ pub mod spg;
 pub mod metadata;
 pub mod versions;
 pub mod objects;
+pub mod message;
 mod request;
 mod response;
 

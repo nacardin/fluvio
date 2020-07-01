@@ -22,12 +22,10 @@ pub type PartitionLocalStore<C> = LocalStore<PartitionSpec,C>;
 pub type DefaultPartitionMd = PartitionMetadata<String>;
 pub type DefaultPartitionLocalStore = PartitionLocalStore<String>;
 
-// -----------------------------------
-// Partition - Implementation
-// -----------------------------------
+
 
 impl <C>PartitionMetadata<C> 
-    where C: Clone + Debug
+    where C: Clone + Debug + Default
 {
     /// create new partition with replica map.
     /// first element of replicas is leader
@@ -40,7 +38,7 @@ impl <C>PartitionMetadata<C>
 impl<S,C> From<((S, i32), Vec<i32>)> for PartitionMetadata<C>
 where
     S: Into<String>,
-    C: Clone + Debug
+    C: Clone + Debug + Default
 {
     fn from(partition: ((S, i32), Vec<i32>)) -> Self {
         let (replica_key, replicas) = partition;
@@ -141,6 +139,7 @@ impl <C>PartitionLocalStore<C>
     pub async fn bulk_add<S>(&self, partitions: Vec<((S, i32), Vec<i32>)>)
     where
         S: Into<String>,
+        C: Default
     {
         for (replica_key, replicas) in partitions.into_iter() {
             let partition: PartitionMetadata<C> = (replica_key, replicas).into();
@@ -184,7 +183,7 @@ impl <C>PartitionLocalStore<C>
 impl<C,S> From<Vec<((S, i32), Vec<i32>)>> for PartitionLocalStore<C>
 where
     S: Into<String>,
-    C: Clone + Debug
+    C: Clone + Debug + Default
 {
     fn from(partitions: Vec<((S, i32), Vec<i32>)>) -> Self {
         let elements = partitions

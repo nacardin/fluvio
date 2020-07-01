@@ -84,7 +84,7 @@ impl From<((TopicResolution, String), Vec<K8SpuMetadata>)> for TopicNextState {
 }
 
 
-pub type TopicMetadata<C> = MetadataStoreObject<TopicSpec,C>;
+
 
 // -----------------------------------
 // Topic - Traits
