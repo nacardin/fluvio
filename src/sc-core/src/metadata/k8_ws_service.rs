@@ -3,8 +3,6 @@
 //!
 use std::fmt::Display;
 use std::convert::Into;
-use std::io::Error as IoError;
-use std::io::ErrorKind;
 
 use log::trace;
 use log::warn;
@@ -67,17 +65,10 @@ where
         debug!("Adding: {}:{}", S::LABEL, value.key());
         trace!("adding KV {:#?} to k8 kv", value);
 
-        let (key, spec, kv_ctx) = value.parts();
+        let (key, spec, _status,ctx) = value.parts();
         let k8_spec: S::K8Spec = spec.into();
-        if let Some(item_ctx) = kv_ctx.item_ctx {
-            let new_k8 = InputK8Obj::new(k8_spec, item_ctx.into());
-
-            self.0
-                .apply(new_k8)
-                .await
-                .map(|_| ())
-                .map_err(|err| err.into())
-        } else if let Some(ref parent_metadata) = kv_ctx.parent_ctx {
+        
+        if let Some(parent_metadata) = ctx.owner() {
             let item_name = key.to_string();
 
             let new_k8 = InputK8Obj::new(
@@ -90,11 +81,13 @@ where
 
             self.0.apply(new_k8).await.map(|_| ())
         } else {
-            Err(IoError::new(
-                ErrorKind::Other,
-                format!("{} add failed - no item or context {}", S::LABEL, key),
-            )
-            .into())
+            let new_k8 = InputK8Obj::new(k8_spec, ctx.item_owned().into());
+
+            self.0
+                .apply(new_k8)
+                .await
+                .map(|_| ())
+                .map_err(|err| err.into())
         }
     }
 
@@ -120,26 +113,21 @@ where
         );
         trace!("status update: {:#?}", value.status);
 
-        let k8_status: <<S as K8ExtendedSpec>::K8Spec as K8Spec>::Status =
-            value.status().clone().into();
+        
+        let (_key,_spec,status,ctx) = value.parts();
+        let k8_status: <<S as K8ExtendedSpec>::K8Spec as K8Spec>::Status = status.into();
 
-        if let Some(ref kv_ctx) = value.kv_ctx().item_ctx {
-            let k8_input: UpdateK8ObjStatus<S::K8Spec> = UpdateK8ObjStatus {
-                api_version: S::K8Spec::api_version(),
-                kind: S::K8Spec::kind(),
-                metadata: kv_ctx.clone().into(),
-                status: k8_status,
-                ..Default::default()
-            };
+        
+        let k8_input: UpdateK8ObjStatus<S::K8Spec> = UpdateK8ObjStatus {
+            api_version: S::K8Spec::api_version(),
+            kind: S::K8Spec::kind(),
+            metadata: ctx.item_owned().into(),
+            status: k8_status,
+            ..Default::default()
+        };
 
             self.0.update_status(&k8_input).await.map(|_| ())
-        } else {
-            Err(IoError::new(
-                ErrorKind::Other,
-                "KVS update failed - missing  KV ctx".to_owned(),
-            )
-            .into())
-        }
+        
     }
 
     /// update both spec and status
@@ -157,27 +145,23 @@ where
     {
         debug!("K8 Update Spec: {} key: {}", S::LABEL, value.key());
         trace!("K8 Update Spec: {:#?}", value);
-        let k8_spec: <S as K8ExtendedSpec>::K8Spec = value.spec().clone().into();
 
-        if let Some(ref kv_ctx) = value.kv_ctx().item_ctx {
-            trace!("updating spec: {:#?}", k8_spec);
+        let (_key,spec,_status,ctx) = value.parts();
 
-            let k8_input: InputK8Obj<S::K8Spec> = InputK8Obj {
-                api_version: S::K8Spec::api_version(),
-                kind: S::K8Spec::kind(),
-                metadata: kv_ctx.clone().into(),
-                spec: k8_spec,
-                ..Default::default()
-            };
+        let k8_spec: <S as K8ExtendedSpec>::K8Spec = spec.into();
+        
+        trace!("updating spec: {:#?}", k8_spec);
 
-            self.0.apply(k8_input).await.map(|_| ())
-        } else {
-            Err(IoError::new(
-                ErrorKind::Other,
-                "KVS update failed - missing  KV ctx".to_owned(),
-            )
-            .into())
-        }
+        let k8_input: InputK8Obj<S::K8Spec> = InputK8Obj {
+            api_version: S::K8Spec::api_version(),
+            kind: S::K8Spec::kind(),
+            metadata: ctx.item_owned().into(),
+            spec: k8_spec,
+            ..Default::default()
+        };
+
+        self.0.apply(k8_input).await.map(|_| ())
+       
     }
 
     async fn inner_process<S>(&self, action: WSAction<S,K8MetaItem>) -> Result<(), ScServerError>

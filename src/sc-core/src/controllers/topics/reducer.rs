@@ -180,7 +180,7 @@ impl TopicReducer {
     async fn process_spu_kv(&self, request: LSChange<SpuSpec,K8MetaItem>, actions: &mut TopicActions) {
         match request {
             LSChange::Add(new_spu) => {
-                debug!("processing SPU add: {}", new_spu);
+                debug!("processing SPU add: {}", new_spu.key());
 
                 self.generate_replica_map_for_all_topics_handler(actions).await;
             }
@@ -213,14 +213,17 @@ impl TopicReducer {
     /// if state is different, apply actions
     ///
     async fn update_actions_next_state(&self, topic: &TopicAdminMd, actions: &mut TopicActions) {
-        let next_state = topic.compute_next_state(self.spu_store(), self.partition_store()).await;
+        let before = TopicPolicyEngine::new(topic);
+        let next_state = before.compute_next_state(self.spu_store(), self.partition_store()).await;
 
         debug!("topic: {} next state: {}", topic.key(), next_state);
         let mut updated_topic = topic.clone();
-        trace!("next state detal: {:#?}", next_state);
+        trace!("next state: {:#?}", next_state);
+
+        let mut after = TopicPolicyEngine::new(&mut updated_topic);
 
         // apply changes in partitions
-        for partition_kv in updated_topic.apply_next_state(next_state).into_iter() {
+        for partition_kv in after.apply_next_state(next_state).into_iter() {
             actions
                 .partitions
                 .push(PartitionWSAction::Add(partition_kv));

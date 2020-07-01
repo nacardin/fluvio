@@ -1,24 +1,27 @@
 use std::ops::Deref;
+use std::ops::DerefMut;
 use std::fmt;
+use std::collections::BTreeMap;
 
 use log::debug;
 use log::warn;
 use log::trace;
+use rand::thread_rng;
+use rand::Rng;
 
 use flv_types::*;
-use flv_metadata::topic::store::*;
 use flv_metadata::topic::*;
-use flv_metadata::partition::*;
+
 
 use crate::stores::topic::*;
 use crate::stores::partition::*;
 use crate::stores::spu::*;
 
-/// Our custom topic server
-pub struct TopicPolicyEngine(TopicAdminMd);
+/// handle topic policy related computation
+pub struct TopicPolicyEngine<'a>(&'a TopicAdminMd);
 
 
-impl Deref for TopicPolicyEngine {
+impl Deref for TopicPolicyEngine<'_> {
     type Target = TopicAdminMd;
 
     fn deref(&self) -> &Self::Target {
@@ -26,8 +29,36 @@ impl Deref for TopicPolicyEngine {
     }
 }
 
+impl DerefMut for TopicPolicyEngine<'_> {
+  
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
 
-impl TopicPolicyEngine {
+/*
+impl<T> Deref for DerefMutExample<T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.value
+    }
+}
+
+
+impl<T> DerefMut for DerefMutExample<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.value
+    }
+}
+*/
+
+impl <'a>TopicPolicyEngine<'a> {
+
+    pub fn new(topic: &'a TopicAdminMd) -> Self {
+        Self(topic)
+    }
+
     pub fn same_next_state(&self) -> TopicNextState {
         TopicNextState {
             resolution: self.status.resolution.clone(),
@@ -58,7 +89,7 @@ impl TopicPolicyEngine {
                     self.validate_computed_topic_parameters(param)
                 }
                 TopicResolution::Pending | TopicResolution::InsufficientResources => {
-                    let mut next_state = self.generate_replica_map(spu_store, param).await;
+                    let mut next_state = generate_replica_map(spu_store, param).await;
                     if next_state.resolution == TopicResolution::Provisioned {
                         debug!(
                             "Topic: {} replica generate successfull, status is provisioned",
@@ -91,8 +122,7 @@ impl TopicPolicyEngine {
                     self.validate_assigned_topic_parameters(partition_map)
                 }
                 TopicResolution::Pending | TopicResolution::InsufficientResources => {
-                    let mut next_state = self
-                        .update_replica_map_for_assigned_topic(partition_map, spu_store)
+                    let mut next_state = update_replica_map_for_assigned_topic(partition_map, spu_store)
                         .await;
                     if next_state.resolution == TopicResolution::Provisioned {
                         next_state.partitions = self.create_new_partitions(partition_store).await;
@@ -153,90 +183,70 @@ impl TopicPolicyEngine {
         }
     }
 
-    ///
-    /// Genereate Replica Map if there are enough online spus
-    ///  * returns a replica map or a reason for the failure
-    ///  * fatal error sare configuration errors and are not recovarable
-    ///
-    pub async fn generate_replica_map(
-        &self,
-        spus: &SpuAdminStore,
-        param: &TopicReplicaParam,
-    ) -> TopicNextState {
-        let spu_count = spus.count().await;
-        if spu_count < param.replication_factor {
-            trace!(
-                "topic '{}' - R-MAP needs {:?} online spus, found {:?}",
-                self.key,
-                param.replication_factor,
-                spu_count
-            );
+    
+}
+    
 
-            let reason = format!("need {} more SPU", param.replication_factor - spu_count);
-            TopicStatus::set_resolution_no_resource(reason).into()
+///
+/// Generate Replica Map if there are enough online spus
+///  * returns a replica map or a reason for the failure
+///  * fatal error  configuration errors and are not recoverable
+///
+pub async fn generate_replica_map(
+    spus: &SpuAdminStore,
+    param: &TopicReplicaParam,
+) -> TopicNextState {
+    let spu_count = spus.count().await;
+    if spu_count < param.replication_factor {
+        trace!(
+            "R-MAP needs {:?} online spus, found {:?}",
+            param.replication_factor,
+            spu_count
+        );
+
+        let reason = format!("need {} more SPU", param.replication_factor - spu_count);
+        TopicStatus::set_resolution_no_resource(reason).into()
+    } else {
+        let replica_map = generate_replica_map_for_topic(spus, param, None).await;
+        if replica_map.len() > 0 {
+            (TopicStatus::next_resolution_provisioned(), replica_map).into()
         } else {
-            let replica_map = generate_replica_map_for_topic(spus, param, None).await;
-            if replica_map.len() > 0 {
-                (TopicStatus::next_resolution_provisoned(), replica_map).into()
-            } else {
-                let reason = "empty replica map";
-                TopicStatus::set_resolution_no_resource(reason.to_owned()).into()
-            }
-        }
-    }
-
-    /// create partition children if it doesn't exists
-    pub async fn create_new_partitions(
-        &self,
-        partition_store: &PartitionAdminStore,
-    ) -> Vec<PartitionAdminMd> {
-        let parent_kv_ctx = self.0.ctx().make_parent_ctx();
-
-        let mut partitions = vec![];
-        for (idx, replicas) in self.status.replica_map.iter() {
-            let replica_key = ReplicaKey::new(self.key(), *idx);
-            debug!("Topic: {} creating partition: {}", self.key(), replica_key);
-            if !partition_store.contains_key(&replica_key).await {
-                partitions.push(
-                    PartitionAdminMd::with_spec(replica_key, replicas.clone().into())
-                        .with_context(parent_kv_ctx.clone()),
-                )
-            }
-        }
-        partitions
-    }
-
-    ///
-    /// Compare assigned SPUs versus local SPUs. If all assigned SPUs are live,
-    /// update topic status to ok. otherwise, mark as waiting for live SPUs
-    ///
-    pub async fn update_replica_map_for_assigned_topic(
-        &self,
-        partition_maps: &PartitionMaps,
-        spu_store: &SpuAdminStore,
-    ) -> TopicNextState {
-        let partition_map_spus = partition_maps.unique_spus_in_partition_map();
-        let spus_id = spu_store.spu_ids_for_replica().await;
-
-        // ensure spu exists
-        for spu in &partition_map_spus {
-            if !spus_id.contains(spu) {
-                return TopicStatus::next_resolution_invalid_config(format!(
-                    "invalid spu id: {}",
-                    spu
-                ))
-                .into();
-            }
-        }
-
-        let replica_map = partition_maps.partition_map_to_replica_map();
-        if replica_map.len() == 0 {
-            TopicStatus::next_resolution_invalid_config("invalid replica map".to_owned()).into()
-        } else {
-            (TopicStatus::next_resolution_provisoned(), replica_map).into()
+            let reason = "empty replica map";
+            TopicStatus::set_resolution_no_resource(reason.to_owned()).into()
         }
     }
 }
+
+///
+/// Compare assigned SPUs versus local SPUs. If all assigned SPUs are live,
+/// update topic status to ok. otherwise, mark as waiting for live SPUs
+///
+pub async fn update_replica_map_for_assigned_topic(
+    partition_maps: &PartitionMaps,
+    spu_store: &SpuAdminStore,
+) -> TopicNextState {
+    let partition_map_spus = partition_maps.unique_spus_in_partition_map();
+    let spus_id = spu_store.spu_ids_for_replica().await;
+
+    // ensure spu exists
+    for spu in &partition_map_spus {
+        if !spus_id.contains(spu) {
+            return TopicStatus::next_resolution_invalid_config(format!(
+                "invalid spu id: {}",
+                spu
+            ))
+            .into();
+        }
+    }
+
+    let replica_map = partition_maps.partition_map_to_replica_map();
+    if replica_map.len() == 0 {
+        TopicStatus::next_resolution_invalid_config("invalid replica map".to_owned()).into()
+    } else {
+        (TopicStatus::next_resolution_provisioned(), replica_map).into()
+    }
+}
+
 
 
 
@@ -278,8 +288,8 @@ impl From<((TopicResolution, String), ReplicaMap)> for TopicNextState {
     }
 }
 
-impl From<((TopicResolution, String), Vec<SpuAdminMd>)> for TopicNextState {
-    fn from(val: ((TopicResolution, String), Vec<SpuAdminMd>)) -> Self {
+impl From<((TopicResolution, String), Vec<PartitionAdminMd>)> for TopicNextState {
+    fn from(val: ((TopicResolution, String), Vec<PartitionAdminMd>)) -> Self {
         let ((resolution, reason), partitions) = val;
         Self {
             resolution,
@@ -378,194 +388,6 @@ async fn generate_partitions_without_rack(
 
 
 
-//
-// Unit Tests
-//
-#[cfg(test)]
-
-mod test {
-    use flv_metadata::topic::{TopicResolution, TopicStatus};
-    use flv_future_aio::test_async;
-
-    use super::{DefaultTopicMd, DefaultTopicLocalStore};
-
-    #[test]
-    fn test_topic_replica_map() {
-        // empty replica map
-        let topic1 = DefaultTopicMd::new("Topic-1", (1, 1, false).into(), TopicStatus::default());
-        assert_eq!(topic1.replica_map().len(), 0);
-
-        // replica map with 2 partitions
-        let topic2 = DefaultTopicMd::new(
-            "Topic-2",
-            (1, 1, false).into(),
-            TopicStatus::new(
-                TopicResolution::Provisioned,
-                vec![vec![0, 1], vec![1, 2]],
-                "".to_owned(),
-            ),
-        );
-        assert_eq!(topic2.replica_map().len(), 2);
-    }
-
-    #[test]
-    fn test_update_topic_status_objects() {
-        // create topic 1
-        let mut topic1 = DefaultTopicMd::new("Topic-1", (2, 2, false).into(), TopicStatus::default());
-        assert_eq!(topic1.status.resolution, TopicResolution::Init);
-
-        // create topic 2
-        let topic2 = DefaultTopicMd::new(
-            "Topic-1",
-            (2, 2, false).into(),
-            TopicStatus::new(
-                TopicResolution::Provisioned,
-                vec![vec![0, 1], vec![1, 2]],
-                "".to_owned(),
-            ),
-        );
-
-        // test update individual components
-        topic1.status.set_replica_map(topic2.replica_map().clone());
-        topic1.status.reason = topic2.reason().clone();
-        topic1.status.resolution = (&topic2.status.resolution).clone();
-
-        // topics should be identical
-        assert_eq!(topic1, topic2);
-    }
-
-    #[test_async]
-    async fn topic_list_insert() -> Result<(), ()> {
-        // create topics
-        let topic1 = DefaultTopicMd::new("Topic-1", (1, 1, false).into(), TopicStatus::default());
-        let topic2 = DefaultTopicMd::new("Topic-2", (2, 2, false).into(), TopicStatus::default());
-
-        let topics = DefaultTopicLocalStore::default();
-        topics.insert(topic1).await;
-        topics.insert(topic2).await;
-
-        assert_eq!(topics.count().await, 2);
-        Ok(())
-    }
-
-    #[test_async]
-    async fn test_topics_in_pending_state() -> Result<(), ()> {
-        let topics = DefaultTopicLocalStore::default();
-
-        // resolution: Init
-        let topic1 = DefaultTopicMd::new("Topic-1", (1, 1, false).into(), TopicStatus::default());
-        assert_eq!(topic1.status.is_resolution_initializing(), true);
-
-        // resulution: Pending
-        let topic2 = DefaultTopicMd::new(
-            "Topic-2",
-            (1, 1, false).into(),
-            TopicStatus::new(
-                TopicResolution::Pending,
-                vec![],
-                "waiting for live spus".to_owned(),
-            ),
-        );
-        assert_eq!(topic2.status.is_resolution_pending(), true);
-
-        // resolution: Ok
-        let topic3 = DefaultTopicMd::new(
-            "Topic-3",
-            (2, 2, false).into(),
-            TopicStatus::new(
-                TopicResolution::Provisioned,
-                vec![vec![0, 1], vec![1, 2]],
-                "".to_owned(),
-            ),
-        );
-        assert_eq!(topic3.status.is_resolution_provisioned(), true);
-
-        // resolution: Inconsistent
-        let topic4 = DefaultTopicMd::new(
-            "Topic-4",
-            (2, 2, false).into(),
-            TopicStatus::new(
-                TopicResolution::InsufficientResources,
-                vec![vec![0], vec![1]],
-                "".to_owned(),
-            ),
-        );
-
-        topics.insert(topic1).await;
-        topics.insert(topic2).await;
-        topics.insert(topic3).await;
-        topics.insert(topic4).await;
-
-        let expected = vec![String::from("Topic-2"), String::from("Topic-4")];
-        let mut pending_state_names: Vec<String> = vec![];
-
-        for topic in topics.read().await.values() {
-            if topic.status.need_replica_map_recal() {
-                pending_state_names.push(topic.key_owned());
-            }
-        }
-
-        assert_eq!(pending_state_names, expected);
-        Ok(())
-    }
-
-    #[test_async]
-    async fn test_update_topic_status_with_other_error_topic_not_found() -> Result<(), ()> {
-        let topics = DefaultTopicLocalStore::default();
-
-        let topic1 = DefaultTopicMd::new("Topic-1", (1, 1, false).into(), TopicStatus::default());
-        topics.insert(topic1).await;
-
-        let topic2 = DefaultTopicMd::new(
-            "Topic-2",
-            (2, 2, false).into(),
-            TopicStatus::new(
-                TopicResolution::Provisioned,
-                vec![vec![0, 1], vec![1, 2]],
-                "".to_owned(),
-            ),
-        );
-
-        // test: update_status (returns error)
-        let res = topics
-            .update_status(topic2.key(), topic2.status.clone())
-            .await;
-        assert_eq!(
-            format!("{}", res.unwrap_err()),
-            "Topic 'Topic-2': not found, cannot update"
-        );
-        Ok(())
-    }
-
-    #[test_async]
-    async fn test_update_topic_status_successful() -> Result<(), ()> {
-        let topics = DefaultTopicLocalStore::default();
-        let topic1 = DefaultTopicMd::new("Topic-1", (2, 2, false).into(), TopicStatus::default());
-        topics.insert(topic1).await;
-
-        let updated_topic = DefaultTopicMd::new(
-            "Topic-1",
-            (2, 2, false).into(),
-            TopicStatus::new(
-                TopicResolution::Provisioned,
-                vec![vec![0, 1], vec![1, 2]],
-                "".to_owned(),
-            ),
-        );
-
-        // run test
-        let res = topics
-            .update_status(updated_topic.key(), updated_topic.status.clone())
-            .await;
-        assert!(res.is_ok());
-
-        let topic = topics.topic("Topic-1").await;
-        assert_eq!(topic.is_some(), true);
-
-        assert_eq!(topic.unwrap(), updated_topic);
-        Ok(())
-    }
-}
 
 //
 // Unit Tests

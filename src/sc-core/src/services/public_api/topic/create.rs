@@ -14,8 +14,6 @@ use std::io::Error;
 use log::{debug, trace};
 
 use kf_protocol::api::FlvErrorCode;
-
-use flv_metadata::core::*;
 use k8_metadata_client::MetadataClient;
 
 use sc_api::FlvStatus;
@@ -24,6 +22,9 @@ use sc_api::topic::*;
 use crate::core::Context;
 use crate::stores::topic::*;
 use crate::stores::*;
+use crate::controllers::topics::TopicPolicyEngine;
+use crate::controllers::topics::generate_replica_map;
+use crate::controllers::topics::update_replica_map_for_assigned_topic;
 
 use super::PublicContext;
 
@@ -69,9 +70,10 @@ async fn validate_topic_request(
 
     // create temporary topic status to return validation result
     let topic_kv = TopicAdminMd::with_spec(name.to_owned(), topic_spec.clone());
+    let policy = TopicPolicyEngine::new(&topic_kv);
     match topic_spec {
         TopicSpec::Computed(param) => {
-            let next_state = topic_kv.validate_computed_topic_parameters(param);
+            let next_state = policy.validate_computed_topic_parameters(param);
             trace!("validating, computed topic: {:#?}", next_state);
             if next_state.resolution.is_invalid() {
                 FlvStatus::new(
@@ -80,7 +82,7 @@ async fn validate_topic_request(
                     Some(next_state.reason),
                 )
             } else {
-                let next_state = topic_kv.generate_replica_map(metadata.spus(), param).await;
+                let next_state = generate_replica_map(metadata.spus(), param).await;
                 trace!("validating, generate replica map topic: {:#?}", next_state);
                 if next_state.resolution.no_resource() {
                     FlvStatus::new(
@@ -94,7 +96,8 @@ async fn validate_topic_request(
             }
         }
         TopicSpec::Assigned(ref partition_map) => {
-            let next_state = topic_kv.validate_assigned_topic_parameters(partition_map);
+
+            let next_state = policy.validate_assigned_topic_parameters(partition_map);
             trace!("validating, computed topic: {:#?}", next_state);
             if next_state.resolution.is_invalid() {
                 FlvStatus::new(
@@ -103,8 +106,7 @@ async fn validate_topic_request(
                     Some(next_state.reason),
                 )
             } else {
-                let next_state = topic_kv
-                    .update_replica_map_for_assigned_topic(partition_map, metadata.spus())
+                let next_state = update_replica_map_for_assigned_topic(partition_map, metadata.spus())
                     .await;
                 trace!("validating, assign replica map topic: {:#?}", next_state);
                 if next_state.resolution.is_invalid() {
@@ -146,8 +148,8 @@ async fn create_topic<C>(
 where
     C: MetadataClient,
 {
-    let meta = K8MetaContext::new(name.clone(), ctx.namespace.clone());
-    let kv_ctx: MetadataContext= meta.into();
+    let meta = K8MetaItem::new(name.clone(), ctx.namespace.clone());
+    let kv_ctx: K8MetadataContext= meta.into();
     let topic_kv = TopicAdminMd::new_with_context(name, topic, kv_ctx);
 
     ctx.k8_ws().add(topic_kv).await

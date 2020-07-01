@@ -82,17 +82,7 @@ where
         ));
     }
 
-    // have have KV context
-    let item_ctx = match &spu.kv_ctx().item_ctx {
-        Some(ctx) => ctx,
-        None => {
-            return Ok(FlvStatus::new(
-                spu_name,
-                FlvErrorCode::SpuError,
-                Some("missing Kv context".to_owned()),
-            ))
-        }
-    };
+    let item_ctx = spu.ctx().item();
 
     // delete custom spec and return result
     let item = item_ctx.as_input();

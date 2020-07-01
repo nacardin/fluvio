@@ -91,8 +91,8 @@ where
         self.ctx = ctx;
     }
 
-    pub fn parts(self) -> (S::IndexKey, S, MetadataContext<C>) {
-        (self.key, self.spec, self.ctx)
+    pub fn parts(self) -> (S::IndexKey, S, S::Status,MetadataContext<C>) {
+        (self.key, self.spec, self.status, self.ctx)
     }
 
     pub fn is_owned<U>(&self, uid: U) -> bool 

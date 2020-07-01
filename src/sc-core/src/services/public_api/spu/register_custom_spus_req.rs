@@ -97,7 +97,7 @@ where
 {
     let meta = ObjectMeta::new(name.clone(), &ctx.namespace);
     let spu_spec: SpuSpec = spu_spec.into();
-    let kv_ctx = K8MetadataContext::default().with_ctx(meta);
+    let kv_ctx = K8MetadataContext::from(meta);
     let custom_spu_kv = SpuAdminMd::new_with_context(name.clone(), spu_spec, kv_ctx);
 
     ctx.k8_ws().add(custom_spu_kv).await

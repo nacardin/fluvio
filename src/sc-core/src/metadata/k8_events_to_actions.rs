@@ -32,7 +32,7 @@ use crate::ScServerError;
 pub async fn k8_events_to_metadata_actions<S>(
     k8_tokens: K8List<S::K8Spec>,
     local_store: &LocalStore<S,K8MetaItem>,
-) -> Actions<LSChange<S>>
+) -> Actions<LSChange<S,K8MetaItem>>
 where
     S: K8ExtendedSpec + PartialEq,
     <S as Spec>::Owner: K8ExtendedSpec,
@@ -46,7 +46,7 @@ where
     let mut local_names = local_store.clone_keys().await;
     let all = local_store.count().await;
 
-    let mut actions: Actions<LSChange<S>> = Actions::default();
+    let mut actions: Actions<LSChange<S,K8MetaItem>> = Actions::default();
 
     // loop through items and generate add/mod actions
     for k8_obj in k8_tokens.items {
@@ -131,7 +131,7 @@ where
 pub async fn k8_watch_events_to_metadata_actions<S, E>(
     stream: TokenStreamResult<S::K8Spec, E>,
     local_store: &LocalStore<S,K8MetaItem>,
-) -> Actions<LSChange<S>>
+) -> Actions<LSChange<S,K8MetaItem>>
 where
     S: K8ExtendedSpec + PartialEq,
     S::IndexKey: Display,
@@ -144,14 +144,14 @@ where
     S::K8Spec: Into<S>,
 {
     let (mut add_cnt, mut mod_cnt, mut del_cnt, mut skip_cnt) = (0, 0, 0, 0);
-    let mut actions: Actions<LSChange<S>> = Actions::default();
+    let mut actions: Actions<LSChange<S,K8MetaItem>> = Actions::default();
 
     // loop through items and generate add/mod actions
     for token in stream.unwrap() {
         match token {
             Ok(watch_obj) => match watch_obj {
                 K8Watch::ADDED(k8_obj) => {
-                    let converted: Result<MetadataStoreObject<S>, ScServerError> =
+                    let converted: Result<MetadataStoreObject<S,K8MetaItem>, ScServerError> =
                         k8_obj_to_kv_obj(k8_obj); // help out compiler
                     match converted {
                         Ok(new_kv_value) => {
@@ -185,7 +185,7 @@ where
                     }
                 }
                 K8Watch::MODIFIED(k8_obj) => {
-                    let converted: Result<MetadataStoreObject<S>, ScServerError> =
+                    let converted: Result<MetadataStoreObject<S,K8MetaItem>, ScServerError> =
                         k8_obj_to_kv_obj(k8_obj); // help out compiler
                     match converted {
                         Ok(new_kv_value) => {

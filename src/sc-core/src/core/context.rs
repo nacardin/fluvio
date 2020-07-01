@@ -23,7 +23,7 @@ pub struct Context {
     spus: Arc<SpuAdminStore>,
     partitions: Arc<PartitionAdminStore>,
     topics: Arc<TopicAdminStore>,
-    spgs: Arc<SpuAdminStore>,
+    spgs: Arc<SpgAdminStore>,
     config: ScConfig,
 }
 

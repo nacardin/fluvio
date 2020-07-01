@@ -207,7 +207,7 @@ impl TopicStatus {
         self.resolution == TopicResolution::Provisioned
     }
 
-    pub fn next_resolution_provisoned() -> (TopicResolution, String) {
+    pub fn next_resolution_provisioned() -> (TopicResolution, String) {
         (TopicResolution::Provisioned, "".to_owned())
     }
 

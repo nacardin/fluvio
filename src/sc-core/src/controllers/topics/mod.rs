@@ -5,6 +5,7 @@ mod policy;
 
 pub use self::actions::*;
 pub use self::controller::*;
+pub use self::policy::*;
 pub use common::*;
 
 mod common {

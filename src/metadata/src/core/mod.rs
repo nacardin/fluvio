@@ -35,6 +35,10 @@ mod context {
             &self.item
         }
 
+        pub fn item_owned(self) -> C {
+            self.item
+        }
+
         pub fn owner(&self) -> Option<&C> {
             self.owner.as_ref()
         }
@@ -47,9 +51,9 @@ mod context {
         where C: MetadataItem
     {
 
-        pub fn create_child(&self,child_context: C) -> Self {
+        pub fn create_child(&self) -> Self {
             Self {
-                item: child_context,
+                item:  C::default(),
                 owner: Some(self.item.clone())
             }
         }

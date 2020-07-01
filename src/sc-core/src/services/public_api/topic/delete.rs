@@ -26,20 +26,18 @@ where
     debug!("api request: delete topic '{}'", topic_name);
 
     let status = if let Some(topic) = ctx.context().topics().topic(&topic_name).await {
-        if let Some(item_ctx) = &topic.kv_ctx().item_ctx {
-            let item = item_ctx.as_input();
-            if let Err(err) = ctx.k8_client().delete_item::<TopicSpec, _>(&item).await {
-                FlvStatus::new(
-                    topic_name.clone(),
-                    FlvErrorCode::TopicError,
-                    Some(err.to_string()),
-                )
-            } else {
-                FlvStatus::new_ok(topic_name.clone())
-            }
+        
+        let item = topic.ctx().item().as_input();
+        if let Err(err) = ctx.k8_client().delete_item::<TopicSpec, _>(&item).await {
+            FlvStatus::new(
+                topic_name.clone(),
+                FlvErrorCode::TopicError,
+                Some(err.to_string()),
+            )
         } else {
             FlvStatus::new_ok(topic_name.clone())
         }
+        
     } else {
         // topic does not exist
         FlvStatus::new(
