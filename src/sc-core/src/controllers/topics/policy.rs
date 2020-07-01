@@ -1,10 +1,25 @@
+use std::ops::Deref;
+use std::fmt;
+
+use log::debug;
+use log::warn;
+use log::trace;
+
+use flv_types::*;
+use flv_metadata::topic::store::*;
+use flv_metadata::topic::*;
+use flv_metadata::partition::*;
+
+use crate::stores::topic::*;
+use crate::stores::partition::*;
+use crate::stores::spu::*;
 
 /// Our custom topic server
-pub struct TopicPolicyEngine(TopicMetadata<K8MetaItem>);
+pub struct TopicPolicyEngine(TopicAdminMd);
 
 
 impl Deref for TopicPolicyEngine {
-    type Target = TopicMetadata<K8MetaItem>;
+    type Target = TopicAdminMd;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -175,7 +190,7 @@ impl TopicPolicyEngine {
         &self,
         partition_store: &PartitionAdminStore,
     ) -> Vec<PartitionAdminMd> {
-        let parent_kv_ctx = self.kv_ctx.make_parent_ctx();
+        let parent_kv_ctx = self.0.ctx().make_parent_ctx();
 
         let mut partitions = vec![];
         for (idx, replicas) in self.status.replica_map.iter() {
@@ -184,7 +199,7 @@ impl TopicPolicyEngine {
             if !partition_store.contains_key(&replica_key).await {
                 partitions.push(
                     PartitionAdminMd::with_spec(replica_key, replicas.clone().into())
-                        .with_kv_ctx(parent_kv_ctx.clone()),
+                        .with_context(parent_kv_ctx.clone()),
                 )
             }
         }

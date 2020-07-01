@@ -177,7 +177,7 @@ impl TopicReducer {
     }
 
     /// process kv
-    async fn process_spu_kv(&self, request: LSChange<SpuSpec,K8MetaContext>, actions: &mut TopicActions) {
+    async fn process_spu_kv(&self, request: LSChange<SpuSpec,K8MetaItem>, actions: &mut TopicActions) {
         match request {
             LSChange::Add(new_spu) => {
                 debug!("processing SPU add: {}", new_spu);
