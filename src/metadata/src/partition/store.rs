@@ -12,6 +12,7 @@ use log::debug;
 use flv_types::SpuId;
 
 use crate::store::*;
+use crate::core::*;
 use super::*;
 
 pub type SharedPartitionStore<C> = Arc<PartitionLocalStore<C>>;
@@ -25,7 +26,7 @@ pub type DefaultPartitionLocalStore = PartitionLocalStore<String>;
 
 
 impl <C>PartitionMetadata<C> 
-    where C: Clone + Debug + Default
+    where C: MetadataItem
 {
     /// create new partition with replica map.
     /// first element of replicas is leader
@@ -38,7 +39,7 @@ impl <C>PartitionMetadata<C>
 impl<S,C> From<((S, i32), Vec<i32>)> for PartitionMetadata<C>
 where
     S: Into<String>,
-    C: Clone + Debug + Default
+    C: MetadataItem
 {
     fn from(partition: ((S, i32), Vec<i32>)) -> Self {
         let (replica_key, replicas) = partition;
@@ -52,7 +53,7 @@ where
 // -----------------------------------
 
 impl <C>PartitionLocalStore<C> 
-    where C: Clone + Debug
+    where C: MetadataItem
 {
     pub async fn names(&self) -> Vec<ReplicaKey> {
         self.read().await.keys().cloned().collect()
@@ -183,7 +184,7 @@ impl <C>PartitionLocalStore<C>
 impl<C,S> From<Vec<((S, i32), Vec<i32>)>> for PartitionLocalStore<C>
 where
     S: Into<String>,
-    C: Clone + Debug + Default
+    C: MetadataItem
 {
     fn from(partitions: Vec<((S, i32), Vec<i32>)>) -> Self {
         let elements = partitions

@@ -11,6 +11,18 @@ pub struct Replica {
     pub replicas: Vec<SpuId>,
 }
 
+
+impl Replica {
+    pub fn new(id: ReplicaKey, leader: SpuId, replicas: Vec<SpuId>) -> Self {
+        Replica {
+            id,
+            leader,
+            replicas,
+        }
+    }
+}
+
+
 impl fmt::Display for Replica {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{} leader: {} replicas: [", self.id, self.leader)?;

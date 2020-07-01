@@ -16,7 +16,3 @@ pub use self::requests::update_all::*;
 use kf_protocol::api::RequestMessage;
 
 pub type UpdateSpuRequestMessage = RequestMessage<UpdateSpuRequest>;
-
-pub mod messages {
-    pub use flv_metadata::api::*;
-}

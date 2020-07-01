@@ -6,15 +6,15 @@
 use std::collections::BTreeMap;
 use std::collections::HashSet;
 use std::iter::FromIterator;
-use std::fmt::Debug;
 use std::io::Error as IoError;
 use std::io::ErrorKind;
 use std::sync::Arc;
 
 use flv_types::SpuId;
+
 use crate::spu::*;
 use crate::store::*;
-
+use crate::core::*;
 
 pub type SharedSpuLocalStore<C> = Arc<SpuLocalStore<C>>;
 
@@ -30,7 +30,7 @@ pub type DefaultSpuStore = SpuLocalStore<String>;
 // -----------------------------------
 
 impl <C>SpuMetadata<C>
-    where C: Clone + Debug
+    where C: MetadataItem
  {
     //
     // Accessors
@@ -64,7 +64,7 @@ impl <C>SpuMetadata<C>
 impl<C,J> From<(J, i32, bool, Option<String>)> for SpuMetadata<C>
 where
     J: Into<String>,
-    C: Clone + Debug + Default
+    C: MetadataItem
 {
     fn from(spu: (J, i32, bool, Option<String>)) -> Self {
         let mut spec = SpuSpec::default();
@@ -87,7 +87,7 @@ pub type SpuLocalStore<C> = LocalStore<SpuSpec,C>;
 // -----------------------------------
 
 impl <C>SpuLocalStore<C> 
-    where C: Clone + Debug
+    where C: MetadataItem
 {
     /// update the spec
     pub async fn update_spec(&self, name: &str, other_spu: &SpuMetadata<C>) -> Result<(), IoError> {
@@ -355,7 +355,7 @@ impl <C>SpuLocalStore<C>
 }
 
 impl <C>From<Vec<(i32, bool, Option<String>)>> for SpuLocalStore<C> 
-    where C: Clone + Debug + Default
+    where C: MetadataItem
 {
     fn from(spus: Vec<(i32, bool, Option<String>)>) -> Self {
         let elements = spus

@@ -4,7 +4,6 @@ mod update_spu;
 
 
 pub use update_all::*;
-pub use replica::*;
 pub use update_replica::*;
 pub use update_spu::*;
 pub use request::*;

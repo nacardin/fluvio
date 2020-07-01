@@ -5,7 +5,7 @@ use kf_protocol::derive::Decode;
 use kf_protocol::derive::Encode;
 use flv_metadata::partition::ReplicaKey;
 use flv_metadata::spu::SpuSpec;
-use flv_metadata::api::Replica;
+use flv_metadata::partition::Replica;
 use flv_types::SpuId;
 
 use crate::InternalSpuApi;

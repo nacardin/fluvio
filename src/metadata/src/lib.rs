@@ -6,6 +6,7 @@ pub mod partition;
 pub mod spg;
 pub mod core;
 pub mod store;
+pub mod message;
 
 #[cfg(feature = "k8")]
 pub mod k8 {

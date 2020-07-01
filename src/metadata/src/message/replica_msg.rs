@@ -13,7 +13,7 @@ use std::fmt;
 use kf_protocol::derive::{Decode, Encode};
 use flv_types::SpuId;
 
-use crate::partition::ReplicaKey;
+use crate::partition::*;
 
 use super::MsgType;
 use super::Message;
@@ -68,16 +68,3 @@ impl ReplicaMsg {
     }
 }
 
-// -----------------------------------
-// Replica
-// -----------------------------------
-
-impl Replica {
-    pub fn new(id: ReplicaKey, leader: SpuId, replicas: Vec<SpuId>) -> Self {
-        Replica {
-            id,
-            leader,
-            replicas,
-        }
-    }
-}

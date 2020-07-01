@@ -3,11 +3,9 @@ use std::collections::BTreeMap;
 
 use kf_protocol::derive::Decode;
 use kf_protocol::derive::Encode;
-use flv_metadata::partition::ReplicaKey;
+use flv_metadata::partition::*;
 use flv_metadata::spu::SpuSpec;
 use flv_types::SpuId;
-
-use super::replica::ReplicaLeader;
 
 
 /// All specs.  Listener can use this to sync their own metadata store.

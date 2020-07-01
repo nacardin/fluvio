@@ -24,22 +24,16 @@ use chashmap::WriteGuard;
 
 use flv_future_aio::sync::broadcast::Sender;
 use flv_metadata::spu::SpuSpec;
-use flv_metadata::partition::PartitionSpec;
-use flv_metadata::partition::ReplicaKey;
-use kf_socket::SinkPool;
-use kf_socket::KfSink;
+use flv_metadata::partition::*;
+use kf_socket::*;
 use flv_types::SpuId;
 use flv_types::log_on_err;
 use flv_util::actions::Actions;
-use internal_api::messages::SpuMsg;
-use internal_api::messages::Replica;
-use internal_api::messages::ReplicaMsg;
-use internal_api::messages::ReplicaMsgs;
+use flv_metadata::message::*;
 use internal_api::UpdateSpuRequest;
 use internal_api::UpdateReplicaRequest;
 use internal_api::UpdateAllRequest;
-use kf_protocol::api::Request;
-use kf_protocol::api::RequestMessage;
+use kf_protocol::api::*;
 use sc_api::metadata::*;
 
 use crate::stores::partition::*;
@@ -71,8 +65,8 @@ pub type SharedConnManager = Arc<ConnManager>;
 /// Unlikely controller, it doesn't have own independent task lifecyle (maybe should?)
 #[derive(Debug)]
 pub struct ConnManager {
-    spu_store: Arc<K8SpuLocalStore>,
-    partition_store: Arc<K8PartitionLocalStore>,
+    spu_store: Arc<SpuAdminStore>,
+    partition_store: Arc<PartitionAdminStore>,
     sinks: SinkPool<SpuId>,
     client_sender: Sender<ClientNotification>
 }
@@ -92,8 +86,8 @@ impl ConnManager {
 
     /// internal connection manager constructor
     pub fn new(
-        spu_store: Arc<K8SpuLocalStore>, 
-        partition_store: Arc<K8PartitionLocalStore>,
+        spu_store: Arc<SpuAdminStore>, 
+        partition_store: Arc<PartitionAdminStore>,
         client_sender: Sender<ClientNotification>
     ) -> Self {
         ConnManager {

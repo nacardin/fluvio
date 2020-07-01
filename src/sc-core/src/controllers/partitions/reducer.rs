@@ -12,18 +12,12 @@ use log::warn;
 
 use flv_types::log_on_err;
 use flv_metadata::k8::metadata::ObjectMeta;
-use flv_metadata::partition::PartitionSpec;
-use flv_metadata::partition::PartitionResolution;
-use flv_metadata::partition::PartitionStatus;
-use flv_metadata::partition::ReplicaStatus;
-use flv_metadata::partition::ElectionPolicy;
-use flv_metadata::partition::ElectionScoring;
+use flv_metadata::partition::*;
+use flv_metadata::store::actions::*;
 use internal_api::UpdateLrsRequest;
 
 use crate::controllers::conn_manager::ConnectionRequest;
 use crate::controllers::conn_manager::PartitionSpecChange;
-use crate::stores::actions::LSChange;
-use crate::stores::actions::WSAction;
 use crate::stores::partition::*;
 use crate::stores::spu::*;
 use crate::ScServerError;
@@ -69,15 +63,15 @@ type PartitionWSAction = WSAction<PartitionSpec,ObjectMeta>;
 /// have different leader because Topic0-0 already is using spu 0.
 #[derive(Debug)]
 pub struct PartitionReducer {
-    partition_store: Arc<K8PartitionLocalStore>,
-    spu_store: Arc<K8SpuLocalStore>,
+    partition_store: Arc<PartitionAdminStore>,
+    spu_store: Arc<SpuAdminStore>,
 }
 
 impl Default for PartitionReducer {
     fn default() -> Self {
         Self {
-            partition_store: PartitionLocalStore::new_shared(),
-            spu_store: SpuLocalStore::new_shared(),
+            partition_store: PartitionAdminStore::new_shared(),
+            spu_store: SpuAdminStore::new_shared(),
         }
     }
 }
@@ -85,8 +79,8 @@ impl Default for PartitionReducer {
 impl PartitionReducer {
     pub fn new<A, B>(partition_store: A, spu_store: B) -> Self
     where
-        A: Into<Arc<K8PartitionLocalStore>>,
-        B: Into<Arc<K8SpuLocalStore>>,
+        A: Into<Arc<PartitionAdminStore>>,
+        B: Into<Arc<SpuAdminStore>>,
     {
         Self {
             partition_store: partition_store.into(),

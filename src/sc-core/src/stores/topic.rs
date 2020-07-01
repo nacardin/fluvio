@@ -33,6 +33,15 @@ pub type TopicLocalStore<C> = LocalStore<TopicSpec,C>;
 pub type DefaultTopicMd = TopicMetadata<String>;
 pub type DefaultTopicLocalStore = TopicLocalStore<String>;
 
+
+
+impl K8ExtendedSpec for TopicSpec {
+    type K8Spec = Self;
+    type K8Status = Self::Status;
+}
+
+
+
 /// values for next state
 #[derive(Default, Debug)]
 pub struct TopicNextState {
@@ -86,34 +95,6 @@ impl From<((TopicResolution, String), Vec<K8SpuMetadata>)> for TopicNextState {
 
 
 
-// -----------------------------------
-// Topic - Traits
-// -----------------------------------
-
-impl <C>std::fmt::Display for TopicMetadata<C> {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match &self.spec {
-            TopicSpec::Assigned(partition_map) => write!(f, "assigned::{}", partition_map),
-            TopicSpec::Computed(param) => write!(f, "computed::({})", param),
-        }
-    }
-}
-
-
-impl<C> TopicMetadata<C> {
-    pub fn is_provisioned(&self) -> bool {
-        self.status.is_resolution_provisioned()
-    }
-
-    pub fn replica_map(&self) -> &ReplicaMap {
-        &self.status.replica_map
-    }
-
-    pub fn reason(&self) -> &String {
-        &self.status.reason
-    }
-}
-
 
 impl K8TopicMd {
     pub fn same_next_state(&self) -> TopicNextState {
@@ -123,7 +104,7 @@ impl K8TopicMd {
         }
     }
 
-    /// update our state with next state, return remaining partiton kv changes
+    /// update our state with next state, return remaining partition kv changes
     pub fn apply_next_state(&mut self, next_state: TopicNextState) -> Vec<K8PartitionMd> {
         self.status.resolution = next_state.resolution;
         self.status.reason = next_state.reason;

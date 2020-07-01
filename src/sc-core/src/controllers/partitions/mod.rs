@@ -11,8 +11,7 @@ mod common {
     use ::flv_metadata::partition::PartitionSpec;
     use flv_metadata::k8::metadata::ObjectMeta;
 
-    use crate::stores::actions::WSAction;
-    use crate::stores::actions::LSChange;
+    use flv_metadata::store::actions::*;
     use crate::metadata::K8ClusterStateDispatcher;
     
 

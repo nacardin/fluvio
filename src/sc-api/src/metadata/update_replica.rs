@@ -1,11 +1,8 @@
 use kf_protocol::derive::Decode;
 use kf_protocol::derive::Encode;
-use flv_metadata::api::*;
+use flv_metadata::message::*;
+use flv_metadata::partition::*;
 
-
-use super::replica::ReplicaLeader;
-
-pub type ReplicaMsg = Message<ReplicaLeader>;
 
 /// Changes in the Replica Specs
 #[derive(Decode, Encode, Debug, Clone, Default)]

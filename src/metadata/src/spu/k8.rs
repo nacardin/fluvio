@@ -24,10 +24,3 @@ impl Spec for SpuSpec {
 }
 
 impl Status for SpuStatus {}
-
-use crate::core::K8ExtendedSpec;
-
-impl K8ExtendedSpec for SpuSpec {
-    type K8Spec  = Self;
-    type K8Status = Self::Status;
-}

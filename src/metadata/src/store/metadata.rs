@@ -1,5 +1,3 @@
-use std::fmt;
-use std::fmt::Display;
 use std::fmt::Debug;
 
 use crate::core::*;
@@ -12,7 +10,7 @@ use crate::core::*;
 pub struct MetadataStoreObject<S,C>
 where
     S: Spec,
-    C: Clone + Debug
+    C: MetadataItem
 {
     pub spec: S,
     pub status: S::Status,
@@ -23,7 +21,7 @@ where
 impl<S,C> MetadataStoreObject<S,C>
 where
     S: Spec,
-    C: Clone + Debug
+    C: MetadataItem
 {
     pub fn new<J>(key: J, spec: S, status: S::Status) -> Self
     where
@@ -109,21 +107,11 @@ where
     }
 }
 
-impl<S,C> fmt::Display for MetadataStoreObject<S,C>
-where
-    S: Spec,
-    S::IndexKey: Display,
-    C: Clone + Debug
-{
-    default fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "KV {} key: {}", S::LABEL, self.key())
-    }
-}
 
 impl<S,C> Into<(S::IndexKey, S, S::Status)> for MetadataStoreObject<S,C>
 where
     S: Spec,
-    C: Clone + Debug
+    C: MetadataItem
 {
     fn into(self) -> (S::IndexKey, S, S::Status) {
         (self.key, self.spec, self.status)

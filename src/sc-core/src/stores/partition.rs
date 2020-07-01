@@ -1,24 +1,20 @@
 
-use std::sync::Arc;
 
-use log::debug;
-
-use internal_api::messages::Replica;
-use flv_metadata::partition::ReplicaKey;
-use flv_metadata::k8::metadata::ObjectMeta;
-use flv_metadata::partition::{PartitionSpec, PartitionStatus};
-use flv_types::SpuId;
-use sc_api::metadata::*;
+use flv_metadata::partition::store::*;
+use flv_metadata::partition::*;
 
 use super::*;
 
-pub type SharedPartitionStore<C> = Arc<PartitionLocalStore<C>>;
+pub type K8PartitionMd = PartitionMetadata<K8MetaContext>;
+type K8PartitionLocalStore = PartitionLocalStore<K8MetaContext>;
+
+pub type PartitionAdminStore = K8PartitionLocalStore;
 
 
-pub type PartitionMetadata<C> = MetadataStoreObject<PartitionSpec,C>;
-pub type K8PartitionMd = PartitionMetadata<ObjectMeta>;
-pub type DefaultPartitionMd = PartitionMetadata<String>;
-pub type PartitionLocalStore<C> = LocalStore<PartitionSpec,C>;
-pub type K8PartitionLocalStore = PartitionLocalStore<ObjectMeta>;
+use super::*;
 
 
+impl K8ExtendedSpec for PartitionSpec {
+    type K8Spec   = Self;
+    type K8Status = Self::Status;
+}

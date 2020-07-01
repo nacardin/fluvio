@@ -1,12 +1,20 @@
 use std::ops::Deref;
 
 use flv_metadata::spu::store::*;
-use flv_metadata::store::*;
 use flv_metadata::k8::metadata::ObjectMeta;
-use internal_api::messages::SpuMsg;
+use flv_metadata::message::*;
+
+use super::*;
 
 pub type K8SpuMetadata = SpuMetadata<ObjectMeta>;
-pub type K8SpuLocalStore = SpuLocalStore<ObjectMeta>;
+type K8SpuLocalStore = SpuLocalStore<ObjectMeta>;
+
+
+
+impl K8ExtendedSpec for SpuSpec {
+    type K8Spec  = Self;
+    type K8Status = Self::Status;
+}
 
 
 pub struct SpuAdminStore(K8SpuLocalStore);

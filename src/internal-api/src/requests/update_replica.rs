@@ -1,7 +1,7 @@
 use kf_protocol::derive::Decode;
 use kf_protocol::derive::Encode;
 use kf_protocol::api::Request;
-use flv_metadata::api::ReplicaMsgs;
+use flv_metadata::message::ReplicaMsgs;
 
 use crate::InternalSpuApi;
 

@@ -3,10 +3,9 @@ use std::fmt::Debug;
 use kf_protocol::derive::{Decode, Encode};
 use kf_protocol::api::Request;
 
-use flv_metadata::core::Spec;
+use flv_metadata::core::*;
 use flv_metadata::topic::TopicSpec;
-use flv_metadata::spu::SpuSpec;
-use flv_metadata::spu::CustomSpuSpec;
+use flv_metadata::spu::*;
 use flv_metadata::spg::SpuGroupSpec;
 use flv_metadata::store::*;
 use crate::AdminPublicApiKey;
@@ -85,7 +84,7 @@ impl<S,C> Into<Metadata<S>> for MetadataStoreObject<S,C>
 where
     S: Spec,
     S::IndexKey: Into<String>,
-    C: Clone + Debug
+    C: MetadataItem
 {
     fn into(self) -> Metadata<S> {
         Metadata {
@@ -100,7 +99,7 @@ impl<S,C> Into<Metadata<S>> for &MetadataStoreObject<S,C>
 where
     S: Spec,
     S::IndexKey: Into<String>,
-    C: Clone + Debug
+    C: MetadataItem
 {
     fn into(self) -> Metadata<S> {
         Metadata {
