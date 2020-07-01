@@ -33,7 +33,7 @@ pub struct SpuController<W> {
     conn_manager: SharedConnManager,
     ws_service: W,
     spu_reducer: SpuReducer,
-    lc_receiver: Receiver<Actions<LSChange<SpuSpec,K8MetaContext>>>,
+    lc_receiver: Receiver<Actions<LSChange<SpuSpec,K8MetaItem>>>,
     conn_receiver: Receiver<SpuConnectionStatusChange>,
     conn_sender: Sender<SpuConnectionStatusChange>,
 }

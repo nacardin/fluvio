@@ -55,7 +55,7 @@ where
         self.0.clone()
     }
 
-    pub async fn add<S>(&self, value: MetadataStoreObject<S,K8MetaContext>) -> Result<(), C::MetadataClientError>
+    pub async fn add<S>(&self, value: MetadataStoreObject<S,K8MetaItem>) -> Result<(), C::MetadataClientError>
     where
         S: K8ExtendedSpec + Into<<S as K8ExtendedSpec>::K8Spec>,
         <S as Spec>::Owner: K8ExtendedSpec,
@@ -101,7 +101,7 @@ where
     /// only update the status
     async fn update_status<S>(
         &self,
-        value: MetadataStoreObject<S,K8MetaContext>,
+        value: MetadataStoreObject<S,K8MetaItem>,
     ) -> Result<(), C::MetadataClientError>
     where
         S: K8ExtendedSpec,
@@ -145,7 +145,7 @@ where
     /// update both spec and status
     pub async fn update_spec<S>(
         &self,
-        value: MetadataStoreObject<S,K8MetaContext>,
+        value: MetadataStoreObject<S,K8MetaItem>,
     ) -> Result<(), C::MetadataClientError>
     where
         S: K8ExtendedSpec + Into<<S as K8ExtendedSpec>::K8Spec>,
@@ -180,7 +180,7 @@ where
         }
     }
 
-    async fn inner_process<S>(&self, action: WSAction<S,K8MetaContext>) -> Result<(), ScServerError>
+    async fn inner_process<S>(&self, action: WSAction<S,K8MetaItem>) -> Result<(), ScServerError>
     where
         S: K8ExtendedSpec + Into<<S as K8ExtendedSpec>::K8Spec>,
         S::IndexKey: Display,
@@ -205,13 +205,13 @@ impl<C> WSUpdateService for K8WSUpdateService<C>
 where
     C: MetadataClient,
 {
-    async fn update_spu(&self, ws_actions: WSAction<SpuSpec,K8MetaContext>) -> Result<(), ScServerError> {
+    async fn update_spu(&self, ws_actions: WSAction<SpuSpec,K8MetaItem>) -> Result<(), ScServerError> {
         let service = self.clone();
         service.inner_process(ws_actions).await?;
         Ok(())
     }
 
-    async fn update_topic(&self, ws_actions: WSAction<TopicSpec,K8MetaContext>) -> Result<(), ScServerError> {
+    async fn update_topic(&self, ws_actions: WSAction<TopicSpec,K8MetaItem>) -> Result<(), ScServerError> {
         let service = self.clone();
         service.inner_process(ws_actions).await?;
         Ok(())
@@ -219,7 +219,7 @@ where
 
     async fn update_partition(
         &self,
-        ws_actions: WSAction<PartitionSpec,K8MetaContext>,
+        ws_actions: WSAction<PartitionSpec,K8MetaItem>,
     ) -> Result<(), ScServerError> {
         let service = self.clone();
         service.inner_process(ws_actions).await?;

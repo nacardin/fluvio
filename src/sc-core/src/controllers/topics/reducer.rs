@@ -23,7 +23,7 @@ use crate::stores::topic::*;
 use crate::stores::partition::*;
 use crate::stores::spu::*;
 use crate::controllers::partitions::PartitionWSAction;
-use crate::stores::K8MetaContext;
+use crate::stores::K8MetaItem;
 use crate::ScServerError;
 
 use super::*;

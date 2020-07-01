@@ -73,7 +73,7 @@ where
     <<S as K8ExtendedSpec>::K8Spec as K8Spec>::Status: Into<S::Status>,
     S::K8Spec: Into<S>,
 {
-    pub fn new(namespace: String, client: SharedClient<C>, metadata: Arc<LocalStore<S,K8MetaContext>>) -> Self {
+    pub fn new(namespace: String, client: SharedClient<C>, metadata: Arc<LocalStore<S,K8MetaItem>>) -> Self {
         Self {
             namespace,
             client,
@@ -182,7 +182,7 @@ where
         Ok(version)
     }
 
-    async fn send_actions(&mut self, actions: Actions<LSChange<S,K8MetaContext>>) {
+    async fn send_actions(&mut self, actions: Actions<LSChange<S,K8MetaItem>>) {
         // for now do serially
         trace!(
             "sending {} LS Changes: {} to {} senders",

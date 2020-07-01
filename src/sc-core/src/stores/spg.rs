@@ -10,5 +10,5 @@ impl K8ExtendedSpec for SpuGroupSpec {
     type K8Status = Self::Status;
 }
 
-pub type  SpgAdminMd = SpuGroupMetadata<K8MetaContext>;
-pub type  SpgAdminStore = SpuGroupLocalStore<K8MetaContext>;
+pub type  SpgAdminMd = SpuGroupMetadata<K8MetaItem>;
+pub type  SpgAdminStore = SpuGroupLocalStore<K8MetaItem>;

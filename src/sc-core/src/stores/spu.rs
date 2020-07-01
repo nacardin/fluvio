@@ -2,13 +2,12 @@
 
 use flv_metadata::spu::store::*;
 use flv_metadata::spu::*;
-use flv_metadata::k8::metadata::ObjectMeta;
 
 
 use super::*;
 
-pub type SpuAdminMd = SpuMetadata<K8MetaContext>;
-pub type SpuAdminStore = SpuLocalStore<ObjectMeta>;
+pub type SpuAdminMd = SpuMetadata<K8MetaItem>;
+pub type SpuAdminStore = SpuLocalStore<K8MetaItem>;
 
 
 

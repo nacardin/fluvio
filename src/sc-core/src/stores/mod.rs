@@ -6,7 +6,7 @@ pub use k8::*;
 
 mod k8 {
 
-    use std::ops::Deref;
+    
 
 
     use std::io::Error as IoError;
@@ -23,21 +23,9 @@ mod k8 {
     use flv_metadata::store::*;
     use flv_metadata::core::*;
 
-    #[derive(Debug,Clone,PartialEq)]
-    pub struct K8MetaContext(ObjectMeta);
-
-
-    impl Deref for K8MetaContext {
-        type Target = ObjectMeta;
-
-        fn deref(&self) -> &Self::Target {
-            &self.0
-        }
-    }
-
-    pub type K8MetadataContext = MetadataContext<K8MetaContext>;
-
-    impl MetadataItem for K8MetaContext {}
+    pub type K8MetaItem = ObjectMeta;
+    pub type K8MetadataContext = MetadataContext<K8MetaItem>;
+ 
     
     pub trait K8ExtendedSpec: Spec
     {
@@ -46,7 +34,7 @@ mod k8 {
 
         fn convert_from_k8(
             k8_obj: K8Obj<Self::K8Spec>,
-        ) -> Result<MetadataStoreObject<Self,K8MetadataContext>, IoError>
+        ) -> Result<MetadataStoreObject<Self,K8MetaItem>, IoError>
         where
             Self::IndexKey: TryFrom<String> + Display,
             <Self::IndexKey as TryFrom<String>>::Error: Debug,

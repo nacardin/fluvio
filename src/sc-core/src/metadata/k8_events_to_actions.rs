@@ -31,7 +31,7 @@ use crate::ScServerError;
 ///
 pub async fn k8_events_to_metadata_actions<S>(
     k8_tokens: K8List<S::K8Spec>,
-    local_store: &LocalStore<S,K8MetaContext>,
+    local_store: &LocalStore<S,K8MetaItem>,
 ) -> Actions<LSChange<S>>
 where
     S: K8ExtendedSpec + PartialEq,
@@ -130,7 +130,7 @@ where
 ///
 pub async fn k8_watch_events_to_metadata_actions<S, E>(
     stream: TokenStreamResult<S::K8Spec, E>,
-    local_store: &LocalStore<S,K8MetaContext>,
+    local_store: &LocalStore<S,K8MetaItem>,
 ) -> Actions<LSChange<S>>
 where
     S: K8ExtendedSpec + PartialEq,
@@ -260,7 +260,7 @@ where
 ///
 /// Translates K8 object into Internal metadata object
 ///
-fn k8_obj_to_kv_obj<S>(k8_obj: K8Obj<S::K8Spec>) -> Result<MetadataStoreObject<S,K8MetaContext>, ScServerError>
+fn k8_obj_to_kv_obj<S>(k8_obj: K8Obj<S::K8Spec>) -> Result<MetadataStoreObject<S,K8MetaItem>, ScServerError>
 where
     S: K8ExtendedSpec,
     <S as Spec>::Owner: K8ExtendedSpec,

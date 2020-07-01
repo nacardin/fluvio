@@ -1,6 +1,9 @@
 pub use core_model::*;
 pub use context::*;
 
+#[cfg(feature = "k8")]
+pub use k8::*;
+
 mod context {
 
     use std::fmt::Debug;
@@ -53,8 +56,20 @@ mod context {
     }
 
 
+}
+
+
+#[cfg(feature = "k8")]
+pub mod k8 {
+
+    use crate::k8::metadata::ObjectMeta;
+
+    use super::*;
+
+    impl MetadataItem for ObjectMeta {}
 
 }
+
 
 mod core_model {
 
