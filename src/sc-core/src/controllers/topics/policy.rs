@@ -1,5 +1,3 @@
-use std::ops::Deref;
-use std::ops::DerefMut;
 use std::fmt;
 use std::collections::BTreeMap;
 
@@ -21,37 +19,6 @@ use crate::stores::spu::*;
 pub struct TopicPolicyEngine<'a>(&'a TopicAdminMd);
 
 
-impl Deref for TopicPolicyEngine<'_> {
-    type Target = TopicAdminMd;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl DerefMut for TopicPolicyEngine<'_> {
-  
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-
-/*
-impl<T> Deref for DerefMutExample<T> {
-    type Target = T;
-
-    fn deref(&self) -> &Self::Target {
-        &self.value
-    }
-}
-
-
-impl<T> DerefMut for DerefMutExample<T> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.value
-    }
-}
-*/
 
 impl <'a>TopicPolicyEngine<'a> {
 
@@ -61,17 +28,18 @@ impl <'a>TopicPolicyEngine<'a> {
 
     pub fn same_next_state(&self) -> TopicNextState {
         TopicNextState {
-            resolution: self.status.resolution.clone(),
+            resolution: self.0.status.resolution.clone(),
             ..Default::default()
         }
     }
 
     /// update our state with next state, return remaining partition kv changes
     pub fn apply_next_state(&mut self, next_state: TopicNextState) -> Vec<PartitionAdminMd> {
-        self.status.resolution = next_state.resolution;
-        self.status.reason = next_state.reason;
+       
+        self.0.status.resolution = next_state.resolution;
+        self.0.status.reason = next_state.reason;
         if next_state.replica_map.len() > 0 {
-            self.status.set_replica_map(next_state.replica_map);
+            self.0.status.set_replica_map(next_state.replica_map);
         }
         next_state.partitions
     }
@@ -82,9 +50,9 @@ impl <'a>TopicPolicyEngine<'a> {
         spu_store: &SpuAdminStore,
         partition_store: &PartitionAdminStore,
     ) -> TopicNextState {
-        match self.spec() {
+        match self.0.spec() {
             // Computed Topic
-            TopicSpec::Computed(ref param) => match self.status.resolution {
+            TopicSpec::Computed(ref param) => match self.0.status.resolution {
                 TopicResolution::Init | TopicResolution::InvalidConfig => {
                     self.validate_computed_topic_parameters(param)
                 }
@@ -93,9 +61,9 @@ impl <'a>TopicPolicyEngine<'a> {
                     if next_state.resolution == TopicResolution::Provisioned {
                         debug!(
                             "Topic: {} replica generate successfull, status is provisioned",
-                            self.key()
+                            self.0.key()
                         );
-                        next_state.partitions = self.create_new_partitions(partition_store).await;
+                        next_state.partitions = self.0.create_new_partitions(partition_store).await;
                         next_state
                     } else {
                         next_state
@@ -104,11 +72,11 @@ impl <'a>TopicPolicyEngine<'a> {
                 _ => {
                     debug!(
                         "topic: {} resolution: {:#?} ignoring",
-                        self.key, self.status.resolution
+                        self.0.key, self.0.status.resolution
                     );
                     let mut next_state = self.same_next_state();
                     if next_state.resolution == TopicResolution::Provisioned {
-                        next_state.partitions = self.create_new_partitions(partition_store).await;
+                        next_state.partitions = self.0.create_new_partitions(partition_store).await;
                         next_state
                     } else {
                         next_state
@@ -117,7 +85,7 @@ impl <'a>TopicPolicyEngine<'a> {
             },
 
             // Assign Topic
-            TopicSpec::Assigned(ref partition_map) => match self.status.resolution {
+            TopicSpec::Assigned(ref partition_map) => match self.0.status.resolution {
                 TopicResolution::Init | TopicResolution::InvalidConfig => {
                     self.validate_assigned_topic_parameters(partition_map)
                 }
@@ -125,7 +93,7 @@ impl <'a>TopicPolicyEngine<'a> {
                     let mut next_state = update_replica_map_for_assigned_topic(partition_map, spu_store)
                         .await;
                     if next_state.resolution == TopicResolution::Provisioned {
-                        next_state.partitions = self.create_new_partitions(partition_store).await;
+                        next_state.partitions = self.0.create_new_partitions(partition_store).await;
                         next_state
                     } else {
                         next_state
@@ -134,11 +102,11 @@ impl <'a>TopicPolicyEngine<'a> {
                 _ => {
                     debug!(
                         "assigned topic: {} resolution: {:#?} ignoring",
-                        self.key, self.status.resolution
+                        self.0.key, self.0.status.resolution
                     );
                     let mut next_state = self.same_next_state();
                     if next_state.resolution == TopicResolution::Provisioned {
-                        next_state.partitions = self.create_new_partitions(partition_store).await;
+                        next_state.partitions = self.0.create_new_partitions(partition_store).await;
                         next_state
                     } else {
                         next_state
@@ -154,15 +122,15 @@ impl <'a>TopicPolicyEngine<'a> {
     ///
     pub fn validate_computed_topic_parameters(&self, param: &TopicReplicaParam) -> TopicNextState {
         if let Err(err) = TopicSpec::valid_partition(&param.partitions) {
-            warn!("topic: {} partition config is invalid", self.key());
+            warn!("topic: {} partition config is invalid", self.0.key());
             TopicStatus::next_resolution_invalid_config(&err.to_string()).into()
         } else if let Err(err) = TopicSpec::valid_replication_factor(&param.replication_factor) {
-            warn!("topic: {} replication config is invalid", self.key());
+            warn!("topic: {} replication config is invalid", self.0.key());
             TopicStatus::next_resolution_invalid_config(&err.to_string()).into()
         } else {
             debug!(
                 "topic: {} config is valid, transition to pending",
-                self.key()
+                self.0.key()
             );
             TopicStatus::next_resolution_pending().into()
         }
