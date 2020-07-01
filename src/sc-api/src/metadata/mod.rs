@@ -1,5 +1,4 @@
 mod update_all;
-mod replica;
 mod update_replica;
 mod update_spu;
 

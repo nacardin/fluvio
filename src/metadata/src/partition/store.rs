@@ -5,33 +5,31 @@
 //!
 
 use std::sync::Arc;
+use std::fmt::Debug;
 
 use log::debug;
 
-use internal_api::messages::Replica;
-use flv_metadata::partition::ReplicaKey;
-use flv_metadata::k8::metadata::ObjectMeta;
-use flv_metadata::partition::{PartitionSpec, PartitionStatus};
 use flv_types::SpuId;
-use sc_api::metadata::*;
 
+use crate::store::*;
 use super::*;
 
 pub type SharedPartitionStore<C> = Arc<PartitionLocalStore<C>>;
 
 
 pub type PartitionMetadata<C> = MetadataStoreObject<PartitionSpec,C>;
-pub type K8PartitionMd = PartitionMetadata<ObjectMeta>;
-pub type DefaultPartitionMd = PartitionMetadata<String>;
 pub type PartitionLocalStore<C> = LocalStore<PartitionSpec,C>;
-pub type K8PartitionLocalStore = PartitionLocalStore<ObjectMeta>;
+pub type DefaultPartitionMd = PartitionMetadata<String>;
+pub type DefaultPartitionLocalStore = PartitionLocalStore<String>;
 
 // -----------------------------------
 // Partition - Implementation
 // -----------------------------------
 
-impl <C>PartitionMetadata<C> {
-    /// create new partiton with replica map.
+impl <C>PartitionMetadata<C> 
+    where C: Clone + Debug
+{
+    /// create new partition with replica map.
     /// first element of replicas is leader
     pub fn with_replicas(key: ReplicaKey, replicas: Vec<SpuId>) -> Self {
         let spec: PartitionSpec = replicas.into();
@@ -42,6 +40,7 @@ impl <C>PartitionMetadata<C> {
 impl<S,C> From<((S, i32), Vec<i32>)> for PartitionMetadata<C>
 where
     S: Into<String>,
+    C: Clone + Debug
 {
     fn from(partition: ((S, i32), Vec<i32>)) -> Self {
         let (replica_key, replicas) = partition;
@@ -54,7 +53,9 @@ where
 // Partitions - Implementation
 // -----------------------------------
 
-impl <C>PartitionLocalStore<C> {
+impl <C>PartitionLocalStore<C> 
+    where C: Clone + Debug
+{
     pub async fn names(&self) -> Vec<ReplicaKey> {
         self.read().await.keys().cloned().collect()
     }
@@ -109,35 +110,7 @@ impl <C>PartitionLocalStore<C> {
             .collect()
     }
 
-    /// replica msg for target spu
-    pub async fn replica_for_spu(&self, target_spu: SpuId) -> Vec<Replica> {
-        let msgs: Vec<Replica> = self
-            .partition_spec_for_spu(target_spu)
-            .await
-            .into_iter()
-            .map(|(replica_key, partition_spec)| {
-                Replica::new(replica_key, partition_spec.leader, partition_spec.replicas)
-            })
-            .collect();
-        debug!(
-            "{} computing replic msg for spuy: {}, msg: {}",
-            self,
-            target_spu,
-            msgs.len()
-        );
-        msgs
-    }
-
-    pub async fn leaders(&self) -> Vec<ReplicaLeader> {
-        self.read()
-            .await
-            .iter()
-            .map(|(key, value)| ReplicaLeader {
-                id: key.clone(),
-                leader: value.spec.leader,
-            })
-            .collect()
-    }
+    
 
     pub async fn table_fmt(&self) -> String {
         let mut table = String::new();
@@ -174,11 +147,44 @@ impl <C>PartitionLocalStore<C> {
             self.insert(partition).await;
         }
     }
+
+
+
+    /// replica msg for target spu
+    pub async fn replica_for_spu(&self, target_spu: SpuId) -> Vec<Replica> {
+        let msgs: Vec<Replica> = self
+            .partition_spec_for_spu(target_spu)
+            .await
+            .into_iter()
+            .map(|(replica_key, partition_spec)| {
+                Replica::new(replica_key, partition_spec.leader, partition_spec.replicas)
+            })
+            .collect();
+        debug!(
+            "{} computing replic msg for spuy: {}, msg: {}",
+            self,
+            target_spu,
+            msgs.len()
+        );
+        msgs
+    }
+
+    pub async fn leaders(&self) -> Vec<ReplicaLeader> {
+        self.read()
+            .await
+            .iter()
+            .map(|(key, value)| ReplicaLeader {
+                id: key.clone(),
+                leader: value.spec.leader,
+            })
+            .collect()
+    }
 }
 
 impl<C,S> From<Vec<((S, i32), Vec<i32>)>> for PartitionLocalStore<C>
 where
     S: Into<String>,
+    C: Clone + Debug
 {
     fn from(partitions: Vec<((S, i32), Vec<i32>)>) -> Self {
         let elements = partitions
@@ -193,11 +199,11 @@ where
 pub mod test {
 
     use flv_future_aio::test_async;
-    use super::PartitionLocalStore;
+    use super::*;
 
     #[test_async]
     async fn test_partitions_to_replica_msgs() -> Result<(), ()> {
-        let partitions: PartitionLocalStore = vec![(("topic1", 0), vec![10, 11, 12])].into();
+        let partitions: DefaultPartitionLocalStore = vec![(("topic1", 0), vec![10, 11, 12])].into();
         let replica_msg = partitions.replica_for_spu(10).await;
         assert_eq!(replica_msg.len(), 1);
         Ok(())

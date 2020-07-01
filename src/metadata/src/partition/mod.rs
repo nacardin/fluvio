@@ -1,11 +1,14 @@
 mod spec;
 mod status;
 mod policy;
+mod replica;
+pub mod store;
 
 pub use self::spec::*;
 pub use self::status::*;
 pub use kf_protocol::api::ReplicaKey;
 pub use self::policy::*;
+pub use self::replica::*;
 
 #[cfg(feature = "k8")]
 mod k8;
