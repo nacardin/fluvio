@@ -28,15 +28,15 @@ use flv_future_aio::timer::sleep;
 use flv_metadata::k8::metadata::K8List;
 use flv_metadata::k8::metadata::K8Watch;
 use flv_metadata::k8::metadata::Spec as K8Spec;
-use flv_metadata::core::K8ExtendedSpec;
-use flv_metadata::core::Spec;   
+use flv_metadata::store::actions::*;
+use flv_metadata::core::Spec;
+use flv_metadata::store::*;   
 use flv_metadata::k8::metadata::ObjectMeta;
 use k8_metadata_client::MetadataClient;
 use k8_metadata_client::SharedClient;
 
 use crate::core::common::new_channel;
 use crate::stores::*;
-use crate::stores::actions::*;
 use crate::core::WSChangeChannel;
 
 use super::k8_events_to_actions::k8_events_to_metadata_actions;
@@ -73,7 +73,7 @@ where
     <<S as K8ExtendedSpec>::K8Spec as K8Spec>::Status: Into<S::Status>,
     S::K8Spec: Into<S>,
 {
-    pub fn new(namespace: String, client: SharedClient<C>, metadata: Arc<LocalStore<S>>) -> Self {
+    pub fn new(namespace: String, client: SharedClient<C>, metadata: Arc<LocalStore<S,K8MetaContext>>) -> Self {
         Self {
             namespace,
             client,
@@ -182,7 +182,7 @@ where
         Ok(version)
     }
 
-    async fn send_actions(&mut self, actions: Actions<LSChange<S>>) {
+    async fn send_actions(&mut self, actions: Actions<LSChange<S,K8MetaContext>>) {
         // for now do serially
         trace!(
             "sending {} LS Changes: {} to {} senders",

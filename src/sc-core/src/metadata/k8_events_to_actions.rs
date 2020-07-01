@@ -15,13 +15,13 @@ use flv_util::actions::Actions;
 use flv_metadata::k8::metadata::K8List;
 use flv_metadata::k8::metadata::K8Obj;
 use flv_metadata::k8::metadata::K8Watch;
-use flv_metadata::core::K8ExtendedSpec;
+use flv_metadata::store::actions::*;
 use flv_metadata::core::Spec;
+use flv_metadata::store::*;
 use k8_obj_metadata::Spec as K8Spec;
 use k8_metadata_client::*;
 
 use crate::stores::*;
-use crate::core::common::LSChange;
 use crate::ScServerError;
 
 ///
@@ -31,10 +31,10 @@ use crate::ScServerError;
 ///
 pub async fn k8_events_to_metadata_actions<S>(
     k8_tokens: K8List<S::K8Spec>,
-    local_store: &LocalStore<S>,
+    local_store: &LocalStore<S,K8MetaContext>,
 ) -> Actions<LSChange<S>>
 where
-    S: StoreSpec + PartialEq,
+    S: K8ExtendedSpec + PartialEq,
     <S as Spec>::Owner: K8ExtendedSpec,
     S::Status: PartialEq,
     <S::IndexKey as TryFrom<String>>::Error: Debug,
@@ -130,10 +130,10 @@ where
 ///
 pub async fn k8_watch_events_to_metadata_actions<S, E>(
     stream: TokenStreamResult<S::K8Spec, E>,
-    local_store: &LocalStore<S>,
+    local_store: &LocalStore<S,K8MetaContext>,
 ) -> Actions<LSChange<S>>
 where
-    S: StoreSpec + PartialEq,
+    S: K8ExtendedSpec + PartialEq,
     S::IndexKey: Display,
     <S as Spec>::Owner: K8ExtendedSpec,
     S::Status: PartialEq,
@@ -260,9 +260,9 @@ where
 ///
 /// Translates K8 object into Internal metadata object
 ///
-fn k8_obj_to_kv_obj<S>(k8_obj: K8Obj<S::K8Spec>) -> Result<MetadataStoreObject<S>, ScServerError>
+fn k8_obj_to_kv_obj<S>(k8_obj: K8Obj<S::K8Spec>) -> Result<MetadataStoreObject<S,K8MetaContext>, ScServerError>
 where
-    S: StoreSpec,
+    S: K8ExtendedSpec,
     <S as Spec>::Owner: K8ExtendedSpec,
     <S::IndexKey as TryFrom<String>>::Error: Debug,
     S::IndexKey: TryFrom<String> + Display,
@@ -286,13 +286,13 @@ pub mod test {
     use flv_metadata::k8::metadata::K8List;
     use flv_metadata::k8::metadata::K8Obj;
     use flv_metadata::k8::metadata::K8Watch;
+    use flv_metadata::store::actions::*;
     use k8_metadata_client::as_token_stream_result;
     use k8_metadata_client::DoNothingError;
     use flv_future_aio::test_async;
 
     //use k8_metadata::core::metadata::K8Watch;
     //use k8_metadata::core::Spec as K8Spec;
-    use crate::core::common::LSChange;
     use crate::stores::topic::*;
 
     use super::k8_events_to_metadata_actions;
@@ -310,7 +310,7 @@ pub mod test {
             .items
             .push(K8Topic::new("topic1", TopicSpec::default()));
 
-        let topic_store = TopicLocalStore::default();
+        let topic_store = TopicAdminStore::default();
 
         let kv_actions = k8_events_to_metadata_actions(topics, &topic_store).await;
 
@@ -338,7 +338,7 @@ pub mod test {
             .items
             .push(K8Topic::new("topic1", TopicSpec::default()));
 
-        let topic_store = TopicLocalStore::default();
+        let topic_store = TopicAdminStore::default();
         let topic_kv =
             k8_obj_to_kv_obj(K8Topic::new("topic1", TopicSpec::default())).expect("work");
         topic_store.insert(topic_kv).await;
@@ -359,7 +359,7 @@ pub mod test {
         let mut topics = TopicList::new();
         topics.items.push(new_topic.clone());
 
-        let topic_store = TopicLocalStore::default();
+        let topic_store = TopicAdminStore::default();
         let old_kv = k8_obj_to_kv_obj(old_topic).expect("conversion");
         topic_store.insert(old_kv.clone()).await;
 
@@ -384,7 +384,7 @@ pub mod test {
     async fn test_items_delete() -> Result<(), ()> {
         let topics = TopicList::new();
 
-        let topic_store = TopicLocalStore::default();
+        let topic_store = TopicAdminStore::default();
         let topic_kv =
             k8_obj_to_kv_obj(K8Topic::new("topic1", TopicSpec::default())).expect("work");
         topic_store.insert(topic_kv).await;
@@ -410,7 +410,7 @@ pub mod test {
         let mut watches = vec![];
         watches.push(K8TopicWatch::ADDED(new_topic.clone()));
 
-        let topic_store = TopicLocalStore::default();
+        let topic_store = TopicAdminStore::default();
 
         let kv_actions = k8_watch_events_to_metadata_actions::<_, DoNothingError>(
             as_token_stream_result(watches),

@@ -66,7 +66,7 @@ where
 /// Generate for delete custom spu operation and return result.
 pub async fn unregister_custom_spu<C>(
     ctx: &PublicContext<C>,
-    spu: &SpuKV,
+    spu: &SpuAdminMd,
 ) -> Result<FlvStatus, Error>
 where
     C: MetadataClient,

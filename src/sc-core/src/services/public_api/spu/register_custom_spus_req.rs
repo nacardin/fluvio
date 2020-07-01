@@ -8,7 +8,6 @@ use std::io::Error;
 
 use kf_protocol::api::FlvErrorCode;
 
-use flv_metadata::core::*;
 use k8_metadata_client::MetadataClient;
 use flv_metadata::k8::metadata::ObjectMeta;
 use sc_api::FlvStatus;
@@ -99,7 +98,7 @@ where
     let meta = ObjectMeta::new(name.clone(), &ctx.namespace);
     let spu_spec: SpuSpec = spu_spec.into();
     let kv_ctx = K8MetadataContext::default().with_ctx(meta);
-    let custom_spu_kv = K8SpuMetadata::new_with_context(name.clone(), spu_spec, kv_ctx);
+    let custom_spu_kv = SpuAdminMd::new_with_context(name.clone(), spu_spec, kv_ctx);
 
     ctx.k8_ws().add(custom_spu_kv).await
 }

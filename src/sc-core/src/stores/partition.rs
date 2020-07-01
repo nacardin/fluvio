@@ -9,8 +9,6 @@ pub type PartitionAdminMd = PartitionMetadata<K8MetaContext>;
 pub type PartitionAdminStore = PartitionLocalStore<K8MetaContext>;
 
 
-use super::*;
-
 
 impl K8ExtendedSpec for PartitionSpec {
     type K8Spec   = Self;

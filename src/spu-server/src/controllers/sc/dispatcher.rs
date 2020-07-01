@@ -25,7 +25,7 @@ use internal_api::RegisterSpuRequest;
 use internal_api::UpdateSpuRequest;
 use internal_api::UpdateReplicaRequest;
 use internal_api::UpdateAllRequest;
-use internal_api::messages::Replica;
+use flv_metadata::partition::Replica;
 use kf_protocol::api::RequestMessage;
 use kf_socket::KfSocket;
 use kf_socket::KfSocketError;

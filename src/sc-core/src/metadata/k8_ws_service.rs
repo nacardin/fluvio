@@ -17,8 +17,9 @@ use flv_metadata::topic::TopicSpec;
 use flv_metadata::partition::PartitionSpec;
 use flv_metadata::spu::SpuSpec;
 use flv_metadata::k8::metadata::InputK8Obj;
-use flv_metadata::core::K8ExtendedSpec;
 use flv_metadata::core::Spec;
+use flv_metadata::store::actions::*;
+use flv_metadata::store::*;
 use flv_types::log_on_err;
 use flv_metadata::k8::metadata::Spec as K8Spec;
 use flv_metadata::k8::metadata::UpdateK8ObjStatus;
@@ -28,7 +29,7 @@ use k8_metadata_client::SharedClient;
 use crate::ScServerError;
 use crate::stores::*;
 use crate::core::WSUpdateService;
-use crate::core::common::WSAction;
+
 
 pub struct K8WSUpdateService<C>(SharedClient<C>);
 
@@ -54,9 +55,9 @@ where
         self.0.clone()
     }
 
-    pub async fn add<S>(&self, value: MetadataStoreObject<S>) -> Result<(), C::MetadataClientError>
+    pub async fn add<S>(&self, value: MetadataStoreObject<S,K8MetaContext>) -> Result<(), C::MetadataClientError>
     where
-        S: StoreSpec + Into<<S as K8ExtendedSpec>::K8Spec>,
+        S: K8ExtendedSpec + Into<<S as K8ExtendedSpec>::K8Spec>,
         <S as Spec>::Owner: K8ExtendedSpec,
         S::Status: PartialEq,
         S::IndexKey: Display,
@@ -100,10 +101,10 @@ where
     /// only update the status
     async fn update_status<S>(
         &self,
-        value: MetadataStoreObject<S>,
+        value: MetadataStoreObject<S,K8MetaContext>,
     ) -> Result<(), C::MetadataClientError>
     where
-        S: StoreSpec,
+        S: K8ExtendedSpec,
         S::IndexKey: Display,
         <S as Spec>::Owner: K8ExtendedSpec,
         S::Status: Display + Into<<<S as K8ExtendedSpec>::K8Spec as K8Spec>::Status>,
@@ -144,10 +145,10 @@ where
     /// update both spec and status
     pub async fn update_spec<S>(
         &self,
-        value: MetadataStoreObject<S>,
+        value: MetadataStoreObject<S,K8MetaContext>,
     ) -> Result<(), C::MetadataClientError>
     where
-        S: StoreSpec + Into<<S as K8ExtendedSpec>::K8Spec>,
+        S: K8ExtendedSpec + Into<<S as K8ExtendedSpec>::K8Spec>,
         <S as Spec>::Owner: K8ExtendedSpec,
         S::IndexKey: Display,
         S::Status: Into<<<S as K8ExtendedSpec>::K8Spec as K8Spec>::Status>,
@@ -179,9 +180,9 @@ where
         }
     }
 
-    async fn inner_process<S>(&self, action: WSAction<S>) -> Result<(), ScServerError>
+    async fn inner_process<S>(&self, action: WSAction<S,K8MetaContext>) -> Result<(), ScServerError>
     where
-        S: StoreSpec + Into<<S as K8ExtendedSpec>::K8Spec>,
+        S: K8ExtendedSpec + Into<<S as K8ExtendedSpec>::K8Spec>,
         S::IndexKey: Display,
         <S as Spec>::Owner: K8ExtendedSpec,
         S::Status: PartialEq + Display,
@@ -204,13 +205,13 @@ impl<C> WSUpdateService for K8WSUpdateService<C>
 where
     C: MetadataClient,
 {
-    async fn update_spu(&self, ws_actions: WSAction<SpuSpec>) -> Result<(), ScServerError> {
+    async fn update_spu(&self, ws_actions: WSAction<SpuSpec,K8MetaContext>) -> Result<(), ScServerError> {
         let service = self.clone();
         service.inner_process(ws_actions).await?;
         Ok(())
     }
 
-    async fn update_topic(&self, ws_actions: WSAction<TopicSpec>) -> Result<(), ScServerError> {
+    async fn update_topic(&self, ws_actions: WSAction<TopicSpec,K8MetaContext>) -> Result<(), ScServerError> {
         let service = self.clone();
         service.inner_process(ws_actions).await?;
         Ok(())
@@ -218,7 +219,7 @@ where
 
     async fn update_partition(
         &self,
-        ws_actions: WSAction<PartitionSpec>,
+        ws_actions: WSAction<PartitionSpec,K8MetaContext>,
     ) -> Result<(), ScServerError> {
         let service = self.clone();
         service.inner_process(ws_actions).await?;

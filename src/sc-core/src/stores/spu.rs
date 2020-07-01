@@ -1,9 +1,9 @@
-use std::ops::Deref;
+
 
 use flv_metadata::spu::store::*;
 use flv_metadata::spu::*;
 use flv_metadata::k8::metadata::ObjectMeta;
-use flv_metadata::message::*;
+
 
 use super::*;
 
@@ -17,10 +17,3 @@ impl K8ExtendedSpec for SpuSpec {
     type K8Status = Self::Status;
 }
 
-
-
-impl SpuAdminStore {
-
-    
-
-}

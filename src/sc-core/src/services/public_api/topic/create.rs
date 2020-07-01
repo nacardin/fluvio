@@ -15,7 +15,7 @@ use log::{debug, trace};
 
 use kf_protocol::api::FlvErrorCode;
 
-use flv_metadata::k8::metadata::ObjectMeta;
+use flv_metadata::core::*;
 use k8_metadata_client::MetadataClient;
 
 use sc_api::FlvStatus;
@@ -68,7 +68,7 @@ async fn validate_topic_request(
     }
 
     // create temporary topic status to return validation result
-    let topic_kv = TopicKV::with_spec(name.to_owned(), topic_spec.clone());
+    let topic_kv = TopicAdminMd::with_spec(name.to_owned(), topic_spec.clone());
     match topic_spec {
         TopicSpec::Computed(param) => {
             let next_state = topic_kv.validate_computed_topic_parameters(param);
@@ -146,9 +146,9 @@ async fn create_topic<C>(
 where
     C: MetadataClient,
 {
-    let meta = ObjectMeta::new(name.clone(), ctx.namespace.clone());
-    let kv_ctx = MetadataContext::default().with_ctx(meta);
-    let topic_kv = TopicKV::new_with_context(name, topic, kv_ctx);
+    let meta = K8MetaContext::new(name.clone(), ctx.namespace.clone());
+    let kv_ctx: MetadataContext= meta.into();
+    let topic_kv = TopicAdminMd::new_with_context(name, topic, kv_ctx);
 
     ctx.k8_ws().add(topic_kv).await
 }
