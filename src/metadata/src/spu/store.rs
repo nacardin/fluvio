@@ -15,6 +15,7 @@ use flv_types::SpuId;
 use crate::spu::*;
 use crate::store::*;
 use crate::core::*;
+use crate::message::*;
 
 pub type SharedSpuLocalStore<C> = Arc<SpuLocalStore<C>>;
 
@@ -351,6 +352,15 @@ impl <C>SpuLocalStore<C>
 
         spus
     }
+
+    pub async fn all_spus_to_spu_msgs(&self) -> Vec<SpuMsg> {
+        self.clone_specs()
+            .await
+            .into_iter()
+            .map(|spu_spec| SpuMsg::update(spu_spec.into()))
+            .collect()
+    }
+
 
 }
 

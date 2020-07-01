@@ -285,7 +285,7 @@ impl ConnManager {
     }
 
     /// send all changes to specific SPU
-    async fn send_update_all_to_spu(&self, spu: &K8SpuMetadata) -> Result<(), ScServerError> {
+    async fn send_update_all_to_spu(&self, spu: &SpuAdminMd) -> Result<(), ScServerError> {
         let spu_specs = self.spu_store.clone_specs().await;
         let replicas = self.partition_store.replica_for_spu(spu.id()).await;
         let request = UpdateAllRequest::new(spu_specs, replicas);
@@ -326,7 +326,7 @@ impl ConnManager {
     /// Send Update SPU message Request to an Spu
     async fn send_update_spu_msg_request<'a>(
         &'a self,
-        spu: &'a K8SpuMetadata,
+        spu: &'a SpuAdminMd,
         spu_msgs: Vec<SpuMsg>,
     ) -> Result<(), ScServerError> {
         trace!("{:#?}", spu_msgs);

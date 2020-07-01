@@ -5,10 +5,8 @@ use flv_metadata::partition::*;
 
 use super::*;
 
-pub type K8PartitionMd = PartitionMetadata<K8MetaContext>;
-type K8PartitionLocalStore = PartitionLocalStore<K8MetaContext>;
-
-pub type PartitionAdminStore = K8PartitionLocalStore;
+pub type PartitionAdminMd = PartitionMetadata<K8MetaContext>;
+pub type PartitionAdminStore = PartitionLocalStore<K8MetaContext>;
 
 
 use super::*;

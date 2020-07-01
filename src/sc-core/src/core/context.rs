@@ -20,10 +20,10 @@ pub type SharedContext = Arc<Context>;
 #[derive(Debug)]
 pub struct Context {
     client_channel: Channel<ClientNotification>,
-    spus: Arc<K8SpuLocalStore>,
-    partitions: Arc<K8PartitionLocalStore>,
-    topics: Arc<K8TopicLocalStore>,
-    spgs: Arc<K8SpuGroupLocalStore>,
+    spus: Arc<SpuAdminStore>,
+    partitions: Arc<PartitionAdminStore>,
+    topics: Arc<TopicAdminStore>,
+    spgs: Arc<SpuAdminStore>,
     config: ScConfig,
 }
 
@@ -41,34 +41,34 @@ impl Context {
 
         Self {
             client_channel: Channel::new(100),
-            spus: SpuLocalStore::new_shared(),
-            partitions: PartitionLocalStore::new_shared(),
-            topics: TopicLocalStore::new_shared(),
-            spgs: SpuGroupLocalStore::new_shared(),
+            spus: SpuAdminStore::new_shared(),
+            partitions: PartitionAdminStore::new_shared(),
+            topics: TopicAdminStore::new_shared(),
+            spgs: SpgAdminStore::new_shared(),
             config: config,
         }
     }
 
     /// reference to spus
-    pub fn spus(&self) -> &Arc<K8SpuLocalStore> {
+    pub fn spus(&self) -> &Arc<SpuAdminStore> {
         &self.spus
     }
 
-    pub fn owned_spus(&self) -> Arc<K8SpuLocalStore> {
+    pub fn owned_spus(&self) -> Arc<SpuAdminStore> {
         self.spus().clone()
     }
 
     /// reference to partitions
-    pub fn partitions(&self) -> &Arc<K8PartitionLocalStore> {
+    pub fn partitions(&self) -> &Arc<PartitionAdminStore> {
         &self.partitions
     }
 
     /// reference to topics
-    pub fn topics(&self) -> &Arc<K8TopicLocalStore> {
+    pub fn topics(&self) -> &Arc<TopicAdminStore> {
         &self.topics
     }
 
-    pub fn spgs(&self) -> &Arc<K8SpuGroupLocalStore> {
+    pub fn spgs(&self) -> &Arc<SpgAdminStore> {
         &self.spgs
     }
 

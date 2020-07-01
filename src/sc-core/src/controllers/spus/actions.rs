@@ -7,9 +7,9 @@ use std::fmt;
 
 use flv_metadata::spu::SpuSpec;
 use flv_metadata::k8::metadata::ObjectMeta;
+use flv_metadata::store::actions::*;
 use flv_util::actions::Actions;
 
-use crate::stores::actions::WSAction;
 use crate::controllers::conn_manager::SpuConnectionStatusChange;
 use crate::controllers::conn_manager::ConnectionRequest;
 

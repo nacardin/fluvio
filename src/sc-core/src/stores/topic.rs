@@ -20,19 +20,18 @@ use rand::thread_rng;
 use rand::Rng;
 
 use flv_types::ReplicaMap;
+use flv_metadata::topic::store::*;
 use flv_metadata::topic::*;
-use flv_metadata::partition::ReplicaKey;
-use flv_metadata::k8::metadata::ObjectMeta;
+use flv_metadata::partition::*;
+
 
 use super::partition::*;
 use super::spu::*;
 use super::*;
 
 
-pub type TopicLocalStore<C> = LocalStore<TopicSpec,C>;
-pub type DefaultTopicMd = TopicMetadata<String>;
-pub type DefaultTopicLocalStore = TopicLocalStore<String>;
-
+pub type TopicAdminMd = TopicMetadata<K8MetaContext>;
+pub type TopicAdminStore = TopicLocalStore<K8MetaContext>;
 
 
 impl K8ExtendedSpec for TopicSpec {
@@ -48,7 +47,7 @@ pub struct TopicNextState {
     pub resolution: TopicResolution,
     pub reason: String,
     pub replica_map: ReplicaMap,
-    pub partitions: Vec<K8PartitionMd>,
+    pub partitions: Vec<PartitionAdminMd>,
 }
 
 impl fmt::Display for TopicNextState {
@@ -80,8 +79,8 @@ impl From<((TopicResolution, String), ReplicaMap)> for TopicNextState {
     }
 }
 
-impl From<((TopicResolution, String), Vec<K8SpuMetadata>)> for TopicNextState {
-    fn from(val: ((TopicResolution, String), Vec<K8SpuMetadata>)) -> Self {
+impl From<((TopicResolution, String), Vec<SpuAdminMd>)> for TopicNextState {
+    fn from(val: ((TopicResolution, String), Vec<SpuAdminMd>)) -> Self {
         let ((resolution, reason), partitions) = val;
         Self {
             resolution,
@@ -96,7 +95,7 @@ impl From<((TopicResolution, String), Vec<K8SpuMetadata>)> for TopicNextState {
 
 
 
-impl K8TopicMd {
+impl TopicAdminMd {
     pub fn same_next_state(&self) -> TopicNextState {
         TopicNextState {
             resolution: self.status.resolution.clone(),
@@ -105,7 +104,7 @@ impl K8TopicMd {
     }
 
     /// update our state with next state, return remaining partition kv changes
-    pub fn apply_next_state(&mut self, next_state: TopicNextState) -> Vec<K8PartitionMd> {
+    pub fn apply_next_state(&mut self, next_state: TopicNextState) -> Vec<PartitionAdminMd> {
         self.status.resolution = next_state.resolution;
         self.status.reason = next_state.reason;
         if next_state.replica_map.len() > 0 {
@@ -117,8 +116,8 @@ impl K8TopicMd {
     /// based on our current state, compute what should be next state
     pub async fn compute_next_state(
         &self,
-        spu_store: &K8SpuLocalStore,
-        partition_store: &K8PartitionLocalStore,
+        spu_store: &SpuAdminStore,
+        partition_store: &PartitionAdminStore,
     ) -> TopicNextState {
         match self.spec() {
             // Computed Topic
@@ -229,7 +228,7 @@ impl K8TopicMd {
     ///
     pub async fn generate_replica_map(
         &self,
-        spus: &K8SpuLocalStore,
+        spus: &SpuAdminStore,
         param: &TopicReplicaParam,
     ) -> TopicNextState {
         let spu_count = spus.count().await;
@@ -257,8 +256,8 @@ impl K8TopicMd {
     /// create partition children if it doesn't exists
     pub async fn create_new_partitions(
         &self,
-        partition_store: &K8PartitionLocalStore,
-    ) -> Vec<K8PartitionMd> {
+        partition_store: &PartitionAdminStore,
+    ) -> Vec<PartitionAdminMd> {
         let parent_kv_ctx = self.kv_ctx.make_parent_ctx();
 
         let mut partitions = vec![];
@@ -267,7 +266,7 @@ impl K8TopicMd {
             debug!("Topic: {} creating partition: {}", self.key(), replica_key);
             if !partition_store.contains_key(&replica_key).await {
                 partitions.push(
-                    K8PartitionMd::with_spec(replica_key, replicas.clone().into())
+                    PartitionAdminMd::with_spec(replica_key, replicas.clone().into())
                         .with_kv_ctx(parent_kv_ctx.clone()),
                 )
             }
@@ -282,7 +281,7 @@ impl K8TopicMd {
     pub async fn update_replica_map_for_assigned_topic(
         &self,
         partition_maps: &PartitionMaps,
-        spu_store: &K8SpuLocalStore,
+        spu_store: &SpuAdminStore,
     ) -> TopicNextState {
         let partition_map_spus = partition_maps.unique_spus_in_partition_map();
         let spus_id = spu_store.spu_ids_for_replica().await;
@@ -311,7 +310,7 @@ impl K8TopicMd {
 /// Generate replica map for a specific topic
 ///
 pub async fn generate_replica_map_for_topic(
-    spus: &K8SpuLocalStore,
+    spus: &SpuAdminStore,
     param: &TopicReplicaParam,
     from_index: Option<i32>,
 ) -> ReplicaMap {
@@ -330,13 +329,13 @@ pub async fn generate_replica_map_for_topic(
 /// Generate partitions on spus that have been assigned to racks
 ///
 async fn generate_partitions_with_rack_assignment(
-    spus: &K8SpuLocalStore,
+    spus: &SpuAdminStore,
     param: &TopicReplicaParam,
     start_index: i32,
 ) -> ReplicaMap {
     let mut partition_map = BTreeMap::new();
-    let rack_map = SpuLocalStore::live_spu_rack_map_sorted(&spus).await;
-    let spu_list = SpuLocalStore::online_spus_in_rack(&rack_map);
+    let rack_map = SpuAdminStore::live_spu_rack_map_sorted(&spus).await;
+    let spu_list = SpuAdminStore::online_spus_in_rack(&rack_map);
     let spu_cnt = spus.online_spu_count().await;
 
     let s_idx = if start_index >= 0 {
@@ -361,7 +360,7 @@ async fn generate_partitions_with_rack_assignment(
 /// Generate partitions without taking rack assignments into consideration
 ///
 async fn generate_partitions_without_rack(
-    spus: &K8SpuLocalStore,
+    spus: &SpuAdminStore,
     param: &TopicReplicaParam,
     start_index: i32,
 ) -> ReplicaMap {
@@ -638,12 +637,12 @@ pub mod replica_map_test {
 
     use flv_future_aio::test_async;
 
-    use super::SpuLocalStore;
-    use super::generate_replica_map_for_topic;
+    use super::*;
+
 
     #[test_async]
     async fn generate_replica_map_for_topic_1x_replicas_no_rack() -> Result<(), ()> {
-        let spus: SpuLocalStore = vec![
+        let spus: SpuAdminStore = vec![
             (0, true, None),
             (1, true, None),
             (2, true, None),

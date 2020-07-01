@@ -148,7 +148,7 @@ impl PartitionReducer {
 
     fn add_partition_action_handler(
         &self,
-        mut partition: PartitionMetadata<ObjectMeta>,
+        mut partition: PartitionAdminMd,
         actions: &mut PartitionActions,
     ) -> Result<(), ScServerError> {
         debug!(
@@ -185,8 +185,8 @@ impl PartitionReducer {
     ///
     fn mod_partition_action_handler(
         &self,
-        new_partition: K8PartitionMd,
-        old_partition: K8PartitionMd,
+        new_partition: PartitionAdminMd,
+        old_partition: PartitionAdminMd,
         actions: &mut PartitionActions,
     ) -> Result<(), ScServerError> {
         trace!("mod partition {:#?}", new_partition);
@@ -224,7 +224,7 @@ impl PartitionReducer {
     ///
     fn del_partition_action_handler(
         &self,
-        partition: K8PartitionMd,
+        partition: PartitionAdminMd,
         _actions: &mut PartitionActions,
     ) -> Result<(), ScServerError> {
         debug!("DelPartition({}) - remove from metadata", partition.key());
@@ -274,7 +274,7 @@ impl PartitionReducer {
     }
 
     /// perform election when spu goes offline
-    async fn force_election_spu_off(&self, offline_spu: K8SpuMetadata, actions: &mut PartitionActions) {
+    async fn force_election_spu_off(&self, offline_spu: SpuAdminMd, actions: &mut PartitionActions) {
         debug!(
             "start election when spu went offline: {}",
             offline_spu.key()
@@ -317,7 +317,7 @@ impl PartitionReducer {
     }
 
     /// perform election when spu become online
-    async fn force_election_spu_on(&self, online_spu: K8SpuMetadata, actions: &mut PartitionActions) {
+    async fn force_election_spu_on(&self, online_spu: SpuAdminMd, actions: &mut PartitionActions) {
         debug!("start election spu went online: {}", online_spu.key());
         let online_leader_spu_id = online_spu.spec.id;
 
