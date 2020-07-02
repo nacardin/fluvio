@@ -1,4 +1,4 @@
-#![feature(drain_filter,specialization)]
+#![feature(drain_filter)]
 
 pub mod spu;
 pub mod topic;

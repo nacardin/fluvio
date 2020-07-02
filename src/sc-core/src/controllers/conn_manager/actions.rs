@@ -45,6 +45,7 @@ pub enum SpuSpecChange {
 pub enum PartitionSpecChange {
     Add(ReplicaKey, PartitionSpec),
     Mod(ReplicaKey, PartitionSpec, PartitionSpec),
+    #[allow(unused)]
     Remove(ReplicaKey, PartitionSpec),
 }
 
