@@ -16,13 +16,13 @@ use crate::stores::partition::*;
 use crate::stores::spu::*;
 
 /// handle topic policy related computation
-pub struct TopicPolicyEngine<'a>(&'a TopicAdminMd);
+pub struct TopicPolicyEngine<'a>(&'a mut TopicAdminMd);
 
 
 
 impl <'a>TopicPolicyEngine<'a> {
 
-    pub fn new(topic: &'a TopicAdminMd) -> Self {
+    pub fn new(topic: &'a mut  TopicAdminMd) -> Self {
         Self(topic)
     }
 

@@ -134,12 +134,12 @@ impl TopicReducer {
     /// At this point, we only need to ensure that topic with init status can be moved
     /// to pending or error state
     ///
-    async fn add_topic_action_handler(&self, topic: TopicAdminMd, actions: &mut TopicActions) {
+    async fn add_topic_action_handler(&self, mut topic: TopicAdminMd, actions: &mut TopicActions) {
         let name = topic.key();
 
         debug!("AddTopic({}) - {}", name, topic);
 
-        self.update_actions_next_state(&topic, actions).await;
+        self.update_actions_next_state(&mut topic, actions).await;
     }
 
     ///
@@ -153,7 +153,7 @@ impl TopicReducer {
     ///
     async fn mod_topic_action_handler(
         &self,
-        new_topic: TopicAdminMd,
+        mut new_topic: TopicAdminMd,
         old_topic: TopicAdminMd,
         actions: &mut TopicActions,
     ) -> Result<(), IoError> {
@@ -170,7 +170,7 @@ impl TopicReducer {
 
         // if topic changed, update status & notify partitions
         if new_topic.status != old_topic.status {
-            self.update_actions_next_state(&new_topic, actions).await;
+            self.update_actions_next_state(&mut new_topic, actions).await;
         }
 
         Ok(())
@@ -212,7 +212,7 @@ impl TopicReducer {
     /// Compute next state for topic
     /// if state is different, apply actions
     ///
-    async fn update_actions_next_state(&self, topic: &TopicAdminMd, actions: &mut TopicActions) {
+    async fn update_actions_next_state(&self, topic:&mut TopicAdminMd, actions: &mut TopicActions) {
         let before = TopicPolicyEngine::new(topic);
         let next_state = before.compute_next_state(self.spu_store(), self.partition_store()).await;
 
