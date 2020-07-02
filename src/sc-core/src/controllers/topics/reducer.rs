@@ -213,17 +213,15 @@ impl TopicReducer {
     /// if state is different, apply actions
     ///
     async fn update_actions_next_state(&self, topic:&mut TopicAdminMd, actions: &mut TopicActions) {
-        let before = TopicPolicyEngine::new(topic);
-        let next_state = before.compute_next_state(self.spu_store(), self.partition_store()).await;
+     
+        let next_state = TopicNextState::compute_next_state(topic,self.spu_store(), self.partition_store()).await;
 
         debug!("topic: {} next state: {}", topic.key(), next_state);
         let mut updated_topic = topic.clone();
         trace!("next state: {:#?}", next_state);
 
-        let mut after = TopicPolicyEngine::new(&mut updated_topic);
-
         // apply changes in partitions
-        for partition_kv in after.apply_next_state(next_state).into_iter() {
+        for partition_kv in next_state.apply_as_next_state(&mut updated_topic).into_iter() {
             actions
                 .partitions
                 .push(PartitionWSAction::Add(partition_kv));
@@ -264,7 +262,7 @@ impl TopicReducer {
                 let name = topic.key();
                 debug!("Generate R-MAP for: {:?}", name);
                 // topic status to collect modifications
-                self.update_actions_next_state(topic, actions).await;
+                self.update_actions_next_state(&mut topic, actions).await;
             }
         }
     }

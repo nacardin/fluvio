@@ -2,7 +2,6 @@ use std::fmt;
 use std::collections::BTreeMap;
 
 use log::debug;
-use log::warn;
 use log::trace;
 use rand::thread_rng;
 use rand::Rng;
@@ -15,143 +14,33 @@ use crate::stores::topic::*;
 use crate::stores::partition::*;
 use crate::stores::spu::*;
 
-/// handle topic policy related computation
-pub struct TopicPolicyEngine<'a>(&'a mut TopicAdminMd);
 
-
-
-impl <'a>TopicPolicyEngine<'a> {
-
-    pub fn new(topic: &'a mut  TopicAdminMd) -> Self {
-        Self(topic)
+//
+/// Validate assigned topic spec parameters and update topic status
+///  * error is passed to the topic reason.
+///
+pub fn validate_assigned_topic_parameters(
+    partition_map: &PartitionMaps,
+) -> TopicNextState {
+    if let Err(err) = partition_map.valid_partition_map() {
+        TopicStatus::next_resolution_invalid_config(&err.to_string()).into()
+    } else {
+        TopicStatus::next_resolution_pending().into()
     }
+}
 
-    pub fn same_next_state(&self) -> TopicNextState {
-        TopicNextState {
-            resolution: self.0.status.resolution.clone(),
-            ..Default::default()
-        }
+///
+/// Validate computed topic spec parameters and update topic status
+///  * error is passed to the topic reason.
+///
+pub fn validate_computed_topic_parameters(param: &TopicReplicaParam) -> TopicNextState {
+    if let Err(err) = TopicSpec::valid_partition(&param.partitions) {
+        TopicStatus::next_resolution_invalid_config(&err.to_string()).into()
+    } else if let Err(err) = TopicSpec::valid_replication_factor(&param.replication_factor) {
+        TopicStatus::next_resolution_invalid_config(&err.to_string()).into()
+    } else {
+        TopicStatus::next_resolution_pending().into()
     }
-
-    /// update our state with next state, return remaining partition kv changes
-    pub fn apply_next_state(&mut self, next_state: TopicNextState) -> Vec<PartitionAdminMd> {
-       
-        self.0.status.resolution = next_state.resolution;
-        self.0.status.reason = next_state.reason;
-        if next_state.replica_map.len() > 0 {
-            self.0.status.set_replica_map(next_state.replica_map);
-        }
-        next_state.partitions
-    }
-
-    /// based on our current state, compute what should be next state
-    pub async fn compute_next_state(
-        &self,
-        spu_store: &SpuAdminStore,
-        partition_store: &PartitionAdminStore,
-    ) -> TopicNextState {
-        match self.0.spec() {
-            // Computed Topic
-            TopicSpec::Computed(ref param) => match self.0.status.resolution {
-                TopicResolution::Init | TopicResolution::InvalidConfig => {
-                    self.validate_computed_topic_parameters(param)
-                }
-                TopicResolution::Pending | TopicResolution::InsufficientResources => {
-                    let mut next_state = generate_replica_map(spu_store, param).await;
-                    if next_state.resolution == TopicResolution::Provisioned {
-                        debug!(
-                            "Topic: {} replica generate successfull, status is provisioned",
-                            self.0.key()
-                        );
-                        next_state.partitions = self.0.create_new_partitions(partition_store).await;
-                        next_state
-                    } else {
-                        next_state
-                    }
-                }
-                _ => {
-                    debug!(
-                        "topic: {} resolution: {:#?} ignoring",
-                        self.0.key, self.0.status.resolution
-                    );
-                    let mut next_state = self.same_next_state();
-                    if next_state.resolution == TopicResolution::Provisioned {
-                        next_state.partitions = self.0.create_new_partitions(partition_store).await;
-                        next_state
-                    } else {
-                        next_state
-                    }
-                }
-            },
-
-            // Assign Topic
-            TopicSpec::Assigned(ref partition_map) => match self.0.status.resolution {
-                TopicResolution::Init | TopicResolution::InvalidConfig => {
-                    self.validate_assigned_topic_parameters(partition_map)
-                }
-                TopicResolution::Pending | TopicResolution::InsufficientResources => {
-                    let mut next_state = update_replica_map_for_assigned_topic(partition_map, spu_store)
-                        .await;
-                    if next_state.resolution == TopicResolution::Provisioned {
-                        next_state.partitions = self.0.create_new_partitions(partition_store).await;
-                        next_state
-                    } else {
-                        next_state
-                    }
-                }
-                _ => {
-                    debug!(
-                        "assigned topic: {} resolution: {:#?} ignoring",
-                        self.0.key, self.0.status.resolution
-                    );
-                    let mut next_state = self.same_next_state();
-                    if next_state.resolution == TopicResolution::Provisioned {
-                        next_state.partitions = self.0.create_new_partitions(partition_store).await;
-                        next_state
-                    } else {
-                        next_state
-                    }
-                }
-            },
-        }
-    }
-
-    ///
-    /// Validate computed topic spec parameters and update topic status
-    ///  * error is passed to the topic reason.
-    ///
-    pub fn validate_computed_topic_parameters(&self, param: &TopicReplicaParam) -> TopicNextState {
-        if let Err(err) = TopicSpec::valid_partition(&param.partitions) {
-            warn!("topic: {} partition config is invalid", self.0.key());
-            TopicStatus::next_resolution_invalid_config(&err.to_string()).into()
-        } else if let Err(err) = TopicSpec::valid_replication_factor(&param.replication_factor) {
-            warn!("topic: {} replication config is invalid", self.0.key());
-            TopicStatus::next_resolution_invalid_config(&err.to_string()).into()
-        } else {
-            debug!(
-                "topic: {} config is valid, transition to pending",
-                self.0.key()
-            );
-            TopicStatus::next_resolution_pending().into()
-        }
-    }
-
-    ///
-    /// Validate assigned topic spec parameters and update topic status
-    ///  * error is passed to the topic reason.
-    ///
-    pub fn validate_assigned_topic_parameters(
-        &self,
-        partition_map: &PartitionMaps,
-    ) -> TopicNextState {
-        if let Err(err) = partition_map.valid_partition_map() {
-            TopicStatus::next_resolution_invalid_config(&err.to_string()).into()
-        } else {
-            TopicStatus::next_resolution_pending().into()
-        }
-    }
-
-    
 }
     
 
@@ -264,6 +153,100 @@ impl From<((TopicResolution, String), Vec<PartitionAdminMd>)> for TopicNextState
             reason,
             partitions,
             ..Default::default()
+        }
+    }
+}
+
+impl TopicNextState  {
+
+    /// apply this state to topic and return set of partitions
+    pub fn apply_as_next_state(&self, topic: &mut TopicAdminMd) -> Vec<PartitionAdminMd> {
+       
+        topic.status.resolution = self.resolution;
+        topic.status.reason = self.reason;
+        if self.replica_map.len() > 0 {
+            topic.status.set_replica_map(self.replica_map);
+        }
+        self.partitions
+    }
+
+    /// create same next state as given topic
+    pub fn same_next_state(topic: &TopicAdminMd) -> TopicNextState {
+        TopicNextState {
+            resolution: topic.status.resolution.clone(),
+            ..Default::default()
+        }
+    }
+
+    /// given topic, compute next state
+    pub async fn compute_next_state(
+        topic: &TopicAdminMd,
+        spu_store: &SpuAdminStore,
+        partition_store: &PartitionAdminStore,
+    ) -> TopicNextState {
+        match topic.spec() {
+            // Computed Topic
+            TopicSpec::Computed(ref param) => match topic.status.resolution {
+                TopicResolution::Init | TopicResolution::InvalidConfig => {
+                    validate_computed_topic_parameters(param)
+                }
+                TopicResolution::Pending | TopicResolution::InsufficientResources => {
+                    let mut next_state = generate_replica_map(spu_store, param).await;
+                    if next_state.resolution == TopicResolution::Provisioned {
+                        debug!(
+                            "Topic: {} replica generate success, status is provisioned",
+                            topic.key()
+                        );
+                        next_state.partitions = topic.create_new_partitions(partition_store).await;
+                        next_state
+                    } else {
+                        next_state
+                    }
+                }
+                _ => {
+                    debug!(
+                        "topic: {} resolution: {:#?} ignoring",
+                        topic.key, topic.status.resolution
+                    );
+                    let mut next_state = TopicNextState::same_next_state(topic);
+                    if next_state.resolution == TopicResolution::Provisioned {
+                        next_state.partitions = topic.create_new_partitions(partition_store).await;
+                        next_state
+                    } else {
+                        next_state
+                    }
+                }
+            },
+
+            // Assign Topic
+            TopicSpec::Assigned(ref partition_map) => match topic.status.resolution {
+                TopicResolution::Init | TopicResolution::InvalidConfig => {
+                    validate_assigned_topic_parameters(partition_map)
+                }
+                TopicResolution::Pending | TopicResolution::InsufficientResources => {
+                    let mut next_state = update_replica_map_for_assigned_topic(partition_map, spu_store)
+                        .await;
+                    if next_state.resolution == TopicResolution::Provisioned {
+                        next_state.partitions = topic.create_new_partitions(partition_store).await;
+                        next_state
+                    } else {
+                        next_state
+                    }
+                }
+                _ => {
+                    debug!(
+                        "assigned topic: {} resolution: {:#?} ignoring",
+                        topic.key, topic.status.resolution
+                    );
+                    let mut next_state = TopicNextState::same_next_state(&topic);
+                    if next_state.resolution == TopicResolution::Provisioned {
+                        next_state.partitions = topic.create_new_partitions(partition_store).await;
+                        next_state
+                    } else {
+                        next_state
+                    }
+                }
+            },
         }
     }
 }
