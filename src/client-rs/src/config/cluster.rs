@@ -64,7 +64,7 @@ impl ClusterConfig {
         let inner_client = config.connect().await?;
         debug!("connected to cluster at: {}", inner_client.config().addr());
         let mut cluster = ClusterClient::new(inner_client);
-        cluster.start_metadata_watch().await?;
+       // cluster.start_metadata_watch().await?;
         Ok(cluster)
     }
 }
