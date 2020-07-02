@@ -13,6 +13,7 @@ use crate::ClientError;
 pub struct Producer {
     topic: String,
     partition: i32,
+    #[allow(unused)]
     serial: SerialClient
 }
 

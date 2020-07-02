@@ -7,6 +7,7 @@ use crate::ClientError;
 use crate::params::*;
 
 pub struct Consumer {
+    #[allow(unused)]
     serial: SerialClient,
     topic: String,
     partition: i32

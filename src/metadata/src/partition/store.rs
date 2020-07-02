@@ -161,7 +161,7 @@ impl <C>PartitionLocalStore<C>
             })
             .collect();
         debug!(
-            "{} computing replic msg for spuy: {}, msg: {}",
+            "{} computing replica msg for spu y: {}, msg: {}",
             self,
             target_spu,
             msgs.len()

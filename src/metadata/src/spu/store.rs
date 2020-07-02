@@ -158,7 +158,7 @@ impl <C>SpuLocalStore<C>
             .collect()
     }
 
-    // find spu id that can be used in the reeokuca
+    // find spu id that can be used?
     pub async fn spu_ids_for_replica(&self) -> Vec<i32> {
         self.read()
             .await

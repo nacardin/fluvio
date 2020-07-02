@@ -51,10 +51,10 @@ mod k8 {
                     let local_status = k8_obj.status.into();
 
                     let ctx: MetadataContext<ObjectMeta> = k8_obj.metadata.into();
-                    let loca_kv =
+                    let local_kv =
                         MetadataStoreObject::new(key, local_spec, local_status).with_context(ctx);
 
-                    Ok(loca_kv)
+                    Ok(local_kv)
                 }
                 Err(err) => Err(IoError::new(
                     ErrorKind::InvalidData,

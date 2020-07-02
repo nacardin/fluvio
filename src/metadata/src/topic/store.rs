@@ -193,7 +193,7 @@ mod test {
         let topic1 = DefaultTopicMd::new("Topic-1", (1, 1, false).into(), TopicStatus::default());
         assert_eq!(topic1.status.is_resolution_initializing(), true);
 
-        // resulution: Pending
+        // resolution: Pending
         let topic2 = DefaultTopicMd::new(
             "Topic-2",
             (1, 1, false).into(),

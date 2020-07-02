@@ -11,8 +11,8 @@
 //!     * ConnAction::UpdateSpu(SpuId, ServerAddress)   - SPU parameters are changed
 //!     * ConnAction::RemoveSpu(SpuId)                  - SPU leaves the system
 //!
-//! Connections will be lazzy handled. They are looked-up when a connection is requested. When SPU
-//! parameters chnage, the connection is marked as stale and a new connection is generated.
+//! Connections will be lazily handled. They are looked-up when a connection is requested. When SPU
+//! parameters change, the connection is marked as stale and a new connection is generated.
 
 use std::sync::Arc;
 
