@@ -4,7 +4,7 @@ mod spg_group;
 mod svc_operator;
 
 use flv_sc_core::metadata::K8WSUpdateService;
-use flv_sc_core::stores::spu::SharedSpuLocalStore;
+use flv_sc_core::stores::spu::SpuAdminStore;
 use k8_client::K8Client;
 
 use spg_operator::SpgOperator;
@@ -17,10 +17,12 @@ use self::spg_group::SpuValidation;
 
 use crate::cli::TlsConfig;
 
+use std::sync::Arc;
+
 pub fn run_k8_operators(
     k8_ws: K8WSUpdateService<K8Client>,
     namespace: String,
-    spu_store: SharedSpuLocalStore,
+    spu_store: Arc<SpuAdminStore>,
     tls: Option<TlsConfig>,
 ) {
     SpgOperator::new(

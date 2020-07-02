@@ -160,7 +160,7 @@ impl From<((TopicResolution, String), Vec<PartitionAdminMd>)> for TopicNextState
 impl TopicNextState  {
 
     /// apply this state to topic and return set of partitions
-    pub fn apply_as_next_state(&self, topic: &mut TopicAdminMd) -> Vec<PartitionAdminMd> {
+    pub fn apply_as_next_state(self, topic: &mut TopicAdminMd) -> Vec<PartitionAdminMd> {
        
         topic.status.resolution = self.resolution;
         topic.status.reason = self.reason;

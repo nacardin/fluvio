@@ -212,7 +212,7 @@ impl TopicReducer {
     /// Compute next state for topic
     /// if state is different, apply actions
     ///
-    async fn update_actions_next_state(&self, topic:&mut TopicAdminMd, actions: &mut TopicActions) {
+    async fn update_actions_next_state(&self, topic:&TopicAdminMd, actions: &mut TopicActions) {
      
         let next_state = TopicNextState::compute_next_state(topic,self.spu_store(), self.partition_store()).await;
 
@@ -262,7 +262,7 @@ impl TopicReducer {
                 let name = topic.key();
                 debug!("Generate R-MAP for: {:?}", name);
                 // topic status to collect modifications
-                self.update_actions_next_state(&mut topic, actions).await;
+                self.update_actions_next_state(topic, actions).await;
             }
         }
     }

@@ -22,9 +22,10 @@ use sc_api::topic::*;
 use crate::core::Context;
 use crate::stores::topic::*;
 use crate::stores::*;
-use crate::controllers::topics::TopicPolicyEngine;
 use crate::controllers::topics::generate_replica_map;
 use crate::controllers::topics::update_replica_map_for_assigned_topic;
+use crate::controllers::topics::validate_computed_topic_parameters;
+use crate::controllers::topics::validate_assigned_topic_parameters;
 
 use super::PublicContext;
 
@@ -68,12 +69,11 @@ async fn validate_topic_request(
         );
     }
 
-    // create temporary topic status to return validation result
-    let topic_kv = TopicAdminMd::with_spec(name.to_owned(), topic_spec.clone());
-    let policy = TopicPolicyEngine::new(&topic_kv);
+
+ 
     match topic_spec {
         TopicSpec::Computed(param) => {
-            let next_state = policy.validate_computed_topic_parameters(param);
+            let next_state = validate_computed_topic_parameters(param);
             trace!("validating, computed topic: {:#?}", next_state);
             if next_state.resolution.is_invalid() {
                 FlvStatus::new(
@@ -97,7 +97,7 @@ async fn validate_topic_request(
         }
         TopicSpec::Assigned(ref partition_map) => {
 
-            let next_state = policy.validate_assigned_topic_parameters(partition_map);
+            let next_state = validate_assigned_topic_parameters(partition_map);
             trace!("validating, computed topic: {:#?}", next_state);
             if next_state.resolution.is_invalid() {
                 FlvStatus::new(

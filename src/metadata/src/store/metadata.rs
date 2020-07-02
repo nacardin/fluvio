@@ -95,13 +95,12 @@ where
         (self.key, self.spec, self.status, self.ctx)
     }
 
-    pub fn is_owned<U>(&self, uid: U) -> bool 
-        where U: AsRef<C>,
-            C: PartialEq
+    /// check if metadata is owned by other
+    pub fn is_owned(&self, uid: &C::UId) -> bool 
     {
 
         match self.ctx().owner() {
-            Some(parent) => parent == uid.as_ref(),
+            Some(parent) => parent.uid() == uid,
             None => false,
         }
     }

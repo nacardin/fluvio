@@ -221,25 +221,7 @@ impl <C>SpuLocalStore<C>
         false
     }
 
-    // check if given range is conflict with any of the range
-    pub async fn is_conflict(
-        &self,
-        owner_uid: &C,
-        start: i32,
-        end_exclusive: i32,
-    ) -> Option<i32>
-        where C: PartialEq + AsRef<C>
-     {
-        for (_, spu) in self.read().await.iter() {
-            if !spu.is_owned(owner_uid) {
-                let id = spu.id();
-                if id >= start && id < end_exclusive {
-                    return Some(id);
-                }
-            }
-        }
-        None
-    }
+    
 
     #[cfg(test)]
     pub async fn all_spu_count(&self) -> i32 {

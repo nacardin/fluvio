@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use log::debug;
 use log::error;
 use log::info;
@@ -13,7 +15,7 @@ use k8_client::metadata::MetadataClient;
 use flv_metadata::spu::IngressAddr;
 
 use flv_sc_core::metadata::K8WSUpdateService;
-use flv_sc_core::stores::spu::SharedSpuLocalStore;
+use flv_sc_core::stores::spu::SpuAdminStore;
 use crate::ScK8Error;
 
 /// An operator to deal with Svc
@@ -21,7 +23,7 @@ use crate::ScK8Error;
 /// External load balancer update external ip or hostname out of band.
 pub struct SvcOperator {
     k8_ws: K8WSUpdateService<K8Client>,
-    spu_store: SharedSpuLocalStore,
+    spu_store: Arc<SpuAdminStore>,
     namespace: String,
 }
 
@@ -29,7 +31,7 @@ impl SvcOperator {
     pub fn new(
         k8_ws: K8WSUpdateService<K8Client>,
         namespace: String,
-        spu_store: SharedSpuLocalStore,
+        spu_store: Arc<SpuAdminStore>,
     ) -> Self {
         Self {
             k8_ws,

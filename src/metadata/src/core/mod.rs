@@ -10,9 +10,19 @@ mod context {
 
     pub type DefaultMetadataContext = MetadataContext<String>;
 
-    pub trait MetadataItem: Clone + Default + Debug {}
+    pub trait MetadataItem: Clone + Default + Debug {
+        type UId: PartialEq;
 
-    impl MetadataItem for String{}
+        fn uid(&self) -> &Self::UId;
+    }
+
+    impl MetadataItem for String{
+        type UId = String;
+
+        fn uid(&self) -> &Self::UId {
+            &self
+        }
+    }
 
     #[derive(Default,Debug,Clone,PartialEq)]
     pub struct MetadataContext<C> {
@@ -70,7 +80,14 @@ pub mod k8 {
 
     use super::*;
 
-    impl MetadataItem for ObjectMeta {}
+    impl MetadataItem for ObjectMeta {
+        type UId = String;
+        fn uid(&self) -> &Self::UId {
+            &self.uid
+        }
+        
+
+    }
 
 }
 

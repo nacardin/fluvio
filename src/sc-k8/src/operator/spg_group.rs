@@ -4,7 +4,7 @@ use flv_metadata::k8::metadata::K8Obj;
 use flv_metadata::spg::K8SpuGroupSpec;
 use flv_types::SpuId;
 
-use flv_sc_core::stores::spu::SpuLocalStore;
+use flv_sc_core::stores::spu::*;
 
 pub type SpuGroupObj = K8Obj<K8SpuGroupSpec>;
 
@@ -12,7 +12,7 @@ pub type SpuGroupObj = K8Obj<K8SpuGroupSpec>;
 #[async_trait]
 pub trait SpuValidation {
     fn is_already_valid(&self) -> bool;
-    async fn is_conflict_with(&self, spu_store: &SpuLocalStore) -> Option<SpuId>;
+    async fn is_conflict_with(&self, spu_store: &SpuAdminStore) -> Option<SpuId>;
 }
 
 #[async_trait]
@@ -23,14 +23,15 @@ impl SpuValidation for SpuGroupObj {
     }
 
     /// check if my group's id is conflict with my spu local store
-    async fn is_conflict_with(&self, spu_store: &SpuLocalStore) -> Option<SpuId> {
+    async fn is_conflict_with(&self, spu_store: &SpuAdminStore) -> Option<SpuId> {
         if self.is_already_valid() {
             return None;
         }
 
         let min_id = self.spec.min_id as SpuId;
 
-        spu_store.is_conflict(
+        is_conflict(
+            spu_store,
             &self.metadata.uid,
             min_id,
             min_id + self.spec.replicas as SpuId,

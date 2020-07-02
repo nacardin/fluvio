@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::sync::Arc;
 
 use log::debug;
 use log::error;
@@ -21,7 +22,7 @@ use k8_client::SharedK8Client;
 use flv_types::defaults::SPU_PUBLIC_PORT;
 use flv_types::defaults::SPU_DEFAULT_NAME;
 use flv_types::SpuId;
-use flv_sc_core::stores::spu::SharedSpuLocalStore;
+use flv_sc_core::stores::spu::SpuAdminStore;
 
 use crate::cli::TlsConfig;
 use super::convert_cluster_to_statefulset;
@@ -31,7 +32,7 @@ use super::SpuValidation;
 
 pub struct SpgOperator {
     client: SharedK8Client,
-    spu_store: SharedSpuLocalStore,
+    spu_store: Arc<SpuAdminStore>,
     namespace: String,
     tls: Option<TlsConfig>,
 }
@@ -40,7 +41,7 @@ impl SpgOperator {
     pub fn new(
         client: SharedK8Client,
         namespace: String,
-        spu_store: SharedSpuLocalStore,
+        spu_store: Arc<SpuAdminStore>,
         tls: Option<TlsConfig>,
     ) -> Self {
         Self {
