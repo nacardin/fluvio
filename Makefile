@@ -181,3 +181,23 @@ install-k8-tls:
 
 uninstall-k8:
 	$(FLVD) cluster uninstall
+
+
+ALPINE_VERSION = 3.12
+RUST_VERSION = $(shell cat ${TOOLCHAIN})
+RUST_BUILDER_IMAGE = $(DOCKER_REGISTRY)/rust-builder:$(RUST_VERSION)
+FLUVIO_BUILDER_IMAGE = $(DOCKER_REGISTRY)/fluvio-builder:$(VERSION)
+
+proto-docker-images: proto-sc-image proto-spu-image
+
+proto-sc-image:	proto-fluvio-builder-image
+	docker build -f k8-util/docker-image/sc/Dockerfile --build-arg ALPINE_VERSION=$(ALPINE_VERSION) --build-arg FLUVIO_BUILDER_IMAGE=$(FLUVIO_BUILDER_IMAGE) -t $(DOCKER_REGISTRY)/fluvio-sc:$(VERSION) k8-util/docker-image/sc
+
+proto-spu-image:	proto-fluvio-builder-image
+	docker build -f k8-util/docker-image/spu/Dockerfile --build-arg ALPINE_VERSION=$(ALPINE_VERSION) --build-arg FLUVIO_BUILDER_IMAGE=$(FLUVIO_BUILDER_IMAGE) -t $(DOCKER_REGISTRY)/fluvio-spu:$(VERSION) k8-util/docker-image/spu
+
+proto-fluvio-builder-image:	proto-rust-builder-image
+	docker build -f k8-util/docker-image/fluvio-builder/Dockerfile --build-arg RUST_BUILDER_IMAGE=$(RUST_BUILDER_IMAGE) -t $(FLUVIO_BUILDER_IMAGE) .
+	
+proto-rust-builder-image:
+	docker build -f k8-util/docker-image/rust-builder/Dockerfile --build-arg ALPINE_VERSION=$(ALPINE_VERSION) --build-arg RUST_VERSION=$(RUST_VERSION) -t $(RUST_BUILDER_IMAGE) k8-util/docker-image/rust-builder
