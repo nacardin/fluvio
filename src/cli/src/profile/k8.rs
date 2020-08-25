@@ -1,6 +1,6 @@
 use std::convert::TryInto;
-
 use tracing::*;
+
 use fluvio::config::*;
 use k8_client::K8Client;
 use k8_obj_core::service::ServiceSpec;
