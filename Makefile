@@ -157,18 +157,13 @@ minikube_image:	fluvio_image
 # build docker image for fluvio using release mode
 # this will tag with current git tag
 fluvio_image: CARGO_PROFILE=$(if $(RELEASE),release,debug)
-fluvio_image: fluvio_bin_linux
+fluvio_image:
 	echo "Building Fluvio musl image with version: $(VERSION)"
 	export CARGO_PROFILE=$(if $(RELEASE),release,debug); \
 	export MINIKUBE_DOCKER_ENV=$(MINIKUBE_DOCKER_ENV); \
 	export DOCKER_TAG=$(GIT_COMMIT); \
+	export RELEASE_FLAG=$(if $(RELEASE),--release,); \
 	k8-util/docker/build.sh
-
-
-fluvio_bin_linux: RELEASE_FLAG=$(if $(RELEASE),--release,)
-fluvio_bin_linux: install_musl
-	cd src/cli; cargo build $(RELEASE_FLAG) --no-default-features  \
-		--features cluster_components_rustls --bin fluvio --target $(TARGET_LINUX)
 
 make publish_fluvio_image: 
 	curl \
