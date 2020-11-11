@@ -200,13 +200,14 @@ jobs:
       - name: install fluvio system chart
         run: |
           FLV_CMD=true ./target/debug/fluvio cluster install --sys --develop
-      - name: Install musl-tools for Linux
-        run: |
-          sudo apt install -y musl-tools
-          sudo ln -s /usr/bin/musl-gcc /usr/local/bin/x86_64-linux-musl-gcc
+      - name: Install Clang
+        run: sudo apt install -y clang-10
       - name: smoke test k8 tls
-        run: | 
-          FLV_CMD=true  FLV_SOCKET_WAIT=600 make smoke-test-k8-tls-root
+        run: make smoke-test-k8-tls-root
+        env:
+          FLV_CMD: true
+          FLV_SOCKET_WAIT: 600
+          TARGET_CC: clang
       - name: Save logs
         if: failure()
         run: kubectl logs flv-sc > /tmp/flv_sc.log

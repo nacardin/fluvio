@@ -36,15 +36,14 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Install Musl Tools for Linux
-        run: |
-          sudo apt install -y musl-tools
-          sudo ln -s /usr/bin/musl-gcc /usr/local/bin/x86_64-linux-musl-gcc
+      - name: Install Clang
+        run: sudo apt install -y clang-10
+      - name: Login to Docker Hub
+        run: docker login --username=${{ secrets.DOCKER_USERNAME }} --password=${{ secrets.DOCKER_PASSWORD }}
       - name: Release docker
-        run: |
-          export TARGET_CC=musl-gcc
-          docker login --username=${{ secrets.DOCKER_USERNAME }} --password=${{ secrets.DOCKER_PASSWORD }}
-          make release_image
+        run: make release_image
+        env:
+          TARGET_CC: clang
     
   upload_linux_cli:
     needs:  create_release
@@ -58,15 +57,13 @@ jobs:
           go get github.com/github-release/github-release
           ls $(go env GOPATH)/bin
           cp $(go env GOPATH)/bin/github-release /home/linuxbrew/.linuxbrew/sbin
-      - name: Install Musl Tools for Linux
-        run: |
-          sudo apt install -y musl-tools
-          sudo ln -s /usr/bin/musl-gcc /usr/local/bin/x86_64-linux-musl-gcc
+      - name: Install Clang
+        run: sudo apt install -y clang-10
       - name: Build Linux CLI
-        run: |
-          export TARGET_CC=musl-gcc
-          make build-cli-linux
-      - name: Upload Darin CLI
+        run: make build-cli-linux
+        env:
+          TARGET_CC: clang
+      - name: Upload Linux CLI
         run:  make upload-gh-linux
         env:
           GITHUB_TOKEN: ${{ secrets.ACTION_RELEASE }}
