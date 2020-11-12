@@ -20,5 +20,3 @@ jobs:
         run: docker login --username=${{ secrets.DOCKER_USERNAME }} --password=${{ secrets.DOCKER_PASSWORD }}
       - name: Publish nightly development Fluvio Image
         run: make nightly_image
-        env:
-          TARGET_CC: clang

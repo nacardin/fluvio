@@ -203,11 +203,7 @@ jobs:
       - name: Install Clang
         run: sudo apt install -y clang-10
       - name: smoke test k8 tls
-        run: make smoke-test-k8-tls-root
-        env:
-          FLV_CMD: true
-          FLV_SOCKET_WAIT: 600
-          TARGET_CC: clang
+        run: FLV_CMD=true FLV_SOCKET_WAIT=600 make smoke-test-k8-tls-root
       - name: Save logs
         if: failure()
         run: kubectl logs flv-sc > /tmp/flv_sc.log

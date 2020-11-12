@@ -169,7 +169,7 @@ fluvio_image: fluvio_bin_linux
 
 fluvio_bin_linux: RELEASE_FLAG=$(if $(RELEASE),--release,)
 fluvio_bin_linux: install_musl
-	cd src/cli; cargo build $(RELEASE_FLAG) --no-default-features  \
+	cd src/cli; TARGET_CC=clang cargo build $(RELEASE_FLAG) --no-default-features  \
 		--features cluster_components_rustls --bin fluvio --target $(TARGET_LINUX)
 
 make publish_fluvio_image: 

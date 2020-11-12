@@ -146,20 +146,11 @@ First, install Rust target:
 rustup target add x86_64-unknown-linux-musl
 ```
 
-For mac:
-
-```
-brew install filosottile/musl-cross/musl-cross
-export TARGET_CC=x86_64-linux-musl-gcc
-```
-
-For Linux, please see [musl wiki](https://wiki.musl-libc.org) for the installation of musl-gcc.
+For Linux, please make sure that [clang](https://clang.llvm.org/get_started.html) is unstalled.
 
 For ubuntu:
 ```
-sudo apt install -y musl-tools
-export TARGET_CC=musl-gcc
-sudo ln -s /usr/bin/musl-gcc /usr/local/bin/x86_64-linux-musl-gcc
+sudo apt install -y clang
 ```
 ## To build docker image
 
@@ -203,29 +194,17 @@ This guide helps users to solve issues they might face during the setup process.
 If you face cross-compilation errors while creating minikube image, for example
 
 ```
-cargo build --bin fluvio-spu --target x86_64-unknown-linux-musl
+cargo build --bin fluvio --target x86_64-unknown-linux-musl
 error: linker `x86_64-linux-musl-gcc` not found
  |
  = note: No such file or directory (os error 2)
 error: aborting due to previous error
-error: could not compile `flv-spu`.
+error: could not compile `fluvio`.
 ```
 This is indicative that you need to add standard library for the target platform:
 
 ```
 rustup target add x86_64-unknown-linux-musl
-```
-
-If it still doesn't work
-
-```
-brew install filosottile/musl-cross/musl-cross
-```
-
-Make sure you set the following environment variable
-
-```
-export TARGET_CC=x86_64-linux-musl-gcc
 ```
 
 ###### Connection issues

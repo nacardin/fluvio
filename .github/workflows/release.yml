@@ -42,8 +42,6 @@ jobs:
         run: docker login --username=${{ secrets.DOCKER_USERNAME }} --password=${{ secrets.DOCKER_PASSWORD }}
       - name: Release docker
         run: make release_image
-        env:
-          TARGET_CC: clang
     
   upload_linux_cli:
     needs:  create_release
@@ -61,8 +59,6 @@ jobs:
         run: sudo apt install -y clang-10
       - name: Build Linux CLI
         run: make build-cli-linux
-        env:
-          TARGET_CC: clang
       - name: Upload Linux CLI
         run:  make upload-gh-linux
         env:

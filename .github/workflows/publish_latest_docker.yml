@@ -20,5 +20,3 @@ jobs:
         run: docker login --username=${{ secrets.DOCKER_USERNAME }} --password=${{ secrets.DOCKER_PASSWORD }}
       - name: Publish latest development Fluvio Image
         run: make latest_image
-        env:
-          TARGET_CC: clang
