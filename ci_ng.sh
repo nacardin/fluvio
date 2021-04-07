@@ -8,9 +8,10 @@ aws ec2 import-key-pair --key-name fluvio-ci-$GITHUB_RUN_ID --public-key-materia
 
 ec2_instance_id=$(aws ec2 run-instances \
     --image-id $EC2_AMI \
-    --instance-type m5.4xlarge \
+    --instance-type c5.4xlarge \
     --security-group-ids sg-010f0a9ee7ddac50f \
     --key-name fluvio-ci-$GITHUB_RUN_ID \
+    --iam-instance-profile SSM \
     --query "Instances[0].InstanceId" \
     --output text)
 
