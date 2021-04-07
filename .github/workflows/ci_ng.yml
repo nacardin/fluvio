@@ -34,7 +34,7 @@ jobs:
           --key-name fluvio-ci-$GITHUB_RUN_ID \
           --query "Reservations[0].Instances[0].InstanceId" \
           --output text > ec2_instance_id && \
-        sleep 5 && \
+        sleep 60 && \
         aws ec2 describe-instances \
           --instance-ids i-0d7a4ebb0738c3468 \
           --query "Reservations[0].Instances[0].PublicIpAddress" \
