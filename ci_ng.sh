@@ -11,7 +11,7 @@ ec2_instance_id=$(aws ec2 run-instances \
     --instance-type c5.4xlarge \
     --security-group-ids sg-010f0a9ee7ddac50f \
     --key-name fluvio-ci-$GITHUB_RUN_ID \
-    --iam-instance-profile SSM \
+    --iam-instance-profile Name=SSM \
     --query "Instances[0].InstanceId" \
     --output text)
 
