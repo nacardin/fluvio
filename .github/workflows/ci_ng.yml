@@ -20,6 +20,7 @@ jobs:
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: us-east-2
     steps:
     - run: ssh-keygen -t RSA -f id_rsa
     - run: aws ec2 import-key-pair --key-name fluvio-ci-$GITHUB_RUN_ID --public-key-material fileb://id_rsa.pub
