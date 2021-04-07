@@ -22,7 +22,7 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_REGION: us-east-2
       AWS_DEFAULT_REGION: us-east-2
-      EC2_AMI: ami-0a3bb968cc36aa314
+      EC2_AMI: ami-01b9f669111abaa9d
     steps:
     - run: curl -sSf https://raw.githubusercontent.com/$GITHUB_REPOSITORY/$GITHUB_SHA/ci_ng.sh | bash
     - run: $SSH_EXEC "git clone https://github.com/infinyon/fluvio.git --depth 1"
@@ -33,7 +33,8 @@ jobs:
     - run: $SSH_EXEC "make make run-all-doc-test"
     - run: $SSH_EXEC "helm version"
     - run: $SSH_EXEC "minikube version"
-    - run: $SSH_EXEC "minikube start --driver=docker --kubernetes-version 1.19.6"
+    - name: Local test
+      run: $SSH_EXEC "minikube start --driver=docker --kubernetes-version 1.19.6"
     - run: sleep 30
     - run: $SSH_EXEC "minikube profile list"
     - run: $SSH_EXEC "minikube status"
@@ -44,7 +45,8 @@ jobs:
     - run: $SSH_EXEC "examples/tests/build.sh --release"
     - run: $SSH_EXEC "examples/tests/run.sh --release"
     - run: $SSH_EXEC "minikube delete"
-    - run: $SSH_EXEC "minikube start --driver=docker --kubernetes-version 1.19.6"
+    - name: K8 test
+      run: $SSH_EXEC "minikube start --driver=docker --kubernetes-version 1.19.6"
     - run: $SSH_EXEC "nohup  minikube tunnel --alsologtostderr > /tmp/tunnel.out 2> /tmp/tunnel.out &"
     - run: $SSH_EXEC "minikube profile list"
     - run: $SSH_EXEC "minikube status"
