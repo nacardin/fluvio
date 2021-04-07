@@ -1,0 +1,43 @@
+name: CI NG
+
+on:
+  push:
+    branches: [ci_ng]
+  workflow_dispatch:
+
+jobs:
+  cancel_previous_runs:
+    name: Cancel Previous Runs
+    runs-on: ubuntu-latest
+    steps:
+    - uses: styfle/cancel-workflow-action@0.4.1
+      with:
+        access_token: ${{ secrets.GITHUB_TOKEN }}
+
+  megatest:
+    name: Megatest
+    runs-on: ubuntu-20.04
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    steps:
+    - run: ssh-keygen -t RSA -f id_rsa
+    - run: aws ec2 import-key-pair --key-name fluvio-ci-$GITHUB_RUN_ID --public-key-material fileb://id_rsa.pub
+    - run: >
+        aws ec2 run-instances
+          --image-id ami-0a0ceb201e79c7120
+          --instance-type m5.2xlarge
+          --security-group-ids sg-010f0a9ee7ddac50f
+          --key-name fluvio-ci-$GITHUB_RUN_ID
+          --query "Reservations[0].Instances[0].InstanceId"
+          --output text >> ec2_instance_id &&
+        sleep 5 &&
+        aws ec2 describe-instances
+          --instance-ids i-0d7a4ebb0738c3468
+          --query "Reservations[0].Instances[0].PublicIpAddress"
+          --output text >> ec2_instance_public_ip &&
+        echo "SSH_REMOTE="ubuntu@$(cat ec2_instance_public_ip) >> $GITHUB_ENV
+    - run: ssh $SSH_REMOTE 'echo test'
+    - run: ssh $SSH_REMOTE 'git clone https://github.com/infinyon/fluvio.git --depth 1'
+    - if: always()
+      run: aws ec2 terminate-instances --instance-ids $(cat ec2_instance_id)
