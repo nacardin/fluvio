@@ -14,7 +14,6 @@ ec2_instance_id=$(aws ec2 run-instances \
     --query "Instances[0].InstanceId" \
     --output text)
 
-echo ec2_instance_id
 echo EC2_INSTANCE_ID=$ec2_instance_id >> $GITHUB_ENV
 
 sleep 30
@@ -24,11 +23,11 @@ ec2_instance_public_ip=$(aws ec2 describe-instances \
     --query "Reservations[0].Instances[0].PublicIpAddress" \
     --output text)
 
-echo ec2_instance_public_ip
+echo EC2_INSTANCE_PUBLIC_IP=$ec2_instance_public_ip >> $GITHUB_ENV
 
 ssh_opts="-o BatchMode=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
-ssh_remote="ubuntu@$(cat ec2_instance_public_ip)"
-ssh_exec="ssh $SSH_REMOTE $SSH_OPTS"
+ssh_remote="ubuntu@$ec2_instance_public_ip"
+ssh_exec="ssh $ssh_remote $ssh_opts"
 
 $ssh_exec 'echo test'
 
