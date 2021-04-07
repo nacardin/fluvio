@@ -2,7 +2,7 @@
 
 set -xe
 
-ssh-keygen -s -t RSA -f id_rsa
+ssh-keygen -q -t RSA -f id_rsa
 
 aws ec2 import-key-pair --key-name fluvio-ci-$GITHUB_RUN_ID --public-key-material fileb://id_rsa.pub
 
