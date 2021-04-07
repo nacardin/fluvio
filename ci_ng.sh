@@ -29,6 +29,4 @@ ssh_opts="-o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=no -o 
 ssh_remote="ubuntu@$ec2_instance_public_ip"
 ssh_exec="ssh -i ./id_rsa $ssh_remote $ssh_opts"
 
-$ssh_exec 'echo test'
-
 echo SSH_EXEC=$ssh_exec >> $GITHUB_ENV

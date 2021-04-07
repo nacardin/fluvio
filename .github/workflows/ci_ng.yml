@@ -25,7 +25,7 @@ jobs:
       EC2_AMI: ami-0a3bb968cc36aa314
     steps:
     - run: curl -sSf https://raw.githubusercontent.com/$GITHUB_REPOSITORY/$GITHUB_SHA/ci_ng.sh | bash
-    - run: $SSH_EXEC 'echo test'
-    - run: $SSH_EXEC 'git clone https://github.com/infinyon/fluvio.git --depth 1'
+    - run: $SSH_EXEC "echo test"
+    - run: $SSH_EXEC "git clone https://github.com/infinyon/fluvio.git --depth 1"
     - if: always()
       run: aws ec2 terminate-instances --instance-ids $EC2_INSTANCE_ID
