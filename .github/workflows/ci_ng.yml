@@ -36,7 +36,7 @@ jobs:
           --output text > ec2_instance_id && \
         sleep 60 && \
         aws ec2 describe-instances \
-          --instance-ids i-0d7a4ebb0738c3468 \
+          --instance-ids $(cat ec2_instance_id) \
           --query "Reservations[0].Instances[0].PublicIpAddress" \
           --output text > ec2_instance_public_ip
     - run: cat ec2_instance_public_ip
