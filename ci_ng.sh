@@ -26,9 +26,9 @@ ec2_instance_public_ip=$(aws ec2 describe-instances \
 
 echo ec2_instance_public_ip
 
-ssh_opts=-o BatchMode=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
-ssh_remote=ubuntu@$(cat ec2_instance_public_ip)
-ssh_exec=ssh $SSH_REMOTE $SSH_OPTS
+ssh_opts="-o BatchMode=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+ssh_remote="ubuntu@$(cat ec2_instance_public_ip)"
+ssh_exec="ssh $SSH_REMOTE $SSH_OPTS"
 
 $ssh_exec 'echo test'
 
