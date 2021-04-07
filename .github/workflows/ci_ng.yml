@@ -32,7 +32,7 @@ jobs:
           --instance-type m5.2xlarge \
           --security-group-ids sg-010f0a9ee7ddac50f \
           --key-name fluvio-ci-$GITHUB_RUN_ID \
-          --query "Reservations[0].Instances[0].InstanceId" \
+          --query "Instances[0].InstanceId" \
           --output text > ec2_instance_id && \
         sleep 60 && \
         aws ec2 describe-instances \
