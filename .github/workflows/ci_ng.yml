@@ -39,7 +39,7 @@ jobs:
           --instance-ids i-0d7a4ebb0738c3468 \
           --query "Reservations[0].Instances[0].PublicIpAddress" \
           --output text > ec2_instance_public_ip
-    - run: echo "SSH_ARGS="-o BatchMode=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@$(cat ec2_instance_public_ip)" >> $GITHUB_ENV
+    - run: echo 'SSH_ARGS="-o BatchMode=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@$(cat ec2_instance_public_ip)"' >> $GITHUB_ENV
     - run: ssh $SSH_ARGS 'echo test'
     - run: ssh $SSH_ARGS 'git clone https://github.com/infinyon/fluvio.git --depth 1'
     - if: always()
