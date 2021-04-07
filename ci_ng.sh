@@ -25,9 +25,9 @@ ec2_instance_public_ip=$(aws ec2 describe-instances \
 
 echo EC2_INSTANCE_PUBLIC_IP=$ec2_instance_public_ip >> $GITHUB_ENV
 
-ssh_opts="-o BatchMode=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+ssh_opts="-o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
 ssh_remote="ubuntu@$ec2_instance_public_ip"
-ssh_exec="ssh $ssh_remote $ssh_opts"
+ssh_exec="ssh -i ./id_rsa $ssh_remote $ssh_opts"
 
 $ssh_exec 'echo test'
 
