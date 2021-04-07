@@ -20,13 +20,15 @@ jobs:
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: us-east-2
       AWS_DEFAULT_REGION: us-east-2
+      EC2_AMI: ami-0a3bb968cc36aa314
     steps:
     - run: ssh-keygen -t RSA -f id_rsa
     - run: aws ec2 import-key-pair --key-name fluvio-ci-$GITHUB_RUN_ID --public-key-material fileb://id_rsa.pub
     - run: |
         aws ec2 run-instances \
-          --image-id ami-0a0ceb201e79c7120 \
+          --image-id $EC2_AMI \
           --instance-type m5.2xlarge \
           --security-group-ids sg-010f0a9ee7ddac50f \
           --key-name fluvio-ci-$GITHUB_RUN_ID \
