@@ -22,7 +22,7 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_REGION: us-east-2
       AWS_DEFAULT_REGION: us-east-2
-      EC2_AMI: ami-01b9f669111abaa9d
+      EC2_AMI: ami-0149f85c121c2cf6d
     steps:
     - run: curl -sSf https://raw.githubusercontent.com/$GITHUB_REPOSITORY/$GITHUB_SHA/ci_ng.sh | bash
     - run: $SSH_EXEC "git clone https://github.com/infinyon/fluvio.git --depth 1"
@@ -38,7 +38,7 @@ jobs:
     - run: sleep 30
     - run: $SSH_EXEC "minikube profile list"
     - run: $SSH_EXEC "minikube status"
-    - run: $SSH_EXEC "make RELEASE=release build_test"
+    - run: $SSH_EXEC "make RELEASE=true build_test"
     - run: $SSH_EXEC "target/release/fluvio cluster start --setup --local --develop"
     - run: $SSH_EXEC "target/release/fluvio version"
     - run: $SSH_EXEC "make RELEASE=true UNINSTALL=noclean smoke-test-tls-root"
@@ -48,12 +48,13 @@ jobs:
     - name: K8 test
       run: $SSH_EXEC "minikube start --driver=docker --kubernetes-version 1.19.6"
     - run: $SSH_EXEC "nohup  minikube tunnel --alsologtostderr > /tmp/tunnel.out 2> /tmp/tunnel.out &"
+    - run: sleep 30
     - run: $SSH_EXEC "minikube profile list"
     - run: $SSH_EXEC "minikube status"
-    - run: $SSH_EXEC "make RELEASE=release TARGET=x86_64-unknown-linux-musl build_test"
+    - run: $SSH_EXEC "make RELEASE=true TARGET=x86_64-unknown-linux-musl build_test"
     - run: $SSH_EXEC "make RELEASE=true TARGET=x86_64-unknown-linux-musl k8-setup"
     - run: $SSH_EXEC "make RELEASE=true minikube_image"
     - run: $SSH_EXEC "make RELEASE=true minikube_image"
     - run: $SSH_EXEC "make RELEASE=true TARGET=x86_64-unknown-linux-musl UNINSTALL=noclean smoke-test-k8-tls-root"
-    - if: always()
-      run: aws ec2 terminate-instances --instance-ids $EC2_INSTANCE_ID
+    # - if: always()
+    #   run: aws ec2 terminate-instances --instance-ids $EC2_INSTANCE_ID
