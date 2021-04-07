@@ -42,7 +42,7 @@ jobs:
           --query "Reservations[0].Instances[0].PublicIpAddress" \
           --output text > ec2_instance_public_ip
     - run: cat ec2_instance_public_ip
-    - run: echo "SSH_OPTS="-o BatchMode=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" >> $GITHUB_ENV
+    - run: echo "SSH_OPTS='-o BatchMode=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'" >> $GITHUB_ENV
     - run: echo "SSH_REMOTE=ubuntu@$(cat ec2_instance_public_ip)" >> $GITHUB_ENV
     - run: echo "SSH_ARGS=$SSH_OPTS $SSH_REMOTE" >> $GITHUB_ENV
     - run: echo $SSH_ARGS
