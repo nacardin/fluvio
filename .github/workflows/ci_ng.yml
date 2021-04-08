@@ -22,10 +22,10 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_REGION: us-east-2
       AWS_DEFAULT_REGION: us-east-2
-      EC2_AMI: ami-0149f85c121c2cf6d
+      EC2_AMI: ami-012fd581fc7600f48
     steps:
     - run: curl -sSf https://raw.githubusercontent.com/$GITHUB_REPOSITORY/$GITHUB_SHA/ci_ng.sh | bash
-    - run: $SSH_EXEC "git clone https://github.com/infinyon/fluvio.git --depth 1"
+    - run: $SSH_EXEC "git clone https://github.com/infinyon/fluvio.git --depth 1 ./"
     - run: $SSH_EXEC "cargo make check-format"
     - run: $SSH_EXEC "cargo make clippy"
     - run: $SSH_EXEC "make build-all-test"
@@ -56,5 +56,5 @@ jobs:
     - run: $SSH_EXEC "make RELEASE=true minikube_image"
     - run: $SSH_EXEC "make RELEASE=true minikube_image"
     - run: $SSH_EXEC "make RELEASE=true TARGET=x86_64-unknown-linux-musl UNINSTALL=noclean smoke-test-k8-tls-root"
-    # - if: always()
-    #   run: aws ec2 terminate-instances --instance-ids $EC2_INSTANCE_ID
+    - if: always()
+      run: aws ec2 terminate-instances --instance-ids $EC2_INSTANCE_ID
