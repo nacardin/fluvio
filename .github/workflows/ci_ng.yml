@@ -25,7 +25,7 @@ jobs:
       EC2_AMI: ami-0c0ab66879ca67116
     steps:
     - run: curl -sSf https://raw.githubusercontent.com/$GITHUB_REPOSITORY/$GITHUB_SHA/ci_ng.sh | bash
-    - run: $SSH_EXEC_1 "git clone https://github.com/infinyon/fluvio.git --depth 1"
+    - run: $SSH_EXEC_1 "pwd;git clone https://github.com/infinyon/fluvio.git --depth 1"
     - run: $SSH_EXEC "cargo make check-format"
     - run: $SSH_EXEC "cargo make clippy"
     - run: $SSH_EXEC "make build-all-test"
