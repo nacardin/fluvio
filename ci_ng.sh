@@ -32,7 +32,7 @@ ssh_exec="ssh -i ./id_rsa $ssh_remote $ssh_opts"
 
 tmp_dir=/tmp
 
-$ssh_exec "echo RELEASE=true > /home/ubuntu/.ssh/environment"
+$ssh_exec 'echo RELEASE=true >> /home/ubuntu/.ssh/environment'
 
 $ssh_exec "export"
 
