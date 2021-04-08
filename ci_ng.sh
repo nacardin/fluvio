@@ -4,7 +4,7 @@ set -xe
 
 ssh-keygen -q -N "" -t RSA -f id_rsa
 
-aws ec2 import-key-pair --key-name fluvio-ci-$GITHUB_RUN_ID --public-key-material fileb://id_rsa.pub
+aws ec2 import-key-pair --key-name fluvio-ci-$GITHUB_RUN_ID --public-key-material fileb://id_rsa.pub || true
 
 ec2_instance_id=$(aws ec2 run-instances \
     --image-id $EC2_AMI \
