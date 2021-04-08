@@ -30,7 +30,7 @@ ssh_opts="-o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=no -o 
 ssh_remote="ubuntu@$ec2_instance_public_ip"
 ssh_exec="ssh -i ./id_rsa $ssh_remote $ssh_opts"
 
-tmp_dir=$($ssh_exec mktemp -d)
+tmp_dir=$($ssh_exec "mktemp -d")
 
 echo SSH_EXEC_1="$ssh_exec cd $tmp_dir;" >> $GITHUB_ENV
 echo SSH_EXEC="$ssh_exec export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/ubuntu/.cargo/bin;export HOME=/home/ubuntu;cd $tmp_dir/fluvio;" >> $GITHUB_ENV
