@@ -42,5 +42,7 @@ $ssh_exec "export"
 echo SSH_EXEC_1="$ssh_exec cd $tmp_dir;" >> $GITHUB_ENV
 echo SSH_EXEC="$ssh_exec export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/ubuntu/.cargo/bin;export HOME=/home/ubuntu;cd $tmp_dir/fluvio;" >> $GITHUB_ENV
 
+sleep 5
+
 # export DEBIAN_FRONTEND=noninteractive
 # sudo apt-get install git -y -qq
