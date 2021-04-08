@@ -32,4 +32,5 @@ ssh_exec="ssh -i ./id_rsa $ssh_remote $ssh_opts"
 
 echo SSH_EXEC=$ssh_exec export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/ubuntu/.cargo/bin"; >> $GITHUB_ENV
 
-apt-get install git -y -qq
+export DEBIAN_FRONTEND=noninteractive
+sudo apt-get install git -y -qq
