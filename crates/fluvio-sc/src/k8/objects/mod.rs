@@ -4,3 +4,4 @@ pub mod spu_k8_config;
 pub mod statefulset;
 pub mod spu_service;
 pub mod managed_connector_deployment;
+pub mod managed_connector_config;

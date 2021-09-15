@@ -23,6 +23,7 @@ use crate::k8::objects::managed_connector_deployment::ManagedConnectorDeployment
 
 use crate::stores::k8::K8MetaItem;
 use crate::k8::objects::managed_connector_deployment::K8DeploymentSpec;
+use crate::k8::objects::managed_connector_config::K8ConfigMapSpec;
 use crate::stores::MetadataStoreObject;
 use crate::stores::actions::WSAction;
 
@@ -41,6 +42,7 @@ pub struct ManagedConnectorDeploymentController {
     namespace: String,
     connectors: StoreContext<ManagedConnectorSpec>,
     deployments: StoreContext<ManagedConnectorDeploymentSpec>,
+    configmaps: StoreContext<ManagedConnectorDeploymentSpec>,
 }
 
 impl ManagedConnectorDeploymentController {
@@ -48,11 +50,13 @@ impl ManagedConnectorDeploymentController {
         namespace: String,
         connectors: StoreContext<ManagedConnectorSpec>,
         deployments: StoreContext<ManagedConnectorDeploymentSpec>,
+        configmaps: StoreContext<ManagedConnectorDeploymentSpec>,
     ) {
         let controller = Self {
             namespace,
             connectors,
             deployments,
+            configmaps
         };
 
         spawn(controller.dispatch_loop());
@@ -78,6 +82,11 @@ impl ManagedConnectorDeploymentController {
         let mut deployment_listener = self.deployments.change_listener();
         let _ = deployment_listener.wait_for_initial_sync().await;
 
+        let mut configmap_listener = self.deployments.change_listener();
+        let _ = configmap_listener.wait_for_initial_sync().await;
+
+        self.sync_connectors_to_configmaps(&mut connector_listener)
+            .await?;
         self.sync_connectors_to_deployments(&mut connector_listener)
             .await?;
 
@@ -85,6 +94,7 @@ impl ManagedConnectorDeploymentController {
             select! {
                 _ = connector_listener.listen() => {
                     debug!("detected connector changes");
+                    self.sync_connectors_to_configmaps(&mut connector_listener).await?;
                     self.sync_connectors_to_deployments(&mut connector_listener).await?;
                 },
                 _ = deployment_listener.listen() => {
@@ -239,5 +249,70 @@ impl ManagedConnectorDeploymentController {
             selector: LabelSelector { match_labels },
             ..Default::default()
         }
+    }
+
+    async fn sync_connectors_to_configmaps(
+        &mut self,
+        listener: &mut K8ChangeListener<ManagedConnectorSpec>,
+    ) -> Result<(), ClientError> {
+        if !listener.has_change() {
+            trace!("no managed connector change, skipping");
+            return Ok(());
+        }
+
+        let changes = listener.sync_changes().await;
+        let epoch = changes.epoch;
+        let (updates, deletes) = changes.parts();
+
+        debug!(
+            "received managed connector changes updates: {},deletes: {},epoch: {}",
+            updates.len(),
+            deletes.len(),
+            epoch,
+        );
+
+        for mc_item in updates.into_iter() {
+            self.sync_connector_to_configmap(mc_item).await?
+        }
+
+        Ok(())
+    }
+
+    #[instrument(skip(self, managed_connector))]
+    async fn sync_connector_to_configmap(
+        &mut self,
+        managed_connector: MetadataStoreObject<ManagedConnectorSpec, K8MetaItem>,
+    ) -> Result<(), ClientError> {
+
+        let key = managed_connector.key();
+        /*
+        self.connectors.update_status(key.to_string(), status.clone()).await?;
+        let status = managed_connector.status();
+        */
+
+
+        let k8_configmap_spec =
+            Self::generate_k8_configmap_spec(&managed_connector.spec(), &self.namespace, key);
+        trace!(?k8_configmap_spec);
+        let configmap_action = WSAction::Apply(
+            MetadataStoreObject::with_key(key)
+                .with_context(managed_connector.ctx().create_child()),
+        );
+
+        debug!(?configmap_action, "applying configmap");
+
+        self.configmaps
+            .wait_action(&key, configmap_action)
+            .await?;
+
+        Ok(())
+    }
+
+    pub fn generate_k8_configmap_spec(
+        mc_spec: &ManagedConnectorSpec,
+        _namespace: &str,
+        _name: &str,
+    ) -> K8ConfigMapSpec {
+        K8ConfigMapSpec {}
     }
 }
