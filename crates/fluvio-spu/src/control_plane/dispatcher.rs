@@ -9,7 +9,7 @@ use futures_util::stream::StreamExt;
 
 use fluvio_future::task::spawn;
 use fluvio_future::timer::sleep;
-use fluvio_controlplane::InternalSpuApi;
+use fluvio_controlplane::{InternalSpuApi, UpdateSmartModuleRequest};
 use fluvio_controlplane::InternalSpuRequest;
 use fluvio_controlplane::RegisterSpuRequest;
 use fluvio_controlplane::{UpdateSpuRequest, UpdateLrsRequest};
@@ -28,6 +28,7 @@ struct DispatcherCounter {
     pub replica_changes: u64, // replica changes received from sc
     pub spu_changes: u64,     // spu changes received from sc
     pub reconnect: u64,       // number of reconnect to sc
+    pub smart_module: u64,       // number of sm updates from sc
 }
 
 /// Controller for handling connection to SC
@@ -132,12 +133,12 @@ impl ScDispatcher<FileReplica> {
             select! {
 
                 _ = status_timer.next() =>  {
-                    trace!("status timer expired");
+                    debug!("status timer expired, sending status to sc");
                     self.send_status_back_to_sc(&mut sink).await?;
                 },
 
                 sc_request = api_stream.next() => {
-                    debug!("got requests from sc");
+                    debug!("got request from sc");
                     match sc_request {
                         Some(Ok(InternalSpuRequest::UpdateReplicaRequest(request))) => {
                             self.counter.replica_changes += 1;
@@ -146,6 +147,13 @@ impl ScDispatcher<FileReplica> {
                         Some(Ok(InternalSpuRequest::UpdateSpuRequest(request))) => {
                             self.counter.spu_changes += 1;
                             if let Err(err) = self.handle_update_spu_request(request).await {
+                                error!("error handling update spu request: {}", err);
+                                break;
+                            }
+                        },
+                        Some(Ok(InternalSpuRequest::UpdateSmartModuleRequest(request))) => {
+                            self.counter.smart_module += 1;
+                            if let Err(err) = self.handle_update_smart_module_request(request).await {
                                 error!("error handling update spu request: {}", err);
                                 break;
                             }
@@ -319,6 +327,43 @@ impl ScDispatcher<FileReplica> {
         };
 
         self.ctx.sync_follower_update().await;
+
+        trace!("finish spu update");
+
+        Ok(())
+    }
+
+    ///
+    /// Handle SmartModule update sent by SC
+    ///
+    #[instrument(skip(self, req_msg), name = "update_smart_module_request")]
+    async fn handle_update_smart_module_request(
+        &mut self,
+        req_msg: RequestMessage<UpdateSmartModuleRequest>,
+    ) -> Result<(), IoError> {
+        let (_, request) = req_msg.get_header_request();
+
+        debug!( message = ?request,"starting SmartModule update");
+
+        // let _actions = if !request.all.is_empty() {
+        //     debug!(
+        //         epoch = request.epoch,
+        //         item_count = request.all.len(),
+        //         "received sm sync all"
+        //     );
+        //     trace!("received sm all items: {:#?}", request.all);
+        //     self.ctx.spu_localstore().sync_all(request.all)
+        // } else {
+        //     debug!(
+        //         epoch = request.epoch,
+        //         item_count = request.changes.len(),
+        //         "received spu changes"
+        //     );
+        //     trace!("received spu change items: {:#?}", request.changes);
+        //     self.ctx.spu_localstore().apply_changes(request.changes)
+        // };
+
+        // self.ctx.sync_follower_update().await;
 
         trace!("finish spu update");
 
