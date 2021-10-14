@@ -345,27 +345,9 @@ impl ScDispatcher<FileReplica> {
 
         debug!( message = ?request,"starting SmartModule update");
 
-        // let _actions = if !request.all.is_empty() {
-        //     debug!(
-        //         epoch = request.epoch,
-        //         item_count = request.all.len(),
-        //         "received sm sync all"
-        //     );
-        //     trace!("received sm all items: {:#?}", request.all);
-        //     self.ctx.spu_localstore().sync_all(request.all)
-        // } else {
-        //     debug!(
-        //         epoch = request.epoch,
-        //         item_count = request.changes.len(),
-        //         "received spu changes"
-        //     );
-        //     trace!("received spu change items: {:#?}", request.changes);
-        //     self.ctx.spu_localstore().apply_changes(request.changes)
-        // };
+        let _actions = self.ctx.smart_module_localstore().apply_changes(request.changes);
 
-        // self.ctx.sync_follower_update().await;
-
-        trace!("finish spu update");
+        trace!("finish sm update");
 
         Ok(())
     }

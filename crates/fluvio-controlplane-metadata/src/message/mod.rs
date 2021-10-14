@@ -6,7 +6,7 @@ pub use self::msg_type::MsgType;
 pub use self::msg_type::Message;
 
 pub use self::replica_msg::{ReplicaMsgs, ReplicaMsg};
-pub use self::smart_module_msg::{SmartModuleMsgs, SmartModuleMsg, SmartModule};
+pub use self::smart_module_msg::{SmartModuleMsgs, SmartModuleMsg};
 
 use crate::spu::SpuSpec;
 pub type SpuMsg = Message<SpuSpec>;

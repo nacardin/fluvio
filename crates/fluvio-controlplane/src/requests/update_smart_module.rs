@@ -3,7 +3,8 @@
 use dataplane::derive::Decoder;
 use dataplane::derive::Encoder;
 use dataplane::api::Request;
-use fluvio_controlplane_metadata::message::{SmartModuleMsg, SmartModule};
+use fluvio_controlplane_metadata::message::{SmartModuleMsg};
+use fluvio_controlplane_metadata::smartmodule::SmartModuleSpec;
 use crate::InternalSpuApi;
 
 /// Changes to Replica Specs
@@ -11,7 +12,7 @@ use crate::InternalSpuApi;
 pub struct UpdateSmartModuleRequest {
     pub epoch: i64,
     pub changes: Vec<SmartModuleMsg>,
-    pub all: Vec<SmartModule>,
+    pub all: Vec<SmartModuleSpec>,
 }
 
 impl Request for UpdateSmartModuleRequest {
@@ -28,7 +29,7 @@ impl UpdateSmartModuleRequest {
         }
     }
 
-    pub fn with_all(epoch: i64, all: Vec<SmartModule>) -> Self {
+    pub fn with_all(epoch: i64, all: Vec<SmartModuleSpec>) -> Self {
         Self {
             epoch,
             changes: vec![],

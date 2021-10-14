@@ -16,30 +16,30 @@ use crate::smartmodule::SmartModuleSpec;
 use super::MsgType;
 use super::Message;
 
-#[derive(Decoder, Encoder, Debug, PartialEq, Clone, Default)]
-pub struct SmartModule {
-    name: String
-}
+// #[derive(Decoder, Encoder, Debug, PartialEq, Clone, Default)]
+// pub struct SmartModule {
+//     name: String
+// }
 
 
-impl fmt::Display for SmartModule {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "TODO: SmartModule")
-    }
-}
+// impl fmt::Display for SmartModule {
+//     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+//         write!(f, "TODO: SmartModule")
+//     }
+// }
 
-impl<C> From<MetadataStoreObject<SmartModuleSpec, C>> for SmartModule
-where
-    C: MetadataItem,
-{
-    fn from(item: MetadataStoreObject<SmartModuleSpec, C>) -> Self {
-        Self {
-            name: item.key
-        }
-    }
-}
+// impl<C> From<MetadataStoreObject<SmartModuleSpec, C>> for SmartModule
+// where
+//     C: MetadataItem,
+// {
+//     fn from(item: MetadataStoreObject<SmartModuleSpec, C>) -> Self {
+//         Self {
+//             name: item.key
+//         }
+//     }
+// }
 
-pub type SmartModuleMsg = Message<SmartModule>;
+pub type SmartModuleMsg = Message<SmartModuleSpec>;
 
 #[derive(Decoder, Encoder, Debug, PartialEq, Clone, Default)]
 pub struct SmartModuleMsgs {
@@ -68,13 +68,13 @@ impl SmartModuleMsgs {
     }
 }
 
-impl SmartModuleMsg {
-    pub fn create_delete_msg(name: String) -> Self {
-        SmartModuleMsg {
-            header: MsgType::DELETE,
-            content: SmartModule {
-                name
-            },
-        }
-    }
-}
+// impl SmartModuleMsg {
+//     pub fn create_delete_msg(name: String) -> Self {
+//         SmartModuleMsg {
+//             header: MsgType::DELETE,
+//             content: SmartModuleSpec {
+//                 name
+//             },
+//         }
+//     }
+// }

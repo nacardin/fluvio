@@ -408,7 +408,7 @@ async fn send_smart_module_changes(
             updates
                 .into_iter()
                 .map(|sm| {
-                    sm.into()
+                    sm.spec
                 })
                 .collect(),
         )
@@ -416,13 +416,13 @@ async fn send_smart_module_changes(
         let mut changes: Vec<SmartModuleMsg> = updates
             .into_iter()
             .map(|sm| {
-                Message::update(sm.into())
+                Message::update(sm.spec)
             })
             .collect();
         let mut deletes = deletes
             .into_iter()
             .map(|sm| {
-                Message::delete(sm.into())
+                Message::delete(sm.spec)
             })
             .collect();
         changes.append(&mut deletes);
