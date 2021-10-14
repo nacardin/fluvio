@@ -8,6 +8,10 @@
 use std::fmt;
 
 use dataplane::core::{Encoder, Decoder};
+use fluvio_stream_model::core::MetadataItem;
+use fluvio_stream_model::store::MetadataStoreObject;
+
+use crate::smartmodule::SmartModuleSpec;
 
 use super::MsgType;
 use super::Message;
@@ -21,6 +25,17 @@ pub struct SmartModule {
 impl fmt::Display for SmartModule {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "TODO: SmartModule")
+    }
+}
+
+impl<C> From<MetadataStoreObject<SmartModuleSpec, C>> for SmartModule
+where
+    C: MetadataItem,
+{
+    fn from(item: MetadataStoreObject<SmartModuleSpec, C>) -> Self {
+        Self {
+            name: item.key
+        }
     }
 }
 
