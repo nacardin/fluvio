@@ -1849,17 +1849,16 @@ dependencies = [
  "eyre",
  "fluvio-dataplane-protocol",
  "fluvio-smartstream-derive",
+ "trybuild 1.0.42 (git+https://github.com/sehz/trybuild?branch=check_option)",
 ]
 
 [[package]]
 name = "fluvio-smartstream-derive"
 version = "0.3.0"
 dependencies = [
- "fluvio-smartstream",
  "proc-macro2",
  "quote",
  "syn",
- "trybuild 1.0.42 (git+https://github.com/sehz/trybuild?branch=check_option)",
 ]
 
 [[package]]
