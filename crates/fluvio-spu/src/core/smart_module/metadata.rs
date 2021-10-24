@@ -1,10 +1,10 @@
-use fluvio_controlplane_metadata::smartmodule::SmartModuleSpec;
+use fluvio_controlplane_metadata::smartmodule::SmartModule;
 use fluvio_types::SmartModuleId;
 
 use crate::core::Spec;
 use crate::core::LocalStore;
 
-impl Spec for SmartModuleSpec {
+impl Spec for SmartModule {
     const LABEL: &'static str = "SmartModule";
 
     type Key = SmartModuleId;
@@ -18,12 +18,12 @@ impl Spec for SmartModuleSpec {
     }
 }
 
-pub type SmartModuleLocalStore = LocalStore<SmartModuleSpec>;
+pub type SmartModuleLocalStore = LocalStore<SmartModule>;
 
 impl SmartModuleLocalStore {
     #[cfg(test)]
-    pub fn indexed_by_id(&self) -> std::collections::BTreeMap<SmartModuleId, SmartModuleSpec> {
-        let mut map: std::collections::BTreeMap<SmartModuleId, SmartModuleSpec> = std::collections::BTreeMap::new();
+    pub fn indexed_by_id(&self) -> std::collections::BTreeMap<SmartModuleId, SmartModule> {
+        let mut map: std::collections::BTreeMap<SmartModuleId, SmartModule> = std::collections::BTreeMap::new();
 
         for sm in self.inner_store().read().values() {
             map.insert(sm.id, sm.clone());

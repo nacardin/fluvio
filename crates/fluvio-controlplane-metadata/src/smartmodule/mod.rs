@@ -4,10 +4,22 @@ mod status;
 pub use self::spec::*;
 pub use self::status::*;
 
+use dataplane::core::{Encoder, Decoder};
+
 #[cfg(feature = "k8")]
 mod k8;
 #[cfg(feature = "k8")]
 pub use k8::*;
+
+
+#[derive(Debug, Default, Clone, PartialEq, Encoder, Decoder)]
+pub struct SmartModule {
+    pub input_kind: SmartModuleInputKind,
+    pub output_kind: SmartModuleOutputKind,
+    pub source_code: Option<SmartModuleSourceCode>,
+    pub wasm: SmartModuleWasm,
+    pub parameters: Option<Vec<SmartModuleParameter>>
+}
 
 mod metadata {
 
