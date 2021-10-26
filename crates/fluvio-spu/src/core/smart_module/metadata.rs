@@ -10,11 +10,11 @@ impl Spec for SmartModule {
     type Key = SmartModuleId;
 
     fn key(&self) -> &Self::Key {
-        &self.id
+        &self.name
     }
 
     fn key_owned(&self) -> Self::Key {
-        self.id.clone()
+        self.name.clone()
     }
 }
 

@@ -3,22 +3,51 @@ mod status;
 
 pub use self::spec::*;
 pub use self::status::*;
+use std::fmt;
 
+use fluvio_stream_model::store::MetadataStoreObject;
 use dataplane::core::{Encoder, Decoder};
 
 #[cfg(feature = "k8")]
 mod k8;
+use fluvio_stream_model::store::k8::K8MetaItem;
 #[cfg(feature = "k8")]
 pub use k8::*;
 
-
 #[derive(Debug, Default, Clone, PartialEq, Encoder, Decoder)]
 pub struct SmartModule {
+    pub name: String,
     pub input_kind: SmartModuleInputKind,
     pub output_kind: SmartModuleOutputKind,
     pub source_code: Option<SmartModuleSourceCode>,
     pub wasm: SmartModuleWasm,
-    pub parameters: Option<Vec<SmartModuleParameter>>
+    pub parameters: Option<Vec<SmartModuleParameter>>,
+}
+
+impl fmt::Display for SmartModule {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "SmartModule({})", self.name)
+    }
+}
+
+impl From<MetadataStoreObject<SmartModuleSpec, K8MetaItem>> for SmartModule {
+    fn from(mso: MetadataStoreObject<SmartModuleSpec, K8MetaItem>) -> Self {
+        let SmartModuleSpec {
+            input_kind,
+            output_kind,
+            source_code,
+            wasm,
+            parameters,
+        } = mso.spec;
+        Self {
+            name: mso.ctx.item().name.clone(),
+            input_kind,
+            output_kind,
+            source_code,
+            wasm,
+            parameters,
+        }
+    }
 }
 
 mod metadata {

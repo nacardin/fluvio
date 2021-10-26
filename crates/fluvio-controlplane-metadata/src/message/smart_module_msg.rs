@@ -9,11 +9,11 @@ use std::fmt;
 
 use dataplane::core::{Encoder, Decoder};
 
-use crate::smartmodule::SmartModuleSpec;
+use crate::smartmodule::SmartModule;
 
 use super::Message;
 
-pub type SmartModuleMsg = Message<SmartModuleSpec>;
+pub type SmartModuleMsg = Message<SmartModule>;
 
 #[derive(Decoder, Encoder, Debug, PartialEq, Clone, Default)]
 pub struct SmartModuleMsgs {
