@@ -281,13 +281,13 @@ impl dyn SmartStream + '_ {
                 let record_bytes = records.write_size(0);
 
                 // if smartstream bytes exceed max bytes then we skip this batch
-                if total_bytes + record_bytes > max_bytes {
-                    debug!(
-                        total_bytes = total_bytes + record_bytes,
-                        max_bytes, "Total SmartStream bytes reached"
-                    );
-                    return Ok((smartstream_batch, maybe_error));
-                }
+                // if total_bytes + record_bytes > max_bytes {
+                //     debug!(
+                //         total_bytes = total_bytes + record_bytes,
+                //         max_bytes, "Total SmartStream bytes reached"
+                //     );
+                //     return Ok((smartstream_batch, maybe_error));
+                // }
 
                 total_bytes += record_bytes;
 

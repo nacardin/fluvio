@@ -119,6 +119,8 @@ pub enum SmartStreamKind {
     Map,
     Aggregate {
         accumulator: Vec<u8>,
+        #[fluvio(min_version = SMART_MODULE_API)]
+        outputs: Outputs,
     },
     #[fluvio(min_version = ARRAY_MAP_WASM_API)]
     ArrayMap,
@@ -126,6 +128,11 @@ pub enum SmartStreamKind {
     FilterMap,
     #[fluvio(min_version = SMART_MODULE_API)]
     Join(String),
+}
+
+pub enum Outputs {
+    PerRecord,
+    OnUpdate
 }
 
 impl Default for SmartStreamKind {
