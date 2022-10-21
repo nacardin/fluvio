@@ -40,7 +40,7 @@ jobs:
       RELEASE: true
     steps:
       - uses: actions/checkout@v3
-
+      - uses: arduino/setup-protoc@v1
       - name: Install Rust ${{ matrix.rust }}
         uses: actions-rs/toolchain@v1
         with:

@@ -81,6 +81,7 @@ jobs:
       - name: Print env
         run: |
           echo "RUST_BIN_DIR = ${{ env.RUST_BIN_DIR }} "
+      - uses: arduino/setup-protoc@v1
       - name: Install Rust ${{ matrix.rust }}
         uses: actions-rs/toolchain@v1
         with:
@@ -229,6 +230,7 @@ jobs:
       - name: Print env
         run: |
           echo "RUST_BIN_DIR = ${{ env.RUST_BIN_DIR }} "
+      - uses: arduino/setup-protoc@v1
       - name: Install Rust ${{ matrix.rust }}
         uses: actions-rs/toolchain@v1
         with:
@@ -319,6 +321,7 @@ jobs:
       TARGET: ${{ matrix.rust-target }}
     steps:
       - uses: actions/checkout@v3
+      - uses: arduino/setup-protoc@v1
       - name: Install Rust ${{ matrix.rust }}
         uses: actions-rs/toolchain@v1
         with:
@@ -373,6 +376,7 @@ jobs:
       RELEASE_NAME: release
     steps:
       - uses: actions/checkout@v3
+      - uses: arduino/setup-protoc@v1
       - name: Install Rust ${{ matrix.rust }}
         uses: actions-rs/toolchain@v1
         with:
@@ -397,6 +401,7 @@ jobs:
       RUSTV: ${{ matrix.rust }}
     steps:
       - uses: actions/checkout@v3
+      - uses: arduino/setup-protoc@v1
       - name: Install Rust ${{ matrix.rust }}
         uses: actions-rs/toolchain@v1
         with:
@@ -429,6 +434,7 @@ jobs:
       RUSTV: ${{ matrix.rust }}
     steps:
       - uses: actions/checkout@v3
+      - uses: arduino/setup-protoc@v1
       - name: Install Rust ${{ matrix.rust }}
         uses: actions-rs/toolchain@v1
         with:
@@ -465,6 +471,7 @@ jobs:
       RUSTV: ${{ matrix.rust }}
     steps:
       - uses: actions/checkout@v3
+      - uses: arduino/setup-protoc@v1
       - name: Install Rust ${{ matrix.rust }}
         uses: actions-rs/toolchain@v1
         with:
@@ -494,6 +501,7 @@ jobs:
       RUSTV: ${{ matrix.rust }}
     steps:
       - uses: actions/checkout@v3
+      - uses: arduino/setup-protoc@v1
       - name: Install Rust ${{ matrix.rust }}
         uses: actions-rs/toolchain@v1
         with:
@@ -877,6 +885,7 @@ jobs:
         cli: [fluvio, smdk]
     steps:
       - uses: actions/checkout@v3
+      - uses: arduino/setup-protoc@v1
       - name: Install Rust ${{ matrix.rust }}
         uses: actions-rs/toolchain@v1
         with:
