@@ -39,7 +39,7 @@ pub fn main_loop(opt: SpuOpt) {
 
     run_block_on(async move {
         crate::otel::init_open_telemetry("spu", VERSION);
-        
+
         let (_ctx, internal_server, public_server) =
             create_services(spu_config.clone(), true, true);
 
