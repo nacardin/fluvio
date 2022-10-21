@@ -284,6 +284,7 @@ dependencies = [
  "blocking",
  "futures-lite",
  "once_cell",
+ "tokio",
 ]
 
 [[package]]
@@ -2669,6 +2670,7 @@ dependencies = [
  "adaptive_backoff",
  "anyhow",
  "async-channel",
+ "async-global-executor",
  "async-io",
  "async-lock",
  "async-rwlock",

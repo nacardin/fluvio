@@ -53,10 +53,10 @@ pub async fn handle_produce_request(
     request: RequestMessage<DefaultProduceRequest>,
     ctx: DefaultSharedGlobalContext,
 ) -> Result<ResponseMessage<ProduceResponse>, Error> {
+    let metrics = super::metrics::StorageMetrics::new();
+
     let (header, produce_request) = request.get_header_request();
     trace!("Handling ProduceRequest: {:#?}", produce_request);
-
-    let metrics = super::metrics::StorageMetrics::new();
 
     let mut topic_results = Vec::with_capacity(produce_request.topics.len());
     for topic_request in produce_request.topics.into_iter() {
